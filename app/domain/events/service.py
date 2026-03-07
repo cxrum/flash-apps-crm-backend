@@ -2,25 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
 
-from app.contracts.events import EventRecordDTO
 from app.domain.events.entities import EventEntity
 from app.domain.events.mappers import EventEntityMapper, EventPersistenceMapper
-
+from app.infra.db.repositories.app_repository_protocol import AppRepositoryProtocol
+from app.infra.db.repositories.events_repository_protocol import EventsRepositoryProtocol
+from app.infra.db.repositories.identity_repository_protocol import IdentityRepositoryProtocol
+from app.infra.db.repositories.user_repository_protocol import UserRepositoryProtocol
 
 class DomainAppNotFoundError(Exception):
     pass
-
-
-class EventsRepositoryProtocol(Protocol):
-    def app_exists(self, app_id: int) -> bool: ...
-    def upsert_users(self, user_ids: list[str]) -> None: ...
-    def upsert_identities(self, identity_links: dict[str, str | None]) -> None: ...
-    def insert_events(self, events: list[EventRecordDTO]) -> int: ...
-    def commit(self) -> None: ...
-    def rollback(self) -> None: ...
-
 
 @dataclass
 class BatchIngestResult:
@@ -39,11 +30,21 @@ class BatchIngestResult:
 
 
 class EventsDomainService:
-    def __init__(self, repository: EventsRepositoryProtocol) -> None:
-        self.repository = repository
+    def __init__(
+        self, 
+        event_repo: EventsRepositoryProtocol,
+        app_repo: AppRepositoryProtocol,
+        user_repo: UserRepositoryProtocol,
+        indentity_repo: IdentityRepositoryProtocol
+        ) -> None:
+        
+        self.event_repo = event_repo
+        self.app_repo = app_repo
+        self.user_repo = user_repo
+        self.indentity_repo = indentity_repo
 
     def process_batch(self, *, app_id: int, environment: str, batch_payload: dict) -> BatchIngestResult:
-        if not self.repository.app_exists(app_id):
+        if not self.app_repo.exists(app_id):
             raise DomainAppNotFoundError("Unknown app id")
 
         events_data: list[dict] = batch_payload["events"]
@@ -67,12 +68,18 @@ class EventsDomainService:
         identity_links = self._collect_identity_links(events)
 
         try:
-            self.repository.upsert_users(user_ids)
-            self.repository.upsert_identities(identity_links)
-            inserted = self.repository.insert_events(event_dtos)
-            self.repository.commit()
+            self.user_repo.upsert_users(user_ids)
+            self.indentity_repo.upsert_identities(identity_links)
+            inserted = self.event_repo.insert_events(event_dtos)
+            
+            self.event_repo.commit()
+            self.indentity_repo.commit()
+            self.event_repo.commit()
+            
         except Exception:
-            self.repository.rollback()
+            self.event_repo.rollback()
+            self.indentity_repo.rollback()
+            self.event_repo.rollback()
             raise
 
         return BatchIngestResult(

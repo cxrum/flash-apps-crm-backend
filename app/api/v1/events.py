@@ -11,16 +11,13 @@ from typing import Literal
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
-from sqlalchemy.orm import Session
 
+from app.domain.events.dependencies import get_events_domain_service
 from app.core.config import settings
 from app.domain.events.service import DomainAppNotFoundError, EventsDomainService
-from app.infra.db.repositories.events_repository import EventsRepository
-from app.infra.db.session import get_db
 
 router = APIRouter()
 
-_RATE_LIMIT_WINDOW_SECONDS = 60
 _rate_limit_hits: dict[tuple[int, str], deque[float]] = defaultdict(deque)
 _rate_limit_lock = threading.Lock()
 
@@ -71,24 +68,14 @@ class EventsBatchPayload(BaseModel):
     events: list[EventItemPayload] = Field(min_length=1, max_length=500)
 
 
-def get_events_repository(db: Session = Depends(get_db)) -> EventsRepository:
-    return EventsRepository(db)
-
-
-def get_events_domain_service(
-    repository: EventsRepository = Depends(get_events_repository),
-) -> EventsDomainService:
-    return EventsDomainService(repository)
-
-
 def _is_rate_limited(app_id: int, ip: str) -> bool:
     key = (app_id, ip)
     now = time.time()
     with _rate_limit_lock:
         bucket = _rate_limit_hits[key]
-        while bucket and now - bucket[0] > _RATE_LIMIT_WINDOW_SECONDS:
+        while bucket and now - bucket[0] > settings.rate_limit_window_seconds:
             bucket.popleft()
-        if len(bucket) >= settings.batch_rate_limit_per_minute:
+        if len(bucket) >= settings.batch_rate_limit_per_window:
             return True
         bucket.append(now)
     return False
@@ -124,7 +111,7 @@ async def ingest_events_batch(
     try:
         payload = EventsBatchPayload.model_validate_json(raw_body)
     except ValidationError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=jsonable_encoder(exc.errors())) from exc
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=jsonable_encoder(exc.errors())) from exc
 
     try:
         result = domain_service.process_batch(

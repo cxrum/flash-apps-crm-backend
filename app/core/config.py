@@ -14,7 +14,8 @@ class Settings(BaseSettings):
     postgres_port: int = Field(alias="POSTGRES_PORT")
     
     app_secret: str = Field(alias="APP_SECRET")
-    batch_rate_limit_per_minute: int = Field(default=120, alias="BATCH_RATE_LIMIT_PER_MINUTE")
+    batch_rate_limit_per_window: int = Field(default=120, alias="BATCH_RATE_LIMIT_PER_MINUTE")
+    rate_limit_window_seconds: int = Field(default=60, alias="RATE_LIMIT_WINDOW_SECONDS")
 
     database_url: str | None = Field(default=None, alias="DATABASE_URL")
 

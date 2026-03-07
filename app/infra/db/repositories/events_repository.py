@@ -6,34 +6,13 @@ from sqlalchemy.orm import Session
 
 from app.contracts.events import EventRecordDTO
 from app.infra.db.models import App, Event, Identity, User
+from app.infra.db.repositories.events_repository_protocol import EventsRepositoryProtocol
 
 
-class EventsRepository:
+class EventsRepository(EventsRepositoryProtocol):
     def __init__(self, db: Session) -> None:
         self.db = db
-
-    def app_exists(self, app_id: int) -> bool:
-        app_exists = self.db.execute(select(App.app_id).where(App.app_id == app_id)).scalar_one_or_none()
-        return app_exists is not None
-
-    def upsert_users(self, user_ids: list[str]) -> None:
-        if not user_ids:
-            return
-        stmt = pg_insert(User).values([{"user_id": user_id} for user_id in user_ids])
-        self.db.execute(stmt.on_conflict_do_nothing(index_elements=[User.user_id]))
-
-    def upsert_identities(self, identity_links: dict[str, str | None]) -> None:
-        identity_rows = [{"anonymous_id": anon_id, "user_id": user_id} for anon_id, user_id in identity_links.items()]
-        if not identity_rows:
-            return
-        insert_stmt = pg_insert(Identity).values(identity_rows)
-        upsert_stmt = insert_stmt.on_conflict_do_update(
-            index_elements=[Identity.anonymous_id],
-            set_={"user_id": insert_stmt.excluded.user_id},
-            where=insert_stmt.excluded.user_id.is_not(None),
-        )
-        self.db.execute(upsert_stmt)
-
+        
     def insert_events(self, events: list[EventRecordDTO]) -> int:
         if not events:
             return 0
