@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.contracts.events import EventRecordDTO
 from app.infra.db.models import App, Event, Identity, User
-from app.infra.db.repositories.events_repository_protocol import EventsRepositoryProtocol
+from app.domain.contracts.events_repository_protocol import EventsRepositoryProtocol
 
 
 class EventsRepository(EventsRepositoryProtocol):

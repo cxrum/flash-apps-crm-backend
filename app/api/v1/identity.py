@@ -5,7 +5,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from app.domain.identity.dependencies import get_identity_service
+from app.di.dependencies import get_identity_service
 from app.domain.identity.service import InvalidAnonymousIdError
 from app.domain.identity.service_protocol import IdentityServiceProtocol
 

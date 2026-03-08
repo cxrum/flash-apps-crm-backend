@@ -2,16 +2,21 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.infra.db.models import User
-from app.infra.db.repositories.user_repository_protocol import UserRepositoryProtocol
+from app.domain.contracts.user_repository_protocol import UserRepositoryProtocol
 
 
 class UserRepository(UserRepositoryProtocol):
     def __init__(self, db: Session) -> None:
         self.db = db
+
+    def exists(self, user_id: str) -> bool:
+        stmt = select(User.user_id).where(User.user_id == user_id)
+        return self.db.execute(stmt).scalar_one_or_none() is not None
 
     def upsert_user(self, *, user_id: str, created_at: datetime | None = None) -> None:
         stmt = pg_insert(User).values(

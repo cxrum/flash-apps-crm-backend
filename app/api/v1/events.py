@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from app.domain.events.dependencies import get_events_domain_service
+from app.di.dependencies import get_events_domain_service
 from app.core.config import settings
 from app.domain.events.service import DomainAppNotFoundError, EventsDomainService
 

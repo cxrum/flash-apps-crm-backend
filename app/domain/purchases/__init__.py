@@ -1,0 +1,2 @@
+"""Purchases domain package."""
+

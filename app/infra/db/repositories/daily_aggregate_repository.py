@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.infra.db.models import DailyAggregate
-from app.infra.db.repositories.daily_aggregate_repository_protocol import DailyAggregateRepositoryProtocol
+from app.domain.contracts.daily_aggregate_repository_protocol import DailyAggregateRepositoryProtocol
 
 
 class DailyAggregateRepository(DailyAggregateRepositoryProtocol):

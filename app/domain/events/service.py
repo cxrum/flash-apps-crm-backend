@@ -5,10 +5,10 @@ from datetime import datetime
 
 from app.domain.events.entities import EventEntity
 from app.domain.events.mappers import EventEntityMapper, EventPersistenceMapper
-from app.infra.db.repositories.app_repository_protocol import AppRepositoryProtocol
-from app.infra.db.repositories.events_repository_protocol import EventsRepositoryProtocol
-from app.infra.db.repositories.identity_repository_protocol import IdentityRepositoryProtocol
-from app.infra.db.repositories.user_repository_protocol import UserRepositoryProtocol
+from app.domain.contracts.app_repository_protocol import AppRepositoryProtocol
+from app.domain.contracts.events_repository_protocol import EventsRepositoryProtocol
+from app.domain.contracts.identity_repository_protocol import IdentityRepositoryProtocol
+from app.domain.contracts.user_repository_protocol import UserRepositoryProtocol
 
 class DomainAppNotFoundError(Exception):
     pass
@@ -35,13 +35,13 @@ class EventsDomainService:
         event_repo: EventsRepositoryProtocol,
         app_repo: AppRepositoryProtocol,
         user_repo: UserRepositoryProtocol,
-        indentity_repo: IdentityRepositoryProtocol
+        identity_repo: IdentityRepositoryProtocol
         ) -> None:
         
         self.event_repo = event_repo
         self.app_repo = app_repo
         self.user_repo = user_repo
-        self.indentity_repo = indentity_repo
+        self.identity_repo = identity_repo
 
     def process_batch(self, *, app_id: int, environment: str, batch_payload: dict) -> BatchIngestResult:
         if not self.app_repo.exists(app_id):
@@ -69,16 +69,11 @@ class EventsDomainService:
 
         try:
             self.user_repo.upsert_users(user_ids)
-            self.indentity_repo.upsert_identities(identity_links)
+            self.identity_repo.upsert_identities(identity_links)
             inserted = self.event_repo.insert_events(event_dtos)
-            
+
             self.event_repo.commit()
-            self.indentity_repo.commit()
-            self.event_repo.commit()
-            
         except Exception:
-            self.event_repo.rollback()
-            self.indentity_repo.rollback()
             self.event_repo.rollback()
             raise
 

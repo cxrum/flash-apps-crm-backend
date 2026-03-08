@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.infra.db.models import Identity, User
-from app.infra.db.repositories.identity_repository_protocol import IdentityRepositoryProtocol
+from app.domain.contracts.identity_repository_protocol import IdentityRepositoryProtocol
 
 
 class IdentityRepository(IdentityRepositoryProtocol):

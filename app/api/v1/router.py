@@ -20,13 +20,3 @@ def health_check_v1() -> dict[str, str]:
         "version": "v1",
         "service": "analytics-api",
     }
-
-
-@router.get("/analytics/events", tags=["v1"])
-def analytics_events_stub_v1() -> dict[str, object]:
-    return {
-        "version": "v1",
-        "message": "Stub analytics events endpoint for v1",
-        "items": [],
-    }
-
