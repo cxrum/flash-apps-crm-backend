@@ -4,16 +4,16 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
-from app.contracts.events import EventRecordDTO
+from app.domain.events.entities import EventEntity
 from app.infra.db.models import App, Event, Identity, User
-from app.domain.contracts.events_repository_protocol import EventsRepositoryProtocol
+from app.domain.events.events_repository_protocol import EventsRepositoryProtocol
 
 
 class EventsRepository(EventsRepositoryProtocol):
     def __init__(self, db: Session) -> None:
         self.db = db
         
-    def insert_events(self, events: list[EventRecordDTO]) -> int:
+    def insert_events(self, events: list[EventEntity]) -> int:
         if not events:
             return 0
         rows = [

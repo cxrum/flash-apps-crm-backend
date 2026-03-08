@@ -4,10 +4,10 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from app.domain.events.entities import EventEntity
-from app.domain.events.mappers import EventEntityMapper, EventPersistenceMapper
-from app.domain.contracts.app_repository_protocol import AppRepositoryProtocol
-from app.domain.contracts.events_repository_protocol import EventsRepositoryProtocol
-from app.domain.contracts.identity_repository_protocol import IdentityRepositoryProtocol
+from app.domain.events.mappers import EventEntityMapper
+from app.domain.app.app_repository_protocol import AppRepositoryProtocol
+from app.domain.events.events_repository_protocol import EventsRepositoryProtocol
+from app.domain.identity.identity_repository_protocol import IdentityRepositoryProtocol
 from app.domain.contracts.user_repository_protocol import UserRepositoryProtocol
 
 class DomainAppNotFoundError(Exception):
@@ -43,26 +43,9 @@ class EventsDomainService:
         self.user_repo = user_repo
         self.identity_repo = identity_repo
 
-    def process_batch(self, *, app_id: int, environment: str, batch_payload: dict) -> BatchIngestResult:
+    def process_batch(self, *, app_id: int, events: list[EventEntity], received: int) -> BatchIngestResult:
         if not self.app_repo.exists(app_id):
             raise DomainAppNotFoundError("Unknown app id")
-
-        events_data: list[dict] = batch_payload["events"]
-        received = len(events_data)
-        sdk_version: str = batch_payload["sdk_version"]
-        sent_at: datetime = batch_payload["sent_at"]
-
-        events = [
-            EventEntityMapper.from_dict(
-                event_data,
-                app_id=app_id,
-                environment=environment,
-                sdk_version=sdk_version,
-                sent_at=sent_at,
-            )
-            for event_data in events_data
-        ]
-        event_dtos = [EventPersistenceMapper.to_dto(event) for event in events]
 
         user_ids = sorted({event.user_id for event in events if event.user_id})
         identity_links = self._collect_identity_links(events)
@@ -70,7 +53,7 @@ class EventsDomainService:
         try:
             self.user_repo.upsert_users(user_ids)
             self.identity_repo.upsert_identities(identity_links)
-            inserted = self.event_repo.insert_events(event_dtos)
+            inserted = self.event_repo.insert_events(events)
 
             self.event_repo.commit()
         except Exception:

@@ -4,7 +4,7 @@ from datetime import datetime
 from uuid import UUID
 
 from app.domain.identity.service_protocol import IdentityLinkResult, IdentityServiceProtocol
-from app.domain.contracts.identity_repository_protocol import IdentityRepositoryProtocol
+from app.domain.identity.identity_repository_protocol import IdentityRepositoryProtocol
 
 
 class InvalidAnonymousIdError(Exception):

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from app.contracts.subscription import SubscriptionSnapshotDTO
+from app.domain.purchases.entities import SubscriptionSnapshotEntity
 from app.domain.events.registry import PurchasesEventsPlaceholderProtocol
 from app.domain.platform import PlatformUseCases
 from app.domain.purchases.service_protocol import PurchaseVerifyResult, PurchasesServiceProtocol
-from app.domain.contracts.app_repository_protocol import AppRepositoryProtocol
-from app.domain.contracts.subscription_repository_protocol import SubscriptionRepositoryProtocol
+from app.domain.app.app_repository_protocol import AppRepositoryProtocol
+from app.domain.purchases.subscription_repository_protocol import SubscriptionRepositoryProtocol
 from app.domain.contracts.user_repository_protocol import UserRepositoryProtocol
-from app.infra.services.apple_purchases import PurchasesClientProtocol
+from app.domain.purchases.app_puchases_protocol import PurchasesClientProtocol
 
 
 class InvalidPlatformError(Exception):
@@ -62,7 +62,6 @@ class PurchasesDomainService(PurchasesServiceProtocol):
         )
         result = self._build_result(snapshot)
 
-        
         if platform == "ios":
             status = self.purchases_client.verify("asd")
         else:
@@ -78,7 +77,7 @@ class PurchasesDomainService(PurchasesServiceProtocol):
         )
         return result
 
-    def _build_result(self, snapshot: SubscriptionSnapshotDTO | None) -> PurchaseVerifyResult:
+    def _build_result(self, snapshot: SubscriptionSnapshotEntity | None) -> PurchaseVerifyResult:
         if snapshot is None:
             return PurchaseVerifyResult(
                 status="invalid",

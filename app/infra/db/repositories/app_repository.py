@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.infra.db.models import App
-from app.domain.contracts.app_repository_protocol import AppRepositoryProtocol
+from app.domain.app.app_repository_protocol import AppRepositoryProtocol
 
 
 class AppRepository(AppRepositoryProtocol):

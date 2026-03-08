@@ -1,71 +1,25 @@
 from __future__ import annotations
 
-import hmac
 import threading
 import time
 from collections import defaultdict, deque
-from datetime import datetime
-from hashlib import sha256
-from typing import Literal
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from fastapi.encoders import jsonable_encoder
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import ValidationError
 
-from app.di.dependencies import get_events_domain_service
+from app.application.events.entities import EventsBatchCommand
+from app.application.events.event_usecases import EventUseCases, InvalidSignatureException
+from app.application.events.mappers import IngestEventsBatchCommandMapper
+from app.core.signature import SignatueVerifirer
+from app.di.dependencies import get_event_usecases
 from app.core.config import settings
-from app.domain.events.service import DomainAppNotFoundError, EventsDomainService
+from app.domain.events.service import DomainAppNotFoundError
 
 router = APIRouter()
 
 _rate_limit_hits: dict[tuple[int, str], deque[float]] = defaultdict(deque)
 _rate_limit_lock = threading.Lock()
-
-
-class DevicePayload(BaseModel):
-    os_version: str
-    model: str
-    language: str
-    timezone: str
-
-
-class IdsPayload(BaseModel):
-    anonymous_id: str
-    user_id: str | None = None
-
-
-class AttributionPayload(BaseModel):
-    click_id: str | None = None
-    source: Literal["facebook", "google", "organic", "unknown"]
-    campaign: str | None = None
-    adset: str | None = None
-    ad: str | None = None
-
-
-class GeoPayload(BaseModel):
-    country: str
-    ip: str | None = None
-
-
-class EventItemPayload(BaseModel):
-    event_id: str
-    event_name: str
-    event_time: datetime
-    platform: Literal["android", "ios"]
-    app_version: str
-    device: DevicePayload
-    ids: IdsPayload
-    attribution: AttributionPayload
-    geo: GeoPayload
-    params: dict = Field(default_factory=dict)
-
-
-class EventsBatchPayload(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-
-    sdk_version: str
-    sent_at: datetime
-    events: list[EventItemPayload] = Field(min_length=1, max_length=500)
 
 
 def _is_rate_limited(app_id: int, ip: str) -> bool:
@@ -81,18 +35,10 @@ def _is_rate_limited(app_id: int, ip: str) -> bool:
     return False
 
 
-def _verify_signature(raw_body: bytes, signature_header: str) -> bool:
-    received = signature_header.strip()
-    if received.lower().startswith("sha256="):
-        received = received.split("=", 1)[1]
-    expected = hmac.new(settings.app_secret.encode("utf-8"), raw_body, sha256).hexdigest()
-    return hmac.compare_digest(expected, received)
-
-
 @router.post("/batch", status_code=status.HTTP_202_ACCEPTED, tags=["v1"])
 async def ingest_events_batch(
     request: Request,
-    domain_service: EventsDomainService = Depends(get_events_domain_service),
+    use_cases: EventUseCases = Depends(get_event_usecases),
     x_app_id: int = Header(alias="X-App-Id"),
     x_env: str = Header(alias="X-Env"),
     x_signature: str = Header(alias="X-Signature"),
@@ -105,21 +51,27 @@ async def ingest_events_batch(
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded")
 
     raw_body = await request.body()
-    if not _verify_signature(raw_body, x_signature):
+    if not SignatueVerifirer.verify_signature(raw_body, x_signature):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid signature")
-
+        
     try:
-        payload = EventsBatchPayload.model_validate_json(raw_body)
+        payload = EventsBatchCommand.model_validate_json(raw_body)
     except ValidationError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=jsonable_encoder(exc.errors())) from exc
+    
+    command = IngestEventsBatchCommandMapper.from_transport(
+        app_id=x_app_id,
+        env=x_env,
+        signature=x_signature,
+        payload=payload,
+    )
 
     try:
-        result = domain_service.process_batch(
-            app_id=x_app_id,
-            environment=x_env,
-            batch_payload=payload.model_dump(mode="python"),
-        )
+        result = use_cases.process_batch(command)
+        
     except DomainAppNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except InvalidSignatureException as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid signature")
 
     return result.as_dict()

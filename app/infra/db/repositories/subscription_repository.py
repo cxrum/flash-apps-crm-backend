@@ -6,9 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
-from app.contracts.subscription import SubscriptionSnapshotDTO
+from app.domain.purchases.entities import SubscriptionSnapshotEntity
+from app.domain.purchases.mappers import SubscriptionSnapshotMappers
 from app.infra.db.models import Subscription
-from app.domain.contracts.subscription_repository_protocol import SubscriptionRepositoryProtocol
+from app.domain.purchases.subscription_repository_protocol import SubscriptionRepositoryProtocol
 
 
 class SubscriptionRepository(SubscriptionRepositoryProtocol):
@@ -21,7 +22,7 @@ class SubscriptionRepository(SubscriptionRepositoryProtocol):
         app_id: int,
         user_id: str,
         platform: str,
-    ) -> SubscriptionSnapshotDTO | None:
+    ) -> SubscriptionSnapshotEntity | None:
         stmt = (
             select(Subscription)
             .where(
@@ -37,7 +38,7 @@ class SubscriptionRepository(SubscriptionRepositoryProtocol):
 
         raw_price = subscription.price
         price = float(raw_price) if isinstance(raw_price, Decimal) else float(raw_price or 0)
-        return SubscriptionSnapshotDTO(
+        return SubscriptionSnapshotEntity(
             subscription_id=subscription.id,
             status=subscription.status,
             expires_at=subscription.expires_at,
@@ -45,23 +46,18 @@ class SubscriptionRepository(SubscriptionRepositoryProtocol):
             currency=subscription.currency,
         )
 
-    def upsert_subscription(self, subscription: dict) -> None:
-        stmt = pg_insert(Subscription).values([subscription])
+    def upsert_subscription(self, subscription: SubscriptionSnapshotEntity) -> None:
+        stmt = pg_insert(Subscription).values([SubscriptionSnapshotMappers.to_dict(subscription)])
         self.db.execute(
             stmt.on_conflict_do_update(
                 index_elements=[
-                    Subscription.app_id,
-                    Subscription.user_id,
-                    Subscription.platform,
-                    Subscription.product_id,
+                    Subscription.id,
                 ],
                 set_={
                     "status": stmt.excluded.status,
-                    "started_at": stmt.excluded.started_at,
                     "expires_at": stmt.excluded.expires_at,
                     "price": stmt.excluded.price,
                     "currency": stmt.excluded.currency,
-                    "last_verified_at": stmt.excluded.last_verified_at,
                 },
             )
         )
