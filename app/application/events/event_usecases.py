@@ -3,7 +3,7 @@ from datetime import datetime
 
 from app.application.events.entities import EventItemCommand, IngestEventsBatchCommand
 from app.domain.contracts.repository_protocol import RepositoryFactoryProtocol
-from app.domain.events.mappers import EventEntityMapper
+from app.application.events.mappers import EventEntityMapper
 from app.domain.events.service import EventsDomainService
 from app.infra.uow_base import UnitOfWorkProtocol
 
