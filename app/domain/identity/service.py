@@ -18,17 +18,12 @@ class IdentityDomainService(IdentityServiceProtocol):
     def link_identity(self, *, anonymous_id: str, user_id: str, linked_at: datetime) -> IdentityLinkResult:
         self._validate_anonymous_id(anonymous_id)
 
-        try:
-            self.repository.upsert_user(user_id)
-            self.repository.upsert_identity(
-                anonymous_id=anonymous_id,
-                user_id=user_id,
-                linked_at=linked_at,
-            )
-            self.repository.commit()
-        except Exception:
-            self.repository.rollback()
-            raise
+        self.repository.upsert_user(user_id)
+        self.repository.upsert_identity(
+            anonymous_id=anonymous_id,
+            user_id=user_id,
+            linked_at=linked_at,
+        )
 
         return IdentityLinkResult(
             status="linked",
@@ -42,4 +37,3 @@ class IdentityDomainService(IdentityServiceProtocol):
             UUID(anonymous_id)
         except ValueError as exc:
             raise InvalidAnonymousIdError("anonymous_id must be a valid UUID") from exc
-

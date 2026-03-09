@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
 
 from app.domain.events.entities import EventEntity
-from app.domain.events.mappers import EventEntityMapper
 from app.domain.app.app_repository_protocol import AppRepositoryProtocol
 from app.domain.events.events_repository_protocol import EventsRepositoryProtocol
 from app.domain.identity.identity_repository_protocol import IdentityRepositoryProtocol
@@ -50,15 +48,9 @@ class EventsDomainService:
         user_ids = sorted({event.user_id for event in events if event.user_id})
         identity_links = self._collect_identity_links(events)
 
-        try:
-            self.user_repo.upsert_users(user_ids)
-            self.identity_repo.upsert_identities(identity_links)
-            inserted = self.event_repo.insert_events(events)
-
-            self.event_repo.commit()
-        except Exception:
-            self.event_repo.rollback()
-            raise
+        self.user_repo.upsert_users(user_ids)
+        self.identity_repo.upsert_identities(identity_links)
+        inserted = self.event_repo.insert_events(events)
 
         return BatchIngestResult(
             status="accepted",

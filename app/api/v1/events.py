@@ -9,9 +9,9 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import ValidationError
 
 from app.application.events.entities import EventsBatchCommand
-from app.application.events.event_usecases import EventUseCases, InvalidSignatureException
+from app.application.events.event_usecases import EventUseCases
 from app.application.events.mappers import IngestEventsBatchCommandMapper
-from app.core.signature import SignatueVerifirer
+from app.core.signature import SignatureVerifirer
 from app.di.dependencies import get_event_usecases
 from app.core.config import settings
 from app.domain.events.service import DomainAppNotFoundError
@@ -51,7 +51,7 @@ async def ingest_events_batch(
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded")
 
     raw_body = await request.body()
-    if not SignatueVerifirer.verify_signature(raw_body, x_signature):
+    if not SignatureVerifirer.verify_signature(raw_body, settings.app_secret.encode("utf-8"),  x_signature):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid signature")
         
     try:
@@ -68,10 +68,7 @@ async def ingest_events_batch(
 
     try:
         result = use_cases.process_batch(command)
-        
     except DomainAppNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
-    except InvalidSignatureException as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid signature")
 
     return result.as_dict()

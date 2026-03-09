@@ -4,97 +4,86 @@ from sqlalchemy.orm import Session
 from app.application.events.event_usecases import EventUseCases
 from app.application.identity.identity_usecases import IdentityUseCases
 from app.application.purchases.purchase_usecases import PurchasesUseCases
+from app.domain.app.app_repository_protocol import AppRepositoryProtocol
+from app.domain.contracts.repository_protocol import RepositoryFactoryProtocol
+from app.domain.contracts.user_repository_protocol import UserRepositoryProtocol
 from app.domain.events.registry import PurchasesEventsPlaceholder, PurchasesEventsPlaceholderProtocol
-from app.domain.events.service import EventsDomainService
-from app.domain.identity.service import IdentityDomainService
-from app.domain.identity.service_protocol import IdentityServiceProtocol
+from app.domain.purchases.app_puchases_protocol import PurchasesClientProtocol
 from app.domain.purchases.service import PurchasesDomainService
 from app.domain.purchases.service_protocol import PurchasesServiceProtocol
-from app.infra.db.repositories.app_repository import AppRepository
-from app.domain.app.app_repository_protocol import AppRepositoryProtocol
-from app.infra.db.repositories.events_repository import EventsRepository
-from app.domain.events.events_repository_protocol import EventsRepositoryProtocol
-from app.infra.db.repositories.identity_repository import IdentityRepository
-from app.domain.identity.identity_repository_protocol import IdentityRepositoryProtocol
-from app.infra.db.repositories.subscription_repository import SubscriptionRepository
 from app.domain.purchases.subscription_repository_protocol import SubscriptionRepositoryProtocol
-from app.infra.db.repositories.user_repository import UserRepository
-from app.domain.contracts.user_repository_protocol import UserRepositoryProtocol
-from app.infra.db.session import get_db
+from app.infra.db.postgres_uow import SqlAlchemyUnitOfWork
+from app.infra.db.repositories.factory import RepositoryFactory
+from app.infra.db.session import SessionLocal, get_db
 from app.infra.services.apple_purchases import ApplePurchasesService
+from app.infra.uow_base import UnitOfWorkProtocol
 
 
-def get_events_repository(db: Session = Depends(get_db)) -> EventsRepositoryProtocol:
-    return EventsRepository(db)
+def get_uow() -> UnitOfWorkProtocol:
+    return SqlAlchemyUnitOfWork(SessionLocal)
 
 
-def get_app_repository(db: Session = Depends(get_db)) -> AppRepositoryProtocol:
-    return AppRepository(db)
+def get_repository_factory() -> RepositoryFactoryProtocol:
+    return RepositoryFactory()
 
 
-def get_user_repository(db: Session = Depends(get_db)) -> UserRepositoryProtocol:
-    return UserRepository(db)
+def get_app_repository(
+    db: Session = Depends(get_db),
+    repo_factory: RepositoryFactoryProtocol = Depends(get_repository_factory),
+) -> AppRepositoryProtocol:
+    return repo_factory.app_repo(db)
 
 
-def get_identity_repository(db: Session = Depends(get_db)) -> IdentityRepositoryProtocol:
-    return IdentityRepository(db)
+def get_user_repository(
+    db: Session = Depends(get_db),
+    repo_factory: RepositoryFactoryProtocol = Depends(get_repository_factory),
+) -> UserRepositoryProtocol:
+    return repo_factory.user_repo(db)
 
-def get_subscription_repository(db: Session = Depends(get_db)) -> SubscriptionRepositoryProtocol:
-    return SubscriptionRepository(db)
+
+def get_subscription_repository(
+    db: Session = Depends(get_db),
+    repo_factory: RepositoryFactoryProtocol = Depends(get_repository_factory),
+) -> SubscriptionRepositoryProtocol:
+    return repo_factory.subscription_repo(db)
+
+
+def get_event_usecases(
+    uow: UnitOfWorkProtocol = Depends(get_uow),
+    repo_factory: RepositoryFactoryProtocol = Depends(get_repository_factory),
+) -> EventUseCases:
+    return EventUseCases(uow=uow, repository_factory=repo_factory)
+
+
+def get_identity_usecases(
+    uow: UnitOfWorkProtocol = Depends(get_uow),
+    repo_factory: RepositoryFactoryProtocol = Depends(get_repository_factory),
+) -> IdentityUseCases:
+    return IdentityUseCases(uow=uow, repository_factory=repo_factory)
 
 
 def get_purchases_events_placeholder() -> PurchasesEventsPlaceholderProtocol:
     return PurchasesEventsPlaceholder()
 
 
-def get_apple_purchases_service () -> PurchasesServiceProtocol:
-    return ApplePurchasesService() # type: ignore
+def get_apple_purchases_service() -> PurchasesClientProtocol:
+    return ApplePurchasesService()
 
-
-def get_events_domain_service(
-    event_repository: EventsRepositoryProtocol = Depends(get_events_repository),
-    app_repository: AppRepositoryProtocol = Depends(get_app_repository),
-    user_repository: UserRepositoryProtocol = Depends(get_user_repository),
-    identity_repository: IdentityRepositoryProtocol = Depends(get_identity_repository),
-) -> EventsDomainService:
-    return EventsDomainService(
-        event_repo=event_repository,
-        app_repo=app_repository,
-        user_repo=user_repository,
-        identity_repo=identity_repository,
-    )
-
-
-def get_event_usecases(
-    event_domain_service: EventsDomainService = Depends(get_events_domain_service),
-) -> EventUseCases:
-    return EventUseCases(event_domain_service)
 
 def get_purchases_service(
     app_repository: AppRepositoryProtocol = Depends(get_app_repository),
     user_repository: UserRepositoryProtocol = Depends(get_user_repository),
     subscription_repository: SubscriptionRepositoryProtocol = Depends(get_subscription_repository),
     events_placeholder: PurchasesEventsPlaceholderProtocol = Depends(get_purchases_events_placeholder),
-    apple_purchases_service: ApplePurchasesService = Depends(get_apple_purchases_service)
+    apple_purchases_service: PurchasesClientProtocol = Depends(get_apple_purchases_service),
 ) -> PurchasesServiceProtocol:
     return PurchasesDomainService(
         app_repository=app_repository,
         user_repository=user_repository,
         subscription_repository=subscription_repository,
         events_placeholder=events_placeholder,
-        purchases_client=apple_purchases_service
+        purchases_client=apple_purchases_service,
     )
-    
-def get_identity_service(
-    repository: IdentityRepositoryProtocol = Depends(get_identity_repository),
-) -> IdentityServiceProtocol:
-    return IdentityDomainService(repository)
-
-
-def get_identity_usecases(
-    identity_service: IdentityServiceProtocol = Depends(get_identity_service),
-) -> IdentityUseCases:
-    return IdentityUseCases(identity_service)
 
 
 def get_purchases_usecases(

@@ -11,7 +11,7 @@ class DailyAggregateRepository(DailyAggregateRepositoryProtocol):
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def upsert_daily_aggregate(self, aggregate: dict) -> None:
+    def upsert_daily_aggregate(self, aggregate: dict) -> None: #FIXME: get rid of dict usage, use entity class from domain level instead 
         stmt = pg_insert(DailyAggregate).values([aggregate])
         self.db.execute(
             stmt.on_conflict_do_update(

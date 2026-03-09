@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
@@ -48,10 +48,3 @@ class UserRepository(UserRepositoryProtocol):
         ]
         stmt = pg_insert(User).values(rows)
         self.db.execute(stmt.on_conflict_do_nothing(index_elements=[User.user_id]))
-
-
-    def commit(self) -> None:
-        self.db.commit()
-
-    def rollback(self) -> None:
-        self.db.rollback()

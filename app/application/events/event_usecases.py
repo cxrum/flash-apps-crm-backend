@@ -1,26 +1,22 @@
 
-
 from datetime import datetime
-from hashlib import sha256
-import hmac
 
-from app.application.events.entities import IngestEventsBatchCommand
-from app.application.events.entities import EventItemCommand
-from app.core.config import Settings
+from app.application.events.entities import EventItemCommand, IngestEventsBatchCommand
+from app.domain.contracts.repository_protocol import RepositoryFactoryProtocol
 from app.domain.events.mappers import EventEntityMapper
 from app.domain.events.service import EventsDomainService
+from app.infra.uow_base import UnitOfWorkProtocol
 
-class InvalidSignatureException(Exception):
-    def __init__(self, *args: object) -> None:
-        super().__init__(*args)
 
 class EventUseCases:
     def __init__(
-        self, 
-        event_domain_service: EventsDomainService
-        ) -> None:
-        self.event_domain_service = event_domain_service
-    
+        self,
+        uow: UnitOfWorkProtocol,
+        repository_factory: RepositoryFactoryProtocol,
+    ) -> None:
+        self.uow = uow
+        self.repository_factory = repository_factory
+
     def process_batch(self, command: IngestEventsBatchCommand):
         events_data: list[EventItemCommand] = command.payload.events
         received = len(events_data)
@@ -37,10 +33,20 @@ class EventUseCases:
             )
             for event_data in events_data
         ]
-        result = self.event_domain_service.process_batch(
+
+        with self.uow as uow:
+            if uow.session is None:
+                raise RuntimeError("UoW session is not started")
+
+            event_domain_service = EventsDomainService(
+                event_repo=self.repository_factory.event_repo(uow.session),
+                app_repo=self.repository_factory.app_repo(uow.session),
+                user_repo=self.repository_factory.user_repo(uow.session),
+                identity_repo=self.repository_factory.identity_repo(uow.session),
+            )
+
+            return event_domain_service.process_batch(
                 app_id=command.app_id,
                 events=events,
-                received=received
+                received=received,
             )
-        
-        return result

@@ -55,10 +55,3 @@ class IdentityRepository(IdentityRepositoryProtocol):
                 where=stmt.excluded.user_id.is_not(None),
             )
         )
-        
-        
-    def commit(self) -> None:
-        self.db.commit()
-
-    def rollback(self) -> None:
-        self.db.rollback()
