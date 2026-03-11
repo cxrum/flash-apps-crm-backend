@@ -1,0 +1,2 @@
+class ApplicationLevelError(Exception):
+    pass

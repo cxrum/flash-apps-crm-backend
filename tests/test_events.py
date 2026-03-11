@@ -14,7 +14,8 @@ from app.application.events.event_usecases import EventUseCases
 from app.core.config import settings
 from app.core.signature import SignatureVerifirer
 from app.di.dependencies import get_event_usecases
-from app.domain.events.service import BatchIngestResult, DomainAppNotFoundError
+from app.domain.events.service import BatchIngestResult
+from app.domain.exceptions import AppNotFoundError
 from app.infra.db.puow import SqlAlchemyUnitOfWork
 from app.main import app
 from tests.factories import EventPayloadFactory, EventsPayloadFactory
@@ -134,7 +135,7 @@ def test_events_batch_api_401_signature_error() -> None:
     assert response.json()["detail"] == "Invalid signature"
 
 def test_events_batch_api_returns_404_on_unknown_app() -> None:
-    use_case_stub = StubEventUseCases(error=DomainAppNotFoundError("Unknown app id"))
+    use_case_stub = StubEventUseCases(error=AppNotFoundError("Unknown app id"))
     app.dependency_overrides[get_event_usecases] = lambda: use_case_stub
 
     payload = EventsPayloadFactory.build()

@@ -6,11 +6,11 @@ from app.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
 from app.domain.app_user.app_user_repository_protocol import CrmAppUserRepositoryProtocol
 from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
+from app.domain.exceptions import AppNotFoundError
 from app.domain.user.CrmUserEntity import CrmUserEntity
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
 
-class DomainAppNotFoundError(Exception):
-    pass
+#FIXME: Move application orchestration logic to the application level. Keep the domain-level rules here.
 
 @dataclass
 class BatchIngestResult:
@@ -40,7 +40,7 @@ class EventsDomainService:
 
     def process_batch(self, *, app_id: int, events: list[EventEntity], received: int) -> BatchIngestResult:
         if not self.app_repo.get_by_id(app_id):
-            raise DomainAppNotFoundError("Unknown app id")
+            raise AppNotFoundError("Unknown app id")
 
         inserted_events = self.event_repo.insert_many(events)
         inserted = len(inserted_events)

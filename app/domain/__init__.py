@@ -23,6 +23,7 @@ from app.domain.user_role.CrmUserRoleEntity import CrmUserRoleEntity
 from app.domain.audit_log.CrmAuditLogEntity import (
     CrmAuditLogEntity,
 )
+from app.domain.exceptions import DomainError
 from app.domain.repositories import (
     CrmAppPlatformRepositoryProtocol,
     CrmAppRepositoryProtocol,
@@ -59,6 +60,7 @@ __all__ = [
     "CrmClickEntity",
     "CrmConversionDefinitionEntity",
     "CrmCurrentParamEntity",
+    "DomainError",
     "EventEntity",
     "CrmInstallEntity",
     "CrmMetricDefinitionEntity",

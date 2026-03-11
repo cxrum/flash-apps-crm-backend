@@ -64,3 +64,29 @@ class GetSdkConfigCommand(FlexibleCommand):
     app_code: str | None = None
     platform: str | None = None
     crm_user_id: str | None = None
+
+class SdkCreateAppCommand(FlexibleCommand):
+    id: int
+    name: str
+    code_slug: str
+    screanshots: dict
+    logo_ur: str | None = None
+    tech_description: str | None = None
+    description: str | None = None
+
+class SdkCreateAppPlatformCommand(FlexibleCommand):
+    app_id: int
+    platform: str
+    package_name: str
+    install_key: str
+    store_url: str | None = None
+    sdk_public_key: str | None = None
+    sdk_secret_hash: str | None = None
+    status: str = "active"
+    platform_id: int | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+    
+    
+class SdkApplicationConfigurationCommand(FlexibleCommand):
+    platform_id: int

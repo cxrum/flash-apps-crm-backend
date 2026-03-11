@@ -6,8 +6,9 @@ from app.application.sdk.entities import (
     SdkInstallCommand,
     SdkParamsUpdateCommand,
     SdkPushRegisterCommand,
+    SdkCreateAppCommand,
 )
-from app.application.sdk.mappers import SdkCommandMapper
+from app.application.sdk.mappers import SdkCommandMapper, SdkDomainMapper
 
 __all__ = [
     "GetSdkConfigCommand",
@@ -18,4 +19,6 @@ __all__ = [
     "SdkParamsUpdateCommand",
     "SdkPushRegisterCommand",
     "SdkCommandMapper",
+    "SdkDomainMapper",
+    "SdkCreateAppCommand"
 ]

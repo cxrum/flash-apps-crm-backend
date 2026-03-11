@@ -1,8 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 
-
-@dataclass(frozen=True)
+@dataclass
 class CrmAppEntity:
     name: str
     code_slug: str
@@ -14,3 +13,19 @@ class CrmAppEntity:
     app_id: int | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
+
+    def activate(self) -> None:
+        self.status = "active"
+        self.updated_at = datetime.now()
+
+    def draft(self) -> None:
+        self.status = "draft"
+        self.updated_at = datetime.now()
+    
+    def archive(self) -> None:
+        self.status = "archived"
+        self.updated_at = datetime.now()
+
+    def add_screenshot(self, url: str) -> None:
+        self.screenshots.append(url)
+        self.updated_at = datetime.now()
