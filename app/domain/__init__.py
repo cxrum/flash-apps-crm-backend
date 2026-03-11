@@ -41,7 +41,6 @@ from app.domain.repositories import (
     CrmPushCampaignRepositoryProtocol,
     CrmPushEventRepositoryProtocol,
     CrmPushTokenRepositoryProtocol,
-    CrmRepositoryFactoryProtocol,
     CrmRolePermissionRepositoryProtocol,
     CrmRoleRepositoryProtocol,
     CrmSecretTemplateRepositoryProtocol,
@@ -49,6 +48,7 @@ from app.domain.repositories import (
     CrmUserRepositoryProtocol,
     CrmUserRoleRepositoryProtocol,
 )
+from app.domain.uow import CrmUnitOfWorkProtocol
 
 __all__ = [
     "CrmAppEntity",
@@ -91,10 +91,10 @@ __all__ = [
     "CrmPushCampaignRepositoryProtocol",
     "CrmPushEventRepositoryProtocol",
     "CrmPushTokenRepositoryProtocol",
-    "CrmRepositoryFactoryProtocol",
     "CrmRolePermissionRepositoryProtocol",
     "CrmRoleRepositoryProtocol",
     "CrmSecretTemplateRepositoryProtocol",
+    "CrmUnitOfWorkProtocol",
     "CrmUserAppAccessRepositoryProtocol",
     "CrmUserRepositoryProtocol",
     "CrmUserRoleRepositoryProtocol",

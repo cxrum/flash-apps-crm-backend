@@ -15,7 +15,7 @@ from app.core.config import settings
 from app.core.signature import SignatureVerifirer
 from app.di.dependencies import get_event_usecases
 from app.domain.events.service import BatchIngestResult, DomainAppNotFoundError
-from app.infra.db.postgres_uow import SqlAlchemyUnitOfWork
+from app.infra.db.puow import SqlAlchemyUnitOfWork
 from app.main import app
 from tests.factories import EventPayloadFactory, EventsPayloadFactory
 from tests.stubs import StubFallingRepositoryFactory, StubRepositoryFactory, StubSession

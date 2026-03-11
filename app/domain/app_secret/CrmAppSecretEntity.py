@@ -9,7 +9,7 @@ class CrmAppSecretEntity:
     encrypted_value: str
     platform_id: int | None = None
     active_flag: bool = True
-    version: Decimal = Decimal("1")
+    version: float = 1
     secret_id: int | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None

@@ -11,7 +11,7 @@ from app.application.identity.identity_usecases import IdentityUseCases
 from app.di.dependencies import get_identity_usecases
 from app.domain.identity.service import InvalidAnonymousIdError
 from app.domain.identity.service_protocol import IdentityLinkResult
-from app.infra.db.postgres_uow import SqlAlchemyUnitOfWork
+from app.infra.db.puow import SqlAlchemyUnitOfWork
 from app.main import app
 from tests.stubs import IdentityOnlyRepositoryFactory, StubSession
 

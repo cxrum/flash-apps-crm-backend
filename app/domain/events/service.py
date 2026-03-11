@@ -42,8 +42,8 @@ class EventsDomainService:
         if not self.app_repo.get_by_id(app_id):
             raise DomainAppNotFoundError("Unknown app id")
 
-        
-        inserted = self.event_repo.insert_many(events)
+        inserted_events = self.event_repo.insert_many(events)
+        inserted = len(inserted_events)
 
         return BatchIngestResult(
             status="accepted",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.infra.db.postgres_uow import SqlAlchemyUnitOfWork
+from app.infra.db.puow import SqlAlchemyUnitOfWork
 from tests.stubs import StubSession
 
 
