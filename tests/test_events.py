@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.v1.events import _is_rate_limited
+from app.api.v2.crm.events import _is_rate_limited
 from app.application.events.entities import EventItemCommand, EventsBatchCommand, IngestEventsBatchCommand
 from app.application.events.event_usecases import EventUseCases
 from app.core.config import settings

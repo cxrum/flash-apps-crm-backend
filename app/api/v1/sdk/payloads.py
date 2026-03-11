@@ -1,0 +1,66 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Literal
+
+from pydantic import Field
+
+from app.api.v1.transport import TransportPayload
+
+
+class SdkDevicePayload(TransportPayload):
+    os_name: str | None = None
+    os_version: str | None = None
+    device_brand: str | None = None
+    device_model: str | None = None
+    app_version: str | None = None
+    sdk_version: str | None = None
+
+
+class SdkInstallPayload(TransportPayload):
+    install_key: str
+    idempotency_key: str
+    click_id: str | None = None
+    params: dict[str, Any] = Field(default_factory=dict)
+    device: SdkDevicePayload
+
+
+class SdkEventPayload(TransportPayload):
+    type: Literal["metric", "conversion"]
+    key: str
+    event_time: datetime | None = None
+    amount: float | None = None
+    currency: str | None = None
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
+class SdkEventsPayload(TransportPayload):
+    install_key: str
+    click_id: str
+    idempotency_key: str
+    events: list[SdkEventPayload] = Field(min_length=1)
+
+
+class SdkParamsUpdatePayload(TransportPayload):
+    click_id: str
+    idempotency_key: str
+    params: dict[str, Any] = Field(default_factory=dict)
+    event_time: datetime | None = None
+
+
+class SdkPushRegisterPayload(TransportPayload):
+    install_key: str
+    token: str
+    provider: str | None = None
+    click_id: str | None = None
+    crm_user_id: str | None = None
+    idempotency_key: str | None = None
+    device: SdkDevicePayload | None = None
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
+class SdkConfigQueryPayload(TransportPayload):
+    install_key: str | None = None
+    app_code: str | None = None
+    platform: str | None = None
+    crm_user_id: str | None = None
