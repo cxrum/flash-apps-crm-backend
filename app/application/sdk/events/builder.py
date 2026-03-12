@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, Protocol, Self
 
-from app.application.exceptions import ApplicationLevelError
+from app.application.exceptions import ApplicationError
 from app.domain.events.CrmEventEntity import EventEntity
 
 
@@ -36,9 +36,9 @@ class _BaseSdkEventBuilder:
         created_at: datetime | None = None,
     ) -> None:
         if not event_id:
-            raise ApplicationLevelError("Event id is required")
+            raise ApplicationError("Event id is required")
         if not click_id:
-            raise ApplicationLevelError("Click id is required")
+            raise ApplicationError("Click id is required")
 
         self._event_id = event_id
         self._click_id = click_id
@@ -67,19 +67,19 @@ class _BaseSdkEventBuilder:
         if value is None:
             return None
         if value < 0:
-            raise ApplicationLevelError("Money value cannot be negative")
+            raise ApplicationError("Money value cannot be negative")
         return float(value)
 
     def _set_event_type(self, value: str) -> Self:
         if value != self._event_type:
-            raise ApplicationLevelError(
+            raise ApplicationError(
                 f"{self.__class__.__name__} supports only event_type={self._event_type!r}",
             )
         return self
 
     def _set_event_key(self, value: str) -> Self:
         if not value:
-            raise ApplicationLevelError("Event key is required")
+            raise ApplicationError("Event key is required")
         self._event_key = value
         return self
 
@@ -90,7 +90,7 @@ class _BaseSdkEventBuilder:
     def _set_payload(self, value: dict[str, Any]) -> Self:
         payload = self.form_payload(**value)
         if not self.validate_payload(payload):
-            raise ApplicationLevelError("Invalid event payload")
+            raise ApplicationError("Invalid event payload")
         self._payload = payload
         return self
 
@@ -104,7 +104,7 @@ class _BaseSdkEventBuilder:
     def form_payload(self, **kwargs: Any) -> dict[str, Any]:
         payload = dict(kwargs)
         if not self.validate_payload(payload):
-            raise ApplicationLevelError("Payload contains reserved event keys")
+            raise ApplicationError("Payload contains reserved event keys")
         return payload
 
     def _validate_money_fields(self) -> None:
@@ -132,25 +132,25 @@ class MetricsEventBuilder(_BaseSdkEventBuilder):
 
     def _set_amount(self, value: float | None) -> Self:
         if value is not None:
-            raise ApplicationLevelError("Metric events cannot carry money values")
+            raise ApplicationError("Metric events cannot carry money values")
         self._amount = None
         return self
 
     def _set_currency(self, value: str | None) -> Self:
         if value is not None:
-            raise ApplicationLevelError("Metric events cannot carry money values")
+            raise ApplicationError("Metric events cannot carry money values")
         self._currency = None
         return self
 
     def _set_amount_in_usd(self, value: float | None) -> Self:
         if value is not None:
-            raise ApplicationLevelError("Metric events cannot carry money values")
+            raise ApplicationError("Metric events cannot carry money values")
         self._amount_usd = None
         return self
 
     def _validate_money_fields(self) -> None:
         if self._amount is not None or self._currency is not None or self._amount_usd is not None:
-            raise ApplicationLevelError("Metric events cannot carry money values")
+            raise ApplicationError("Metric events cannot carry money values")
 
 
 class RevenueEventBuilder(_BaseSdkEventBuilder):
@@ -166,7 +166,7 @@ class RevenueEventBuilder(_BaseSdkEventBuilder):
             return self
         normalized = value.strip().upper()
         if len(normalized) != 3:
-            raise ApplicationLevelError("Revenue event currency must be a 3-letter code")
+            raise ApplicationError("Revenue event currency must be a 3-letter code")
         self._currency = normalized
         return self
 
@@ -176,9 +176,9 @@ class RevenueEventBuilder(_BaseSdkEventBuilder):
 
     def _validate_money_fields(self) -> None:
         if self._amount is None:
-            raise ApplicationLevelError("Revenue events require amount")
+            raise ApplicationError("Revenue events require amount")
         if self._currency is None:
-            raise ApplicationLevelError("Revenue events require currency")
+            raise ApplicationError("Revenue events require currency")
 
 
 class ConversionEventBuilder(_BaseSdkEventBuilder):
@@ -186,22 +186,22 @@ class ConversionEventBuilder(_BaseSdkEventBuilder):
 
     def _set_amount(self, value: float | None) -> Self:
         if value is not None:
-            raise ApplicationLevelError("Non-revenue conversion events cannot carry money values")
+            raise ApplicationError("Non-revenue conversion events cannot carry money values")
         self._amount = None
         return self
 
     def _set_currency(self, value: str | None) -> Self:
         if value is not None:
-            raise ApplicationLevelError("Non-revenue conversion events cannot carry money values")
+            raise ApplicationError("Non-revenue conversion events cannot carry money values")
         self._currency = None
         return self
 
     def _set_amount_in_usd(self, value: float | None) -> Self:
         if value is not None:
-            raise ApplicationLevelError("Non-revenue conversion events cannot carry money values")
+            raise ApplicationError("Non-revenue conversion events cannot carry money values")
         self._amount_usd = None
         return self
 
     def _validate_money_fields(self) -> None:
         if self._amount is not None or self._currency is not None or self._amount_usd is not None:
-            raise ApplicationLevelError("Non-revenue conversion events cannot carry money values")
+            raise ApplicationError("Non-revenue conversion events cannot carry money values")

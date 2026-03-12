@@ -1,6 +1,6 @@
 from app.application.contracts.encryption import EncryptionServiceProtocol
 from app.application.sdk.entities import SdkApplicationConfigurationCommand, SdkCreateAppCommand, SdkCreateAppPlatformCommand
-from app.application.exceptions import ApplicationLevelError
+from app.application.exceptions import ApplicationError
 from app.application.sdk.mappers import SdkDomainMapper
 from app.application.sdk.usecases.apps.responses import AppConfigQueryEntry, AppConfigQueryResponse, AppTemplateConfigQueryEntry, CreateAppResponse, CreatePlatformResponse
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
@@ -24,7 +24,7 @@ class AppService:
         saved_app = self._uow.app_repo.save(app)
             
         if saved_app.app_id is None:
-            raise ApplicationLevelError("App repository returned entity without app_id")
+            raise ApplicationError("App repository returned entity without app_id")
         
         return CreateAppResponse(app_id=saved_app.app_id)
 
@@ -32,16 +32,16 @@ class AppService:
         platform_app = SdkDomainMapper.app_platform_from_command(command)
         
         if not platform_app.is_valid_platform():
-            raise ApplicationLevelError("App platform does not valid")
+            raise ApplicationError("App platform does not valid")
 
         app = self._uow.app_repo.get_by_id(platform_app.app_id)
         if app is None:
-            raise ApplicationLevelError(f"App with id {platform_app.app_id} doesnt exist")
+            raise ApplicationError(f"App with id {platform_app.app_id} doesnt exist")
 
         saved_platform_app = self._uow.app_platform_repo.save(platform_app)
             
         if saved_platform_app.platform_id is None:
-            raise ApplicationLevelError("App platfrom repository returned empty entity")
+            raise ApplicationError("App platfrom repository returned empty entity")
         
         return CreatePlatformResponse(platform_id=saved_platform_app.platform_id)
 
@@ -91,7 +91,7 @@ class AppService:
         )
         
         if platform is None or platform.platform_id is None:
-            raise ApplicationLevelError(
+            raise ApplicationError(
                 f"Platform {command.platform} is not configured for app {command.app_id}",
             )
 
@@ -107,6 +107,10 @@ class AppService:
         for template in templates:
             if template.template_id is None:
                 continue
+            
+            if template.is_server_private():
+                continue
+            
             secret = latest_secrets.get(template.template_id)
             value = (
                 self._encryption_service.decrypt(secret.encrypted_value)

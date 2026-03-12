@@ -4,8 +4,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.application.exceptions import ApplicationLevelError
-from app.application.sdk.event import (
+from app.application.exceptions import ApplicationError
+from app.application.sdk.events.builder import (
     ConversionEventBuilder,
     MetricsEventBuilder,
     RevenueEventBuilder,
@@ -40,7 +40,7 @@ def test_metrics_event_builder_rejects_money_values() -> None:
         event_key="session_start",
     )
 
-    with pytest.raises(ApplicationLevelError, match="cannot carry money values"):
+    with pytest.raises(ApplicationError, match="cannot carry money values"):
         builder._set_amount(9.99)
 
 
@@ -51,7 +51,7 @@ def test_revenue_event_builder_requires_amount_and_currency() -> None:
         event_key="purchase",
     )
 
-    with pytest.raises(ApplicationLevelError, match="require amount"):
+    with pytest.raises(ApplicationError, match="require amount"):
         builder.build()
 
 
@@ -102,5 +102,5 @@ def test_conversion_event_builder_rejects_money_values() -> None:
         event_key="signup_complete",
     )
 
-    with pytest.raises(ApplicationLevelError, match="cannot carry money values"):
+    with pytest.raises(ApplicationError, match="cannot carry money values"):
         builder._set_currency("USD")

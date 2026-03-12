@@ -259,7 +259,7 @@ def build_secret_template_entity(**overrides: Any) -> CrmSecretTemplateEntity:
             {
                 "code": "api_key",
                 "display_name": "API Key",
-                "scope": "server_private",
+                "scope": "client_public",
                 "value_type": "text",
             },
             overrides,

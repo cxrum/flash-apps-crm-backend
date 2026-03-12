@@ -1,3 +1,3 @@
-from app.application.exceptions import ApplicationLevelError
+from app.application.exceptions import ApplicationError
 
-__all__ = ["ApplicationLevelError"]
+__all__ = ["ApplicationError"]

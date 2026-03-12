@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from app.application.exceptions import ApplicationLevelError
+from app.application.exceptions import ApplicationError
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.domain.exceptions import DomainError
 from tests.unit.builders import (
     build_app_entity,
     build_app_platform_entity,
@@ -35,7 +36,7 @@ def test_process_install_raises_for_unknown_install_key(
 ) -> None:
     service = unit_test_context.build_ingestion_service()
 
-    with pytest.raises(ApplicationLevelError, match="Unknown install_key"):
+    with pytest.raises(ApplicationError, match="Unknown install_key"):
         service.process_install(build_sdk_install_command(install_key="missing-install-key"))
 
 
@@ -161,7 +162,7 @@ def test_process_install_rejects_click_bound_to_another_platform(
         )
     )
 
-    with pytest.raises(ApplicationLevelError, match="belongs to another platform"):
+    with pytest.raises(DomainError):
         service.process_install(
             build_sdk_install_command(
                 install_key=android_platform.install_key,

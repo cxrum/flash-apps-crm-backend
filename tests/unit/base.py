@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from app.application.sdk.usecases.apps.service import AppService
-from app.application.sdk.usecases.ingestion.service import InsegisntionService
+from app.application.sdk.usecases.ingestion.service import IngestionService
 from tests.unit.doubles.application.encryption import StubEncryptionService
 from tests.unit.doubles.domain.uow import StubUnitOfWork
 
@@ -19,7 +19,7 @@ class UnitTestContext:
             encryption_service=self.encryption_service,
         )
         
-    def build_ingestion_service(self) -> InsegisntionService:
-        return InsegisntionService(
+    def build_ingestion_service(self) -> IngestionService:
+        return IngestionService(
             uow=self.uow,
         )

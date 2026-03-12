@@ -4,7 +4,7 @@ from typing import Mapping, TypeVar
 
 from pydantic import BaseModel
 
-from app.application.s2s.entities import S2SClickCommand
+from app.application.s2s.commands import S2SClickCommand
 
 TCommand = TypeVar("TCommand", bound=BaseModel)
 

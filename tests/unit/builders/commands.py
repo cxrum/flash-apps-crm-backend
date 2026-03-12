@@ -32,7 +32,7 @@ from app.application.admin.entities import (
     UpsertAppSecretsCommand,
 )
 from app.application.base import FlexibleCommand
-from app.application.s2s.entities import S2SClickCommand
+from app.application.s2s.commands import S2SClickCommand
 from app.application.sdk.entities import (
     GetSdkConfigCommand,
     SdkApplicationConfigurationCommand,

@@ -2,8 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
-
-@dataclass(frozen=True)
+@dataclass
 class CrmAppSecretEntity:
     template_id: int
     encrypted_value: str
