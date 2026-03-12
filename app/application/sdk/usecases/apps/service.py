@@ -97,7 +97,7 @@ class AppService:
 
         templates = self._uow.secret_template_repo.list_all()
         latest_secrets = self._latest_secrets_by_template(
-            self._uow.app_secret_repo.list_by_app_id(
+            self._uow.app_secret_repo.list_active_by_app(
                 command.app_id,
                 platform_id=platform.platform_id,
             )

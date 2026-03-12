@@ -5,7 +5,7 @@ from typing import Any
 
 
 @dataclass(frozen=True)
-class CrmEventEntity:
+class EventEntity:
     event_id: str
     click_id: str
     event_type: str
@@ -17,6 +17,3 @@ class CrmEventEntity:
     amount_usd: float | None = None
     payload: dict[str, Any] = field(default_factory=dict)
     created_at: datetime | None = None
-
-
-EventEntity = CrmEventEntity

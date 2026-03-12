@@ -127,6 +127,14 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
         row = self.session.get(AppPlatform, platform_id)
         return self._to_domain(row) if row is not None else None
 
+    def get_by_install_key(self, install_key: str) -> CrmAppPlatformEntity | None:
+        row = self.session.scalars(
+            select(AppPlatform)
+            .where(AppPlatform.install_key == install_key)
+            .order_by(AppPlatform.platform_id.asc())
+        ).first()
+        return self._to_domain(row) if row is not None else None
+    
     def list_by_app_id(self, app_id: int) -> list[CrmAppPlatformEntity]:
         rows = self.session.scalars(
             select(AppPlatform)
@@ -233,6 +241,14 @@ class SqlAlchemyCrmInstallRepository(CrmInstallRepositoryProtocol):
         row = self.session.scalars(
             select(Install)
             .where(Install.app_user_id == app_user_id)
+            .order_by(desc(Install.installed_at), desc(Install.install_id))
+        ).first()
+        return self._to_domain(row) if row is not None else None
+    
+    def get_by_click_id(self, click_id: str) -> CrmInstallEntity | None:
+        row = self.session.scalars(
+            select(Install)
+            .where(Install.click_id == click_id)
             .order_by(desc(Install.installed_at), desc(Install.install_id))
         ).first()
         return self._to_domain(row) if row is not None else None
