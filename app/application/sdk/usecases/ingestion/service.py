@@ -21,7 +21,7 @@ class InsegisntionService:
 
     @staticmethod
     def _generated_click_id(command: SdkInstallCommand) -> str:
-        return f"sdk-install:{command.idempotency_key}"
+        return f"{command.idempotency_key}"
 
     def _resolve_platform_id(self, install_key: str) -> int:
         platform = self._uow.app_platform_repo.get_by_install_key(install_key)

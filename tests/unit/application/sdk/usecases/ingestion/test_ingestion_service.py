@@ -52,7 +52,7 @@ def test_process_install_creates_click_install_and_raw_event_on_first_install(
     saved_install = unit_test_context.uow.install_repo.get_by_click_id(response.click_id)
     saved_events = unit_test_context.uow.event_repo.list_by_app_id(platform.app_id)
 
-    assert response.click_id == "sdk-install:install-idempotency-1"
+    assert response.click_id == "install-idempotency-1"
     assert saved_click is not None
     assert saved_click.app_platform_id == platform.platform_id
     assert saved_click.source == "sdk_install"
@@ -62,6 +62,7 @@ def test_process_install_creates_click_install_and_raw_event_on_first_install(
     assert saved_install.device_data["os_name"] == command.device.os_name
     assert [event.event_key for event in saved_events] == ["install"]
     assert saved_events[0].payload["install_key"] == command.install_key
+    assert saved_events[0].click_id == response.click_id
 
 
 def test_process_install_reuses_existing_redirect_click(
