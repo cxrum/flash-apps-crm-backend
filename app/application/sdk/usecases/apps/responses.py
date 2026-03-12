@@ -12,12 +12,11 @@ class CreatePlatformResponse:
     platform_id: int
 
 @dataclass(frozen=True)
-class AppConfigQueryEntry:
+class AppTemplateConfigQueryEntry:
     code: str
     display_name: str
     scope: str
     value_type: str
-    value: object
     version: float
     is_masked: bool = True
     is_required: bool = False
@@ -26,6 +25,11 @@ class AppConfigQueryEntry:
     updated_at: datetime | None = None
 
 @dataclass(frozen=True)
+class AppConfigQueryEntry:
+    template : AppTemplateConfigQueryEntry
+    value: object
+        
+@dataclass(frozen=True)
 class AppConfigQueryResponse:
-    configurations: list[AppConfigQueryEntry]
+    platform_configurations: list[AppConfigQueryEntry]
 

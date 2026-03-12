@@ -89,4 +89,5 @@ class SdkCreateAppPlatformCommand(FlexibleCommand):
     
     
 class SdkApplicationConfigurationCommand(FlexibleCommand):
-    platform_id: int
+    app_id: int
+    platform: str

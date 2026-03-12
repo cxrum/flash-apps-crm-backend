@@ -407,13 +407,19 @@ class SqlAlchemyCrmAppSecretRepository(CrmAppSecretRepositoryProtocol):
         row = self.session.get(AppSecret, secret_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_app_id(self, app_id: int) -> list[CrmAppSecretEntity]:
-        rows = self.session.scalars(
+    def list_by_app_id(self, app_id: int, *, platform_id: int | None = None) -> list[CrmAppSecretEntity]:
+        stmt = (
             select(AppSecret)
             .join(AppPlatform, AppSecret.platform_id == AppPlatform.platform_id)
             .where(AppPlatform.app_id == app_id)
             .order_by(AppSecret.secret_id.asc())
-        ).all()
+        )
+        
+        if platform_id is not None:
+            stmt = stmt.where(AppSecret.platform_id == platform_id)
+            
+        rows = self.session.scalars(stmt).all()
+        
         return [self._to_domain(row) for row in rows]
 
     def list_active_by_app(self, app_id: int, *, platform_id: int | None = None) -> list[CrmAppSecretEntity]:

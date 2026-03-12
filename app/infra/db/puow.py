@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from types import TracebackType
 
 from sqlalchemy.orm import Session
@@ -33,6 +33,7 @@ from app.domain.user_app_access.user_app_access_repository_protocol import CrmUs
 from app.domain.user_role.user_role_repository_protocol import CrmUserRoleRepositoryProtocol
 from app.infra.db.repositories.factory import CrmSqlAlchemyRepositoryFactory
 
+#FIXME: Temporary decision. Divide this class to smaller ones for each application service. 
 
 class SqlAlchemyUnitOfWork(CrmUnitOfWorkProtocol):
     app_repo: CrmAppRepositoryProtocol

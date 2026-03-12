@@ -40,6 +40,7 @@ class App(Base):
     code_slug: Mapped[str] = mapped_column(String(120), nullable=False, unique=True, index=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     tech_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    category: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active", index=True)
     logo_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     screenshots: Mapped[list[str]] = mapped_column(JSONB, nullable=False, default=list)
