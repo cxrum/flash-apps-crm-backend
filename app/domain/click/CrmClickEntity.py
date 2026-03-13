@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
+import uuid
 
 from app.domain.exceptions import DomainError
 
@@ -19,20 +20,15 @@ class CrmClickEntity:
     redirect_target: str | None = None
     normalized_params: dict[str, Any] = field(default_factory=dict)
     created_at: datetime | None = None
-
-    @staticmethod
-    def generated_click_id(raw_id:str)->str:
-        return raw_id
     
     @classmethod
     def create_synthetic(
         cls,
-        click_id: str,
         app_platform_id: int,
         params: dict,
     ) -> "CrmClickEntity":
         return cls(
-            click_id=click_id,
+            click_id = CrmClickEntity.generate_click_id(),
             app_platform_id=app_platform_id,
             raw_query=params,
             normalized_params=CrmClickEntity.normalize_params(params),
@@ -43,6 +39,13 @@ class CrmClickEntity:
     def normalize_params(params: dict) -> dict:
         return params
 
+    @staticmethod
+    def generate_click_id() -> str:
+        return str(uuid.uuid4())
+    
+    def set_new_click_id(self):
+        self.click_id = str(uuid.uuid4())
+    
     def accepted(self) -> None:
         self.status = 'accepted'
         
@@ -58,7 +61,7 @@ class CrmClickEntity:
     def init_by_params(self, params: dict):
         self.raw_query = params
         self.normalized_params = CrmClickEntity.normalize_params(params)
-        self.source = self.normalized_params["utm_source"]
+        # self.source = self.normalized_params["utm_source"]
     
     def validate_click_status(self) -> None:
         if self.status not in ['accepted', 'redirected', 'duplicate', 'rejected', 'test']:

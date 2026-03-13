@@ -14,16 +14,8 @@ class Click(Base):
     __tablename__ = "crm_clicks"
     __table_args__ = (
         CheckConstraint("status IN ('accepted', 'redirected', 'duplicate', 'rejected', 'test')", name="ck_crm_clicks_status"),
-        PrimaryKeyConstraint("click_inner_id", "click_id", name="pk_click"),
     )
-
-    click_inner_id: Mapped[int] = mapped_column(
-        BigInteger,
-        nullable=False,
-        index=True,
-        primary_key=True,
-        autoincrement=True
-    )
+    
     click_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     app_platform_id: Mapped[int] = mapped_column(
         BigInteger,

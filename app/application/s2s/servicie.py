@@ -35,13 +35,12 @@ class S2SService:
         raw_click_id = command.click_id or command.idempotency_key
         if raw_click_id is None or not raw_click_id.strip():
             raise ApplicationError("click_id or idempotency_key is required")
-        return CrmClickEntity.generated_click_id(raw_click_id.strip())
+        return raw_click_id
 
     def process_click(self, command: S2SClickCommand) -> S2SClickResponse:
         with self._uow as uow:
             platform = self._resolve_platform(command.platform, command.app_code, uow)
             
-            accepted = True
             if platform is None:
                 raise ApplicationError(
                     f"Platform {command.platform} is not configured for app {command.app_code}",
@@ -64,6 +63,7 @@ class S2SService:
             
             if existing_click is not None:
                 existing_click.validate_platform_match(platform.platform_id)
+                new_click.set_new_click_id()
                 new_click.duplicate()
             
             new_click.init_by_params(dict(command.params))
@@ -72,4 +72,5 @@ class S2SService:
             click = uow.click_repo.insert(
                 new_click
             )
+
             return S2SClickResponse(click_id=click.click_id)

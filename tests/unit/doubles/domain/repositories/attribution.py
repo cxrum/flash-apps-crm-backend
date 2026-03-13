@@ -11,6 +11,7 @@ from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
 from tests.unit.doubles.base import (
     CallRecorderMixin,
+    IntegerSequence,
     clone,
     comparable_datetime,
     evolve,
@@ -22,15 +23,20 @@ class InMemoryCrmClickRepository(CallRecorderMixin, CrmClickRepositoryProtocol):
     def __init__(self) -> None:
         super().__init__()
         self._items: dict[str, CrmClickEntity] = {}
+        self._inner_ids = IntegerSequence()
 
     def insert(self, entity: CrmClickEntity) -> CrmClickEntity:
         self._record("insert", clone(entity))
-        if entity.click_id in self._items:
-            raise ValueError(f"Click {entity.click_id} already exists")
         saved = clone(entity)
+        
+        if entity.click_id in self._items:
+            inner_id = self._inner_ids.next()
+        
         if saved.created_at is None:
             saved = evolve(saved, created_at=utcnow())
+        
         self._items[saved.click_id] = clone(saved)
+        
         return clone(saved)
 
     def insert_many(self, entities: list[CrmClickEntity]) -> list[CrmClickEntity]:

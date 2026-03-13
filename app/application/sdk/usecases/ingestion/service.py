@@ -3,9 +3,10 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from app.application.exceptions import ApplicationError
-from app.application.s2s.commands import S2SClickCommand
 from app.application.sdk.entities import SdkEventCommand, SdkEventsCommand, SdkInstallCommand
-from app.application.sdk.events.builder import _BaseSdkEventBuilder, ConversionEventBuilder, MetricsEventBuilder, RevenueEventBuilder
+from app.application.sdk.usecases.ingestion.event_builder import ConversionEventBuilder, MetricsEventBuilder, RevenueEventBuilder
+from app.application.events_bus.factories.sdk_event import SdkEventMessageFactory
+from app.application.events_bus.service import IEventBus
 from app.application.sdk.usecases.ingestion.responses import SdkEventResponse, SdkInstallResponse
 from app.domain.click.CrmClickEntity import CrmClickEntity
 from app.domain.events.CrmEventEntity import EventEntity
@@ -13,12 +14,15 @@ from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.uow import CrmUnitOfWorkProtocol
 
 
+
 class IngestionService:
     def __init__(
         self,
         uow: CrmUnitOfWorkProtocol,
+        event_bus: IEventBus,
     ) -> None:
         self._uow = uow
+        self.event_bus = event_bus
 
 
 
@@ -31,7 +35,7 @@ class IngestionService:
         return platform.platform_id
 
     def _resolve_click(self, command: SdkInstallCommand, app_platform_id: int, uow: CrmUnitOfWorkProtocol,) -> CrmClickEntity:
-        click_id = command.click_id or CrmClickEntity.generated_click_id(command.idempotency_key)
+        click_id = command.click_id or CrmClickEntity.generate_click_id()
         existing = uow.click_repo.get_by_id(click_id)
         
         if existing is not None:
@@ -40,7 +44,6 @@ class IngestionService:
 
         return uow.click_repo.insert(
             CrmClickEntity.create_synthetic(
-                click_id=click_id,
                 app_platform_id=app_platform_id,
                 params=command.params
             )
@@ -74,15 +77,15 @@ class IngestionService:
                     )
                 .build()    
             )
-        
-            uow.event_repo.insert(event)
+            
+            saved_event = uow.event_repo.insert(event)
+            self.event_bus.publish(SdkEventMessageFactory.from_event(saved_event))
         
         return SdkInstallResponse(
             click_id=click.click_id, 
             app_user_id=saved_install.app_user_id
         )
 
-    
     def _make_event_builder(
         self,
         *,
@@ -110,13 +113,7 @@ class IngestionService:
 
         raise ApplicationError(f"Unsupported event type: {event.type}")
 
-
-    
     def process_batch_events(self, command: SdkEventsCommand) -> SdkEventResponse:
-        
-        # TODO Make event processing in another service with async workers.
-        # Use an EventLogObserver for saving logs. Keep here only validation
-          
         with self._uow as uow:
             app_platform_id = self._resolve_platform_id(command.install_key, uow)
             click = uow.click_repo.get_by_id(command.click_id)
@@ -162,6 +159,7 @@ class IngestionService:
                 events_list.append(builder.build())
 
             inserted = uow.event_repo.insert_many(events_list)
+            self.event_bus.publish_many(SdkEventMessageFactory.from_events(inserted))
         
         return SdkEventResponse(
             received=len(command.events),

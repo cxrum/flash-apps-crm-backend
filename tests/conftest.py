@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import pytest
 
+from app.infra.event_bus.in_memory import InMemoryEventBus
+from app.application.events_bus.service import IEventBus
 from tests.unit.base import UnitTestContext
 from tests.unit.doubles.application.encryption import StubEncryptionService
 from tests.unit.doubles.domain.uow import StubRepositoryFactory, StubUnitOfWork
@@ -21,13 +23,19 @@ def stub_repository_factory(stub_uow: StubUnitOfWork) -> StubRepositoryFactory:
 def stub_encryption_service() -> StubEncryptionService:
     return StubEncryptionService()
 
+@pytest.fixture
+def event_bus() -> IEventBus:
+    return InMemoryEventBus()
+
 
 @pytest.fixture
 def unit_test_context(
     stub_uow: StubUnitOfWork,
     stub_encryption_service: StubEncryptionService,
+    event_bus: IEventBus,
 ) -> UnitTestContext:
     return UnitTestContext(
         uow=stub_uow,
         encryption_service=stub_encryption_service,
+        event_bus=event_bus,
     )

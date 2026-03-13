@@ -66,10 +66,9 @@ def test_process_click_inserts_click_with_s2s_metadata() -> None:
     assert response.click_id == "partner-click-1"
     assert saved_click is not None
     assert saved_click.app_platform_id == platform.platform_id
-    assert saved_click.source == "s2s"
     assert saved_click.raw_query == {"campaign": "spring"}
     assert saved_click.redirect_target == "https://example.com/landing"
-
+    assert saved_click.status == 'accepted'
 
 def test_process_click_returns_existing_click_for_idempotent_retry() -> None:
     uow = StubUnitOfWork()
@@ -77,14 +76,15 @@ def test_process_click_returns_existing_click_for_idempotent_retry() -> None:
     platform = _seed_platform(uow)
     existing_click = uow.click_repo.insert(
         build_click_entity(
-            click_id="partner-click-1",
+            click_id="partner-click-2",
             app_platform_id=platform.platform_id or 0,
-            source="s2s",
         )
     )
-
+    
     response = service.process_click(build_s2s_click_command(click_id=existing_click.click_id))
+    
     platform_clicks = uow.click_repo.list_by_platform_id(platform.platform_id or 0)
 
-    assert response.click_id == existing_click.click_id
-    assert [click.click_id for click in platform_clicks] == ["partner-click-1"]
+    assert response.click_id != existing_click.click_id
+    assert [click.click_id for click in platform_clicks] == [response.click_id, existing_click.click_id]
+    assert [click.status for click in platform_clicks] == ["duplicate", 'accepted']

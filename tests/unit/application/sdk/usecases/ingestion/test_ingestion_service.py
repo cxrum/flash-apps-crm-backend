@@ -53,8 +53,8 @@ def test_process_install_creates_click_install_and_raw_event_on_first_install(
     saved_install = unit_test_context.uow.install_repo.get_by_click_id(response.click_id)
     saved_events = unit_test_context.uow.event_repo.list_by_app_id(platform.app_id)
 
-    assert response.click_id == "install-idempotency-1"
     assert saved_click is not None
+    assert response.click_id == saved_click.click_id
     assert saved_click.app_platform_id == platform.platform_id
     assert saved_click.source == "sdk_install"
     assert saved_install is not None
