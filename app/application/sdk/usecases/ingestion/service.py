@@ -8,9 +8,14 @@ from app.application.sdk.usecases.ingestion.event_builder import ConversionEvent
 from app.application.events_bus.factories.sdk_event import SdkEventMessageFactory
 from app.application.events_bus.service import IEventBus
 from app.application.sdk.usecases.ingestion.responses import SdkEventResponse, SdkInstallResponse
+from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.click.CrmClickEntity import CrmClickEntity
+from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
+from app.domain.currency.entity import CurrencyEntity
+from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
+from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 from app.domain.uow import CrmUnitOfWorkProtocol
 
 
@@ -20,19 +25,21 @@ class IngestionService:
         self,
         uow: CrmUnitOfWorkProtocol,
         event_bus: IEventBus,
+        currency_service: CurrencyConvertorClientProtocol
     ) -> None:
         self._uow = uow
-        self.event_bus = event_bus
+        self._event_bus = event_bus
+        self._currency_service = currency_service
 
 
 
-    def _resolve_platform_id(self, install_key: str, uow: CrmUnitOfWorkProtocol,) -> int:
+    def _resolve_platform(self, install_key: str, uow: CrmUnitOfWorkProtocol,) -> CrmAppPlatformEntity:
         platform = uow.app_platform_repo.get_by_install_key(install_key)
         
         if platform is None or platform.platform_id is None:
             raise ApplicationError(f"Unknown install_key: {install_key}")
         
-        return platform.platform_id
+        return platform
 
     def _resolve_click(self, command: SdkInstallCommand, app_platform_id: int, uow: CrmUnitOfWorkProtocol,) -> CrmClickEntity:
         click_id = command.click_id or CrmClickEntity.generate_click_id()
@@ -52,13 +59,18 @@ class IngestionService:
     def process_install(self, command: SdkInstallCommand) -> SdkInstallResponse:
 
         with self._uow as uow:
-            app_platform_id = self._resolve_platform_id(command.install_key, uow)
-            click = self._resolve_click(command, app_platform_id, uow)
+            app_platform = self._resolve_platform(command.install_key, uow)
+            
+            if app_platform.platform_id is None:
+                raise ApplicationError(f"Unknown platfrom")
+            
+            
+            click = self._resolve_click(command, app_platform.platform_id, uow)
             
             saved_install = uow.install_repo.save(
                 CrmInstallEntity(
                     click_id=click.click_id,
-                    app_platform_id=app_platform_id,
+                    app_platform_id=app_platform.platform_id,
                     device_data=command.device.model_dump(mode="python"),
                 )
             )
@@ -79,7 +91,7 @@ class IngestionService:
             )
             
             saved_event = uow.event_repo.insert(event)
-            self.event_bus.publish(SdkEventMessageFactory.from_event(saved_event))
+            self._event_bus.publish(SdkEventMessageFactory.from_event(saved_event))
         
         return SdkInstallResponse(
             click_id=click.click_id, 
@@ -115,13 +127,20 @@ class IngestionService:
 
     def process_batch_events(self, command: SdkEventsCommand) -> SdkEventResponse:
         with self._uow as uow:
-            app_platform_id = self._resolve_platform_id(command.install_key, uow)
-            click = uow.click_repo.get_by_id(command.click_id)
+            app_platform = self._resolve_platform(command.install_key, uow)
+            click = uow.click_repo.get_by_id(command.click_id)       
+            
+            if app_platform.platform_id is None:
+                raise ApplicationError(f"Unknown platfrom")
+            
+            default_param_dictionary = uow.param_definition_repo.list_by_app_id(None) 
+            app_param_dictionary = uow.param_definition_repo.list_by_app_id(app_platform.platform_id) 
+            params_dictionary = default_param_dictionary + app_param_dictionary
             
             if click is None:
                 raise ApplicationError("Click does not exist")
             
-            click.validate_platform_match(app_platform_id)
+            click.validate_platform_match(app_platform.platform_id)
 
             install = uow.install_repo.get_by_click_id(click.click_id)
             events_list: list[EventEntity] = []
@@ -142,11 +161,18 @@ class IngestionService:
                 )
 
                 if isinstance(builder, RevenueEventBuilder):
+                    amount_in_usd = self._currency_service.convert(
+                        CurrencyEntity(
+                            base=event.currency, # type: ignore
+                            value=event.amount # type: ignore
+                        ),
+                        "USD"
+                    )
                     builder = (
                         builder
                         ._set_amount(event.amount)
                         ._set_currency(event.currency)
-                        ._set_amount_in_usd(None)
+                        ._set_amount_in_usd(amount_in_usd.value)
                     )
                 else:
                     builder = (
@@ -155,11 +181,31 @@ class IngestionService:
                         ._set_currency(None)
                         ._set_amount_in_usd(None)
                     )
-
+                    
+                # TODO Make conversation, metrics and other params background updating. Make dedicated service for conversation, metrics and params.
+                # FIXME Make it more efficient. Implement event.params dict normalization by params_dictionary
+                for definiton in params_dictionary:
+                    for key, value in event.params.items():
+                        param_value = definiton.get_param_value(event.params)
+                        if param_value is None:
+                            continue
+                         
+                        current_param = uow.current_param_repo.get_by_click_and_key(command.click_id, key)
+                        
+                        if current_param is None:
+                            current_param = uow.current_param_repo.save(
+                                CrmCurrentParamEntity(
+                                    click_id=click.click_id,
+                                    param_key=key
+                                )
+                            )
+                        
+                        current_param.update_param(definiton.overwrite_policy, param_value)
+                
                 events_list.append(builder.build())
-
+            
             inserted = uow.event_repo.insert_many(events_list)
-            self.event_bus.publish_many(SdkEventMessageFactory.from_events(inserted))
+            self._event_bus.publish_many(SdkEventMessageFactory.from_events(inserted))
         
         return SdkEventResponse(
             received=len(command.events),

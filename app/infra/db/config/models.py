@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 
 
+# Dictaionary of metrics defifnitios (MetricDefinition.machine_key == Event.event_key, Event.event_type == "metric") 
 class MetricDefinition(Base):
     __tablename__ = "crm_metric_definitions"
     __table_args__ = (
@@ -41,7 +42,7 @@ class MetricDefinition(Base):
         onupdate=func.now(),
     )
 
-
+# Dictaionary of conversion defifnitios (MetricDefinition.machine_key == Event.event_key, Event.event_type == "conversion") 
 class ConversionDefinition(Base):
     __tablename__ = "crm_conversion_definitions"
     __table_args__ = (
@@ -77,7 +78,6 @@ class ConversionDefinition(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
-
 
 class ParamDefinition(Base):
     __tablename__ = "crm_param_definitions"
