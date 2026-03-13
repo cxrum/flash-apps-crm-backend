@@ -8,6 +8,7 @@ from app.domain.click.click_repository_protocol import CrmClickRepositoryProtoco
 from app.domain.conversion_definition.conversion_definition_repository_protocol import (
     CrmConversionDefinitionRepositoryProtocol,
 )
+from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
 from app.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
 from app.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
@@ -33,6 +34,7 @@ from app.domain.user_app_access.user_app_access_repository_protocol import (
     CrmUserAppAccessRepositoryProtocol,
 )
 from app.domain.user_role.user_role_repository_protocol import CrmUserRoleRepositoryProtocol
+from app.infra.services.currency import CurrencyConvertorClient
 from tests.unit.doubles.application.encryption import StubEncryptionService
 from tests.unit.doubles.domain.repositories import (
     InMemoryCrmAppPlatformRepository,
@@ -87,4 +89,5 @@ PROTOCOL_DOUBLE_REGISTRY = {
     CrmUserAppAccessRepositoryProtocol: InMemoryCrmUserAppAccessRepository,
     CrmUserRepositoryProtocol: InMemoryCrmUserRepository,
     CrmUserRoleRepositoryProtocol: InMemoryCrmUserRoleRepository,
+    CurrencyConvertorClientProtocol: CurrencyConvertorClient
 }
