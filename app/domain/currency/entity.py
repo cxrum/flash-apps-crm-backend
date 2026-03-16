@@ -2,7 +2,8 @@
 from dataclasses import dataclass
 
 
-@dataclass
-class CurrencyEntity:
+@dataclass(frozen=True)
+class Money:
     base: str
     value: float
+    rate_to_USD: float | None = None

@@ -4,6 +4,7 @@ import pytest
 
 from app.application.exceptions import ApplicationError
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.domain.currency.entity import Money
 from app.domain.exceptions import DomainError
 from tests.unit.builders import (
     build_app_entity,
@@ -12,6 +13,8 @@ from tests.unit.builders import (
     build_sdk_install_command,
 )
 from tests.unit.base import UnitTestContext
+from tests.unit.builders.commands import build_sdk_event_command, build_sdk_events_command
+from tests.unit.builders.entities import build_app_user_entity
 
 
 def _seed_platform(
@@ -30,15 +33,23 @@ def _seed_platform(
         )
     )
 
-
-def test_process_install_raises_for_unknown_install_key(
+def test_resolve_platform(
     unit_test_context: UnitTestContext,
 ) -> None:
     service = unit_test_context.build_ingestion_service()
-
-    with pytest.raises(ApplicationError, match="Unknown install_key"):
-        service.process_install(build_sdk_install_command(install_key="missing-install-key"))
-
+    
+    ios_platfrom = _seed_platform(unit_test_context, app_id=1, install_key="install-key-ios", platform="ios")
+    android_platfrom = _seed_platform(unit_test_context, app_id=2, install_key="install-key-android", platform="android")
+    
+    resolved_ios_platfrom = service._resolve_platform(ios_platfrom.install_key, uow=unit_test_context.uow)
+    resolved_android_platfrom = service._resolve_platform(android_platfrom.install_key, uow=unit_test_context.uow)
+    
+    with pytest.raises(ApplicationError):
+        service._resolve_platform("uknown-platform-key", uow=unit_test_context.uow)
+    
+    assert resolved_android_platfrom.app_id == android_platfrom.app_id    
+    assert resolved_ios_platfrom.app_id == ios_platfrom.app_id    
+    
 
 def test_process_install_creates_click_install_and_raw_event_on_first_install(
     unit_test_context: UnitTestContext,
@@ -146,7 +157,11 @@ def test_process_install_rejects_click_bound_to_another_platform(
     service = unit_test_context.build_ingestion_service()
     unit_test_context.uow.app_repo.save(build_app_entity(app_id=1))
     ios_platform = unit_test_context.uow.app_platform_repo.save(
-        build_app_platform_entity(app_id=1, platform="ios", install_key="install-key-ios")
+        build_app_platform_entity(
+            app_id=1, 
+            platform="ios", 
+            install_key="install-key-ios"
+        )
     )
     android_platform = unit_test_context.uow.app_platform_repo.save(
         build_app_platform_entity(
@@ -158,7 +173,7 @@ def test_process_install_rejects_click_bound_to_another_platform(
     unit_test_context.uow.click_repo.insert(
         build_click_entity(
             click_id="redirect-click-1",
-            app_platform_id=ios_platform.platform_id or 0,
+            app_platform_id=ios_platform.platform_id,
         )
     )
 
@@ -167,6 +182,121 @@ def test_process_install_rejects_click_bound_to_another_platform(
             build_sdk_install_command(
                 install_key=android_platform.install_key,
                 click_id="redirect-click-1",
-                idempotency_key="install-idempotency-3",
             )
         )
+    
+
+def test_process_install_exist_user_installed_on_another_device(
+    unit_test_context: UnitTestContext,
+) -> None:
+    """
+    For future iterations. It depends on user authorization, but not on Install 
+    """
+    
+    service = unit_test_context.build_ingestion_service()
+    
+    app_user = build_app_user_entity()
+    app_user = unit_test_context.uow.app_user_repo.save(app_user)
+    
+    unit_test_context.uow.app_repo.save(build_app_entity(app_id=1))
+    ios_platform = unit_test_context.uow.app_platform_repo.save(
+        build_app_platform_entity(
+            app_id=1, 
+            platform="ios", 
+            install_key="install-key-ios"
+        )
+    )
+    android_platform = unit_test_context.uow.app_platform_repo.save(
+        build_app_platform_entity(
+            app_id=1,
+            platform="android",
+            install_key="install-key-android",
+        )
+    )
+    
+    android_install = service.process_install(
+        build_sdk_install_command(
+            install_key = android_platform.install_key,
+        )
+    )
+
+    unit_test_context.uow.click_repo.insert(
+        build_click_entity(
+            click_id="redirect-click-1",
+            app_platform_id=ios_platform.platform_id,
+        )
+    )
+    
+    
+    
+
+def test_process_batch_event_types(
+    unit_test_context: UnitTestContext,
+) -> None:
+    platfrom = _seed_platform(unit_test_context)
+    click = build_click_entity(app_platform_id = platfrom.platform_id)
+    unit_test_context.uow.click_repo.insert(click)
+    
+    bus = unit_test_context.event_bus
+    
+    service = unit_test_context.build_ingestion_service()
+    
+    conversion_service = unit_test_context.currency_service
+    
+    events = build_sdk_events_command(
+        events=[
+            build_sdk_event_command(
+                type="metric"
+            ),
+            build_sdk_event_command(
+                type="conversion",
+                currency = "EUR",
+                amount="5",
+                key="purchase"
+            ),
+            build_sdk_event_command(
+                type="conversion"
+            ),
+        ]
+    )
+    
+    resp = service.process_batch_events(events)
+    
+    events = unit_test_context.uow.event_repo.list_by_app_id(platfrom.app_id)
+    
+    assert resp.inserted == 3
+    assert resp.received == 3
+    assert len(events) == 3
+    assert [event.event_type for event in events] == ["conversion", "conversion", "metric"]
+    assert [event.amount_usd for event in events] == [None, conversion_service.convert(Money(base="EUR", value=5), "USD").value, None]
+    assert [event.currency for event in events] == [None, "EUR", None]
+    assert [event.amount for event in events] == [None, 5, None]
+    
+
+def test_process_batch_event_buss(
+    unit_test_context: UnitTestContext,
+) -> None:
+    platfrom = _seed_platform(unit_test_context)
+    click = build_click_entity(app_platform_id = platfrom.platform_id)
+    unit_test_context.uow.click_repo.insert(click)
+    
+    bus = unit_test_context.event_bus
+    service = unit_test_context.build_ingestion_service()
+    conversion_service = unit_test_context.currency_service
+    
+    events = build_sdk_events_command(
+        events=[
+            build_sdk_event_command(
+                type="metric"
+            ),
+            build_sdk_event_command(
+                type="conversion",
+                currency = "EUR",
+                amount="5"
+            ),
+            build_sdk_event_command(
+                type="conversion"
+            ),
+        ]
+    )
+    

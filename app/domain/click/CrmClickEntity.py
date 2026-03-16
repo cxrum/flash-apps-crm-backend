@@ -4,6 +4,7 @@ from typing import Any
 import uuid
 
 from app.domain.exceptions import DomainError
+from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 
 
 @dataclass()
@@ -31,13 +32,16 @@ class CrmClickEntity:
             click_id = CrmClickEntity.generate_click_id(),
             app_platform_id=app_platform_id,
             raw_query=params,
-            normalized_params=CrmClickEntity.normalize_params(params),
             source="sdk_install",
         )
     
-    @staticmethod
-    def normalize_params(params: dict) -> dict:
-        return params
+    def normalize_params(self, defenitions: list[CrmParamDefinitionEntity]) -> None:
+        self.normalized_params = {}
+        
+        for defenition in defenitions:
+            value = defenition.get_param_value(self.raw_query)
+            self.normalized_params[defenition.machine_key] = value
+        
 
     @staticmethod
     def generate_click_id() -> str:
@@ -57,11 +61,6 @@ class CrmClickEntity:
         
     def redirected(self) -> None:
         self.status = 'redirected' 
-    
-    def init_by_params(self, params: dict):
-        self.raw_query = params
-        self.normalized_params = CrmClickEntity.normalize_params(params)
-        # self.source = self.normalized_params["utm_source"]
     
     def validate_click_status(self) -> None:
         if self.status not in ['accepted', 'redirected', 'duplicate', 'rejected', 'test']:

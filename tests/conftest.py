@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import pytest
 
+from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.infra.event_bus.in_memory import InMemoryEventBus
 from app.application.events_bus.service import IEventBus
+from app.infra.services.currency import CurrencyConvertorClient
 from tests.unit.base import UnitTestContext
 from tests.unit.doubles.application.encryption import StubEncryptionService
 from tests.unit.doubles.domain.uow import StubRepositoryFactory, StubUnitOfWork
@@ -29,13 +31,20 @@ def event_bus() -> IEventBus:
 
 
 @pytest.fixture
+def currency_service() -> CurrencyConvertorClientProtocol:
+    return CurrencyConvertorClient()
+
+
+@pytest.fixture
 def unit_test_context(
     stub_uow: StubUnitOfWork,
     stub_encryption_service: StubEncryptionService,
     event_bus: IEventBus,
+    currency_service: CurrencyConvertorClientProtocol
 ) -> UnitTestContext:
     return UnitTestContext(
         uow=stub_uow,
         encryption_service=stub_encryption_service,
         event_bus=event_bus,
+        currency_service=currency_service
     )

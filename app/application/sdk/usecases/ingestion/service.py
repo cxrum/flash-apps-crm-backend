@@ -3,15 +3,15 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from app.application.exceptions import ApplicationError
-from app.application.sdk.entities import SdkEventCommand, SdkEventsCommand, SdkInstallCommand
+from app.application.sdk.entities import SdkEventCommand, SdkEventsCommand, SdkInstallCommand, SdkParamsUpdateCommand
 from app.application.sdk.usecases.ingestion.event_builder import ConversionEventBuilder, MetricsEventBuilder, RevenueEventBuilder
 from app.application.events_bus.factories.sdk_event import SdkEventMessageFactory
 from app.application.events_bus.service import IEventBus
-from app.application.sdk.usecases.ingestion.responses import SdkEventResponse, SdkInstallResponse
+from app.application.sdk.usecases.ingestion.responses import SdkEventResponse, SdkInstallResponse, SdkUpdateParamsResponse
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.click.CrmClickEntity import CrmClickEntity
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
-from app.domain.currency.entity import CurrencyEntity
+from app.domain.currency.entity import Money
 from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
@@ -30,7 +30,6 @@ class IngestionService:
         self._uow = uow
         self._event_bus = event_bus
         self._currency_service = currency_service
-
 
 
     def _resolve_platform(self, install_key: str, uow: CrmUnitOfWorkProtocol,) -> CrmAppPlatformEntity:
@@ -125,6 +124,39 @@ class IngestionService:
 
         raise ApplicationError(f"Unsupported event type: {event.type}")
 
+    @staticmethod
+    def _update_params(uow: CrmUnitOfWorkProtocol, *, params: dict, click_id: str, params_dictionary: list[CrmParamDefinitionEntity], updated_at: datetime | None = None)->list[CrmCurrentParamEntity]:
+        
+        new_params = []
+        
+        for definiton in params_dictionary:
+            value = definiton.get_param_value(params)
+
+            if value is None:
+                continue
+                
+            current_param = uow.current_param_repo.get_by_click_and_key(click_id, definiton.machine_key)
+            
+            if current_param is not None:
+                if updated_at is None:
+                    _updated_at = datetime.now(UTC)
+                else:
+                    _updated_at = updated_at
+                
+                current_param = uow.current_param_repo.save(
+                    CrmCurrentParamEntity(
+                        click_id=click_id,
+                        param_key=definiton.machine_key,
+                        updated_at=_updated_at
+                    )
+                )
+            
+            current_param.update_param(definiton.overwrite_policy, value)
+            new_params.append(current_param)
+            
+        updatet_params = uow.current_param_repo.save_many(new_params)
+        return updatet_params
+    
     def process_batch_events(self, command: SdkEventsCommand) -> SdkEventResponse:
         with self._uow as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
@@ -161,10 +193,14 @@ class IngestionService:
                 )
 
                 if isinstance(builder, RevenueEventBuilder):
+                    
+                    if event.currency is None or event.amount is None:
+                        raise ApplicationError("Revenue error")
+                    
                     amount_in_usd = self._currency_service.convert(
-                        CurrencyEntity(
-                            base=event.currency, # type: ignore
-                            value=event.amount # type: ignore
+                        Money(
+                            base=event.currency,
+                            value=event.amount
                         ),
                         "USD"
                     )
@@ -182,25 +218,12 @@ class IngestionService:
                         ._set_amount_in_usd(None)
                     )
                     
-                # TODO Make conversation, metrics and other params background updating. Make dedicated service for conversation, metrics and params.
-                # FIXME Make it more efficient. Implement event.params dict normalization by params_dictionary
-                for definiton in params_dictionary:
-                    for key, value in event.params.items():
-                        param_value = definiton.get_param_value(event.params)
-                        if param_value is None:
-                            continue
-                         
-                        current_param = uow.current_param_repo.get_by_click_and_key(command.click_id, key)
-                        
-                        if current_param is None:
-                            current_param = uow.current_param_repo.save(
-                                CrmCurrentParamEntity(
-                                    click_id=click.click_id,
-                                    param_key=key
-                                )
-                            )
-                        
-                        current_param.update_param(definiton.overwrite_policy, param_value)
+                IngestionService._update_params(
+                    uow, 
+                    params=event.params, 
+                    click_id=click.click_id, 
+                    params_dictionary=params_dictionary
+                )
                 
                 events_list.append(builder.build())
             
@@ -210,5 +233,31 @@ class IngestionService:
         return SdkEventResponse(
             received=len(command.events),
             inserted=len(inserted),
-            ignored_duplicates=len(command.events) - len(inserted),
+        )
+    
+    def udate_params(self, command: SdkParamsUpdateCommand) -> SdkUpdateParamsResponse:
+        with self._uow as uow:
+            click = uow.click_repo.get_by_id(command.click_id)
+            
+            if click is None:
+                raise ApplicationError(f"Unknown platfrom")
+            
+            default_param_dictionary = uow.param_definition_repo.list_by_app_id(None) 
+            app_param_dictionary = uow.param_definition_repo.list_by_app_id(click.app_platform_id) 
+            params_dictionary = default_param_dictionary + app_param_dictionary
+            
+            if click is None:
+                raise ApplicationError("Click does not exist")
+            
+            updatet_params = IngestionService._update_params(
+                uow, 
+                params=command.params, 
+                click_id=click.click_id, 
+                params_dictionary=params_dictionary,
+                updated_at=command.event_time
+            )
+            
+        return SdkUpdateParamsResponse(
+            received=len(command.params),
+            inserted=len(updatet_params)
         )

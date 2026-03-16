@@ -11,6 +11,7 @@ from tests.unit.builders import (
     build_click_entity,
     build_s2s_click_command,
 )
+from tests.unit.builders.entities import build_param_definition_entity
 from tests.unit.doubles.domain.uow import StubUnitOfWork
 
 
@@ -52,23 +53,33 @@ def test_process_click_inserts_click_with_s2s_metadata() -> None:
     service = S2SService(uow)
     platform = _seed_platform(uow)
 
+    uow.param_definition_repo.save(
+        build_param_definition_entity()
+    )
+    
+    click = uow.click_repo.insert(
+        build_click_entity(click_id="partner-click-1")
+    )
+    
     response = service.process_click(
         build_s2s_click_command(
             click_id="partner-click-1",
-            params={"campaign": "spring"},
+            params={"campaign": "spring", "utm_source":"anton"},
             ip="203.0.113.10",
             user_agent="PartnerBot/1.0",
             redirect_url="https://example.com/landing",
         )
     )
+    
     saved_click = uow.click_repo.get_by_id(response.click_id)
 
-    assert response.click_id == "partner-click-1"
+    assert response.click_id != click.click_id
     assert saved_click is not None
     assert saved_click.app_platform_id == platform.platform_id
-    assert saved_click.raw_query == {"campaign": "spring"}
+    assert saved_click.raw_query == {"campaign": "spring", "utm_source":"anton"}
+    assert saved_click.normalized_params == {"utm_source":"anton"}
     assert saved_click.redirect_target == "https://example.com/landing"
-    assert saved_click.status == 'accepted'
+    assert saved_click.status == 'duplicate'
 
 def test_process_click_returns_existing_click_for_idempotent_retry() -> None:
     uow = StubUnitOfWork()

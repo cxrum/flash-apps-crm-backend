@@ -1,7 +1,9 @@
+from copy import copy
+
 import requests
 
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
-from app.domain.currency.entity import CurrencyEntity
+from app.domain.currency.entity import Money
 
 
 class CurrencyConvertorClient(CurrencyConvertorClientProtocol):
@@ -11,8 +13,11 @@ class CurrencyConvertorClient(CurrencyConvertorClientProtocol):
         super().__init__()
     
     
-    def convert(self, _from: CurrencyEntity, _to: str) -> CurrencyEntity:
+    def convert(self, _from: Money, _to: str) -> Money:
         
+        if _from.base == _to:
+            return copy(_from)
+         
         if len(_to) != 3 or len(_from.base) != 3:
             raise RuntimeError("Inncorect base code")
             
@@ -30,7 +35,7 @@ class CurrencyConvertorClient(CurrencyConvertorClientProtocol):
         
         data = res.json()
         
-        return CurrencyEntity(
+        return Money(
             base=_to,
             value=_from.value * float(data["rates"][_to])
         )

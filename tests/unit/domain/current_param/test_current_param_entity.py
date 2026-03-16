@@ -20,10 +20,10 @@ def test_update_param_replace_overwrites_scalar_slot() -> None:
     assert entity.updated_at is not None
 
 
-def test_update_param_append_supports_lists() -> None:
+def test_update_param_append_supports_uniq_lists() -> None:
     entity = build_current_param_entity(value_string=None, value_json=["email"])
 
-    entity.update_param("append", ["push", "sms"])
+    entity.update_param("append", ["push", "sms", "sms"])
 
     assert entity.value_json == ["email", "push", "sms"]
 

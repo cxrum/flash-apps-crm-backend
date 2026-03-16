@@ -12,7 +12,7 @@ from app.domain.click.CrmClickEntity import CrmClickEntity
 from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
     CrmConversionDefinitionEntity,
 )
-from app.domain.currency.entity import CurrencyEntity
+from app.domain.currency.entity import Money
 from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
@@ -288,8 +288,8 @@ def build_user_app_access_entity(**overrides: Any) -> CrmUserAppAccessEntity:
 def build_user_role_entity(**overrides: Any) -> CrmUserRoleEntity:
     return CrmUserRoleEntity(**_merge({"user_id": 1, "role_id": 1}, overrides))
 
-def build_currency_entity(**overrides: Any) -> CurrencyEntity:
-    return CurrencyEntity(
+def build_currency_entity(**overrides: Any) -> Money:
+    return Money(
         **_merge(
             {
                 "base": "USD",

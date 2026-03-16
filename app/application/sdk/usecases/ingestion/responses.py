@@ -12,5 +12,9 @@ class SdkInstallResponse:
 class SdkEventResponse:
     received: int
     inserted: int
-    ignored_duplicates: int
+    
+@dataclass(frozen=True)
+class SdkUpdateParamsResponse:
+    received: int
+    inserted: int
     

@@ -29,7 +29,13 @@ class _AppendCurrentParamStrategy:
                 appended.extend(incoming_value)
             else:
                 appended.append(incoming_value)
-            return appended
+
+            _temp = []
+            for val in appended:
+                if val not in _temp:
+                     _temp.append(val)
+            
+            return _temp
 
         if isinstance(current_value, str) and isinstance(incoming_value, str):
             return current_value + incoming_value

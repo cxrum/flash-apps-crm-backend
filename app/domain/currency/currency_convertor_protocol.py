@@ -1,8 +1,8 @@
 
 from typing import Protocol
 
-from app.domain.currency.entity import CurrencyEntity
+from app.domain.currency.entity import Money
 
 
 class CurrencyConvertorClientProtocol(Protocol):
-    def convert(self, _from: CurrencyEntity, _to: str) -> CurrencyEntity: ...
+    def convert(self, _from: Money, _to: str) -> Money: ...
