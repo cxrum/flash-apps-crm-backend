@@ -3,10 +3,10 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Protocol
 
-from app.application.events_bus.events import DomainEventMessage
+from app.domain.event_bus.base_event import DomainEventMessage
 
 
-class EventMessageHandlerProtocol(Protocol):
+class EventMessageHandler(Protocol):
     def handle(self, message: DomainEventMessage) -> None: ...
 
 
@@ -18,8 +18,8 @@ class IMessageQueue(Protocol):
 
 
 class IEventBus(Protocol):
-    def subscribe(self, event_name: str, handler: EventMessageHandlerProtocol) -> None: ...
-    def unsubscribe(self, event_name: str, handler: EventMessageHandlerProtocol) -> None: ...
+    def subscribe(self, event_name: str, handler: EventMessageHandler) -> None: ...
+    def unsubscribe(self, event_name: str, handler: EventMessageHandler) -> None: ...
     def publish(self, message: DomainEventMessage) -> None: ...
     def publish_many(self, messages: Sequence[DomainEventMessage]) -> None: ...
 

@@ -1,18 +1,11 @@
-from __future__ import annotations
-
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
-from typing import Any, TypeVar
-
 from app.application.exceptions import ApplicationError
+from app.domain.event_bus.base_event import DomainEventMessage
 
 
-@dataclass(frozen=True, slots=True)
-class DomainEventMessage:
-    name: str
-    payload: dict[str, Any] = field(default_factory=dict)
-    metadata: dict[str, Any] = field(default_factory=dict)
-    occurred_at: datetime = field(default_factory=lambda: datetime.now(tz=UTC))
+from datetime import datetime
+from typing import Any
+
+from app.domain.exceptions import DomainError
 
 
 class RawEventMessage(DomainEventMessage):
@@ -58,14 +51,14 @@ class RawEventMessage(DomainEventMessage):
     def event_time_utc(self) -> datetime:
         value = self.payload["event_time_utc"]
         if not isinstance(value, datetime):
-            raise ApplicationError("RawEventMessage.event_time_utc must be datetime")
+            raise DomainError("RawEventMessage.event_time_utc must be datetime")
         return value
 
     @property
     def raw_payload(self) -> dict[str, Any]:
         value = self.payload.get("payload", {})
         if not isinstance(value, dict):
-            raise ApplicationError("RawEventMessage.payload['payload'] must be dict")
+            raise DomainError("RawEventMessage.payload['payload'] must be dict")
         return dict(value)
 
 
@@ -75,4 +68,3 @@ class MetricEventMessage(RawEventMessage):
 
 class ConversionEventMessage(RawEventMessage):
     EVENT_NAME = "crm.events.conversion.saved"
-

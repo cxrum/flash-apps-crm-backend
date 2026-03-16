@@ -4,6 +4,7 @@ from app.application.s2s.resposes import S2SClickResponse
 from app.application.sdk.usecases.ingestion.service import IngestionService
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.click.CrmClickEntity import CrmClickEntity
+from app.domain.event_bus.service_protocol import IEventBus
 from app.domain.uow import CrmUnitOfWorkProtocol
 
 

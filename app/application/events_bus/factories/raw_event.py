@@ -1,5 +1,5 @@
-from app.application.events_bus.events import RawEventMessage
 from app.application.exceptions import ApplicationError
+from app.domain.event_bus.events.crm_events import RawEventMessage
 from app.domain.events.CrmEventEntity import EventEntity
 
 

@@ -89,5 +89,5 @@ PROTOCOL_DOUBLE_REGISTRY = {
     CrmUserAppAccessRepositoryProtocol: InMemoryCrmUserAppAccessRepository,
     CrmUserRepositoryProtocol: InMemoryCrmUserRepository,
     CrmUserRoleRepositoryProtocol: InMemoryCrmUserRoleRepository,
-    CurrencyConvertorClientProtocol: CurrencyConvertorClient
+    CurrencyConvertorClientProtocol: CurrencyConvertorClient,
 }

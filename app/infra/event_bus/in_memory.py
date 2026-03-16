@@ -1,12 +1,10 @@
 from collections.abc import Sequence
 
-from app.application.events_bus.events import DomainEventMessage
-from app.application.events_bus.service import EventMessageHandlerProtocol, IEventBus, IMessageQueue
-
-
 from collections import deque
 
 from app.application.exceptions import ApplicationError
+from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.service_protocol import EventMessageHandler, IEventBus, IMessageQueue
 
 
 class InMemoryMessageQueue(IMessageQueue):
@@ -33,15 +31,15 @@ class InMemoryMessageQueue(IMessageQueue):
 class InMemoryEventBus(IEventBus):
     def __init__(self, message_queue: IMessageQueue | None = None) -> None:
         self._message_queue = message_queue or InMemoryMessageQueue()
-        self._subscribers: dict[str, list[EventMessageHandlerProtocol]] = {}
+        self._subscribers: dict[str, list[EventMessageHandler]] = {}
 
-    def subscribe(self, event_name: str, handler: EventMessageHandlerProtocol) -> None:
+    def subscribe(self, event_name: str, handler: EventMessageHandler) -> None:
         normalized_event_name = self._normalize_event_name(event_name)
         handlers = self._subscribers.setdefault(normalized_event_name, [])
         if handler not in handlers:
             handlers.append(handler)
 
-    def unsubscribe(self, event_name: str, handler: EventMessageHandlerProtocol) -> None:
+    def unsubscribe(self, event_name: str, handler: EventMessageHandler) -> None:
         normalized_event_name = self._normalize_event_name(event_name)
         handlers = self._subscribers.get(normalized_event_name)
         if handlers is None or handler not in handlers:

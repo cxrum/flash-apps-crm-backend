@@ -2,17 +2,18 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from app.application.events_bus.factories.param_update_event import UpdateParamMessageFactory, UpdateParamValue
 from app.application.exceptions import ApplicationError
 from app.application.sdk.entities import SdkEventCommand, SdkEventsCommand, SdkInstallCommand, SdkParamsUpdateCommand
 from app.application.sdk.usecases.ingestion.event_builder import ConversionEventBuilder, MetricsEventBuilder, RevenueEventBuilder
 from app.application.events_bus.factories.sdk_event import SdkEventMessageFactory
-from app.application.events_bus.service import IEventBus
 from app.application.sdk.usecases.ingestion.responses import SdkEventResponse, SdkInstallResponse, SdkUpdateParamsResponse
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.click.CrmClickEntity import CrmClickEntity
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.domain.currency.entity import Money
 from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
+from app.domain.event_bus.service_protocol import IEventBus
 from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
@@ -124,6 +125,7 @@ class IngestionService:
 
         raise ApplicationError(f"Unsupported event type: {event.type}")
 
+    # TODO Move this processing task to Event-Domain-Bus. Make it async, because its such a heavy task.
     @staticmethod
     def _update_params(uow: CrmUnitOfWorkProtocol, *, params: dict, click_id: str, params_dictionary: list[CrmParamDefinitionEntity], updated_at: datetime | None = None)->list[CrmCurrentParamEntity]:
         
@@ -157,7 +159,7 @@ class IngestionService:
         updatet_params = uow.current_param_repo.save_many(new_params)
         return updatet_params
     
-    def process_batch_events(self, command: SdkEventsCommand) -> SdkEventResponse:
+    def process_batch_events(self, command: SdkEventsCommand):
         with self._uow as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
             click = uow.click_repo.get_by_id(command.click_id)       
@@ -217,47 +219,27 @@ class IngestionService:
                         ._set_currency(None)
                         ._set_amount_in_usd(None)
                     )
-                    
-                IngestionService._update_params(
-                    uow, 
-                    params=event.params, 
-                    click_id=click.click_id, 
-                    params_dictionary=params_dictionary
-                )
-                
                 events_list.append(builder.build())
-            
+                
             inserted = uow.event_repo.insert_many(events_list)
-            self._event_bus.publish_many(SdkEventMessageFactory.from_events(inserted))
+            
+        self._event_bus.publish_many(SdkEventMessageFactory.from_events(inserted))
         
-        return SdkEventResponse(
-            received=len(command.events),
-            inserted=len(inserted),
-        )
     
-    def udate_params(self, command: SdkParamsUpdateCommand) -> SdkUpdateParamsResponse:
+    def udate_params(self, command: SdkParamsUpdateCommand):
         with self._uow as uow:
             click = uow.click_repo.get_by_id(command.click_id)
             
             if click is None:
                 raise ApplicationError(f"Unknown platfrom")
             
-            default_param_dictionary = uow.param_definition_repo.list_by_app_id(None) 
-            app_param_dictionary = uow.param_definition_repo.list_by_app_id(click.app_platform_id) 
-            params_dictionary = default_param_dictionary + app_param_dictionary
-            
             if click is None:
                 raise ApplicationError("Click does not exist")
             
-            updatet_params = IngestionService._update_params(
-                uow, 
-                params=command.params, 
-                click_id=click.click_id, 
-                params_dictionary=params_dictionary,
-                updated_at=command.event_time
-            )
-            
-        return SdkUpdateParamsResponse(
-            received=len(command.params),
-            inserted=len(updatet_params)
+        value = UpdateParamValue(
+            click_id=command.click_id,
+            params=command.params,
+            occured_at=command.event_time or datetime.now(UTC)
         )
+        
+        self._event_bus.publish(UpdateParamMessageFactory.from_raw_payload(value=value))

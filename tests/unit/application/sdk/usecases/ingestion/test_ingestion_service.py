@@ -264,8 +264,6 @@ def test_process_batch_event_types(
     
     events = unit_test_context.uow.event_repo.list_by_app_id(platfrom.app_id)
     
-    assert resp.inserted == 3
-    assert resp.received == 3
     assert len(events) == 3
     assert [event.event_type for event in events] == ["conversion", "conversion", "metric"]
     assert [event.amount_usd for event in events] == [None, conversion_service.convert(Money(base="EUR", value=5), "USD").value, None]

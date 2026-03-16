@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from app.application.events_bus.service import IEventBus
+from app.domain.event_bus.service_protocol import IEventBus
 from app.application.sdk.usecases.apps.service import AppService
 from app.application.sdk.usecases.ingestion.service import IngestionService
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol

@@ -3,8 +3,8 @@ from __future__ import annotations
 import pytest
 
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
+from app.domain.event_bus.service_protocol import IEventBus
 from app.infra.event_bus.in_memory import InMemoryEventBus
-from app.application.events_bus.service import IEventBus
 from app.infra.services.currency import CurrencyConvertorClient
 from tests.unit.base import UnitTestContext
 from tests.unit.doubles.application.encryption import StubEncryptionService
