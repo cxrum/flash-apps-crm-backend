@@ -4,14 +4,19 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from app.api.router import api_router
 from app.core.config import settings
-from app.di.dependencies import SHARED_ASYNC_MEMORY_BUS
+from app.di.dependencies import SHARED_ASYNC_MEMORY_BUS, get_event_subscribers, get_in_memory_event_bus, register_event_handlers
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await SHARED_ASYNC_MEMORY_BUS.start()
-    yield
-    await SHARED_ASYNC_MEMORY_BUS.stop()
+    bus = get_in_memory_event_bus()
+    register_event_handlers(get_event_subscribers(), bus)
+    
+    await bus.start()
+    try:
+        yield
+    finally:
+        await bus.stop()
 
 
 app = FastAPI(

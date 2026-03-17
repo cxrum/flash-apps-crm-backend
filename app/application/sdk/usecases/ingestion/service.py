@@ -126,40 +126,6 @@ class IngestionService:
             return ConversionEventBuilder(**builder_kwargs)
 
         raise ApplicationError(f"Unsupported event type: {event.type}")
-
-    # TODO Move this processing task to Event-Domain-Bus. Make it async, because its such a heavy task.
-    @staticmethod
-    def _update_params(uow: UnitOfWorkProtocol, *, params: dict, click_id: str, params_dictionary: list[CrmParamDefinitionEntity], updated_at: datetime | None = None)->list[CrmCurrentParamEntity]:
-        
-        new_params = []
-        
-        for definiton in params_dictionary:
-            value = definiton.get_param_value(params)
-
-            if value is None:
-                continue
-                
-            current_param = uow.current_param_repo.get_by_click_and_key(click_id, definiton.machine_key)
-            
-            if current_param is not None:
-                if updated_at is None:
-                    _updated_at = datetime.now(UTC)
-                else:
-                    _updated_at = updated_at
-                
-                current_param = uow.current_param_repo.save(
-                    CrmCurrentParamEntity(
-                        click_id=click_id,
-                        param_key=definiton.machine_key,
-                        updated_at=_updated_at
-                    )
-                )
-            
-            current_param.update_param(definiton.overwrite_policy, value)
-            new_params.append(current_param)
-            
-        updatet_params = uow.current_param_repo.save_many(new_params)
-        return updatet_params
     
     async def process_batch_events(self, command: SdkEventsCommand):
         with self._uow_factory.create() as uow:

@@ -1,12 +1,18 @@
 from __future__ import annotations
 import asyncio
+from datetime import UTC, datetime
 
 import pytest
 
+from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
 from app.application.exceptions import ApplicationError
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.currency.entity import Money
+from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
+from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
 from app.domain.exceptions import DomainError
+from tests.unit.application.sdk.events.test_async_bus import AsyncRecordingHandler, RecordingHandler
 from tests.unit.builders import (
     build_app_entity,
     build_app_platform_entity,
@@ -14,8 +20,9 @@ from tests.unit.builders import (
     build_sdk_install_command,
 )
 from tests.unit.base import UnitTestContext
-from tests.unit.builders.commands import build_sdk_event_command, build_sdk_events_command
-from tests.unit.builders.entities import build_app_user_entity
+from tests.unit.builders.commands import build_sdk_event_command, build_sdk_events_command, build_sdk_params_update_command
+from tests.unit.builders.entities import build_app_user_entity, build_param_definition_entity
+from tests.unit.doubles.domain.uow import StubUnitOfWork, StubUoWFactory
 
 
 def _seed_platform(
@@ -60,9 +67,9 @@ def test_process_install_creates_click_install_and_raw_event_on_first_install(
         service = unit_test_context.build_ingestion_service()
         platform = _seed_platform(unit_test_context)
         command = build_sdk_install_command(click_id=None, install_key=platform.install_key)
-
+        
         response = await service.process_install(command)
-
+        
         saved_click = unit_test_context.uow.click_repo.get_by_id(response.click_id)
         saved_install = unit_test_context.uow.install_repo.get_by_click_id(response.click_id)
         saved_events = unit_test_context.uow.event_repo.list_by_app_id(platform.app_id)
@@ -78,6 +85,7 @@ def test_process_install_creates_click_install_and_raw_event_on_first_install(
         assert [event.event_key for event in saved_events] == ["install"]
         assert saved_events[0].payload["install_key"] == command.install_key
         assert saved_events[0].click_id == response.click_id
+        
         
     asyncio.run(scenario())
 
@@ -260,7 +268,6 @@ def test_process_batch_event_types(
         click = build_click_entity(app_platform_id = platfrom.platform_id)
         unit_test_context.uow.click_repo.insert(click)
         
-        
         service = unit_test_context.build_ingestion_service()
         
         conversion_service = unit_test_context.currency_service
@@ -301,22 +308,149 @@ def test_process_batch_event_buss(
         unit_test_context.uow.click_repo.insert(click)
         
         bus = unit_test_context.async_event_bus
+        await bus.start()
+        
+        conversion_handler = AsyncRecordingHandler()
+        metric_handler = AsyncRecordingHandler()
+        
+        bus.subscribe(
+            ConversionEventMessage.EVENT_NAME,
+            conversion_handler
+        )
+        bus.subscribe(
+            MetricEventMessage.EVENT_NAME,
+            metric_handler
+        )
+        
         service = unit_test_context.build_ingestion_service()
-        conversion_service = unit_test_context.currency_service
         
         events = build_sdk_events_command(
             events=[
                 build_sdk_event_command(
-                    type="metric"
+                    type="metric",
+                    key="paywall"
                 ),
                 build_sdk_event_command(
                     type="conversion",
+                    key="purchase",
                     currency = "EUR",
                     amount="5"
                 ),
                 build_sdk_event_command(
-                    type="conversion"
+                    type="conversion",
+                    key="shop"
                 ),
-            ]
+            ],
+            click_id=click.click_id
         )
         
+        try:
+            res = await service.process_batch_events(events)
+            await asyncio.wait_for(conversion_handler.called.wait(), timeout=1)
+        finally:
+            await bus.stop()
+
+        events = unit_test_context.uow.event_repo.list_by_app_id(platfrom.app_id)
+        
+        assert [message.payload["event_key"] for message in metric_handler.messages] == ["paywall", ]
+        assert [message.payload["event_key"] for message in conversion_handler.messages] == ["purchase", "shop"]
+        
+        
+    asyncio.run(scenario())
+    
+
+def test_async_update_param_handler_creates_current_param() -> None:
+    async def scenario() -> None:
+        uow = StubUnitOfWork()
+        handler = AsyncUpdateParamHandler(StubUoWFactory(uow))
+
+        app = uow.app_repo.save(build_app_entity(app_id=1))
+        platform = uow.app_platform_repo.save(build_app_platform_entity(app_id=app.app_id, platform="ios"))
+        click = uow.click_repo.insert(build_click_entity(app_platform_id=platform.platform_id))
+        uow.param_definition_repo.save(
+            build_param_definition_entity(machine_key="utm_source")
+        )
+
+        message = UpdateCurrentParamMessage(
+            name=UpdateCurrentParamMessage.EVENT_NAME,
+            payload={
+                "click_id": click.click_id,
+                "params": {"utm_source": "origin", "bad_utm_source": "origin"},
+                "updated_at": datetime.now(UTC),
+            },
+        )
+
+        await handler.handle(message)
+
+        saved = uow.current_param_repo.list_by_click_id(click.click_id)
+        assert len(saved) == 1
+        assert saved[0].param_key == "utm_source"
+        assert saved[0].current_value() == "origin"
+        assert uow.enter_count == 1
+        assert uow.commit_count == 1
+
+    asyncio.run(scenario())
+
+
+def test_async_update_param_handler_rejects_wrong_message_type_with_detailed_text() -> None:
+    async def scenario() -> None:
+        handler = AsyncUpdateParamHandler(StubUoWFactory(StubUnitOfWork()))
+
+        with pytest.raises(
+            ApplicationError,
+            match="expected UpdateCurrentParamMessage, got DomainEventMessage",
+        ):
+            await handler.handle(DomainEventMessage(name="crm.events.metric.saved"))
+
+    asyncio.run(scenario())
+
+
+def test_async_update_param_handler_rejects_missing_click_with_detailed_text() -> None:
+    async def scenario() -> None:
+        uow = StubUnitOfWork()
+        handler = AsyncUpdateParamHandler(StubUoWFactory(uow))
+        message = UpdateCurrentParamMessage(
+            name=UpdateCurrentParamMessage.EVENT_NAME,
+            payload={
+                "click_id": "missing-click",
+                "params": {"utm_source": "origin"},
+                "updated_at": datetime(2026, 3, 17, 12, 0, tzinfo=UTC),
+            },
+        )
+
+        with pytest.raises(
+            ApplicationError,
+            match="could not find click with id='missing-click'",
+        ):
+            await handler.handle(message)
+
+    asyncio.run(scenario())
+
+
+def test_async_update_param_handler_rejects_missing_param_definitions_with_detailed_text() -> None:
+    async def scenario() -> None:
+        uow = StubUnitOfWork()
+        handler = AsyncUpdateParamHandler(StubUoWFactory(uow))
+        app = uow.app_repo.save(build_app_entity(app_id=1))
+        platform = uow.app_platform_repo.save(
+            build_app_platform_entity(app_id=app.app_id, platform="ios")
+        )
+        click = uow.click_repo.insert(
+            build_click_entity(app_platform_id=platform.platform_id or 0)
+        )
+        message = UpdateCurrentParamMessage(
+            name=UpdateCurrentParamMessage.EVENT_NAME,
+            payload={
+                "click_id": click.click_id,
+                "params": {"utm_source": "origin"},
+                "updated_at": datetime(2026, 3, 17, 12, 0, tzinfo=UTC),
+            },
+        )
+
+        with pytest.raises(
+            ApplicationError,
+            match=f"could not find param definitions for app_id='{app.app_id}' and click_id='{click.click_id}'",
+        ):
+            await handler.handle(message)
+
+    asyncio.run(scenario())

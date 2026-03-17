@@ -36,7 +36,7 @@ def event_bus() -> IEventBus:
 
 @pytest.fixture
 def async_event_bus() -> IAsyncEventBus:
-    return InMemoryAsyncEventBus(3)
+    return InMemoryAsyncEventBus(1)
 
 @pytest.fixture
 def currency_service() -> CurrencyConvertorClientProtocol:

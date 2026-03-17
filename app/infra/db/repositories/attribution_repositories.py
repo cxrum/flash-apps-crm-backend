@@ -245,3 +245,14 @@ class SqlAlchemyCrmEventRepository(CrmEventRepositoryProtocol):
             .limit(limit)
         ).all()
         return [self._to_domain(row) for row in rows]
+
+    def list_by_click_id(self, click_id: str, *, limit: int = 100) -> list[EventEntity]:
+        rows = self.session.scalars(
+            select(Event)
+            .where(Event.click_id == click_id)
+            .order_by(desc(Event.event_time_utc), desc(Event.event_id))
+            .limit(limit)
+        ).all()
+        return [self._to_domain(row) for row in rows]
+
+    

@@ -144,3 +144,17 @@ class InMemoryCrmEventRepository(CallRecorderMixin, CrmEventRepositoryProtocol):
             reverse=True,
         )
         return [clone(item) for item in items[:limit]]
+    
+    def list_by_click_id(self, click_id: str, *, limit: int = 100) -> list[EventEntity]:
+        self._record("list_by_click_id", click_id, limit=limit)
+        items: list[EventEntity] = []
+        for event in self._items.values():
+            click = self._click_lookup(event.click_id)
+            if click is None:
+                continue
+            items.append(clone(event))
+        items.sort(
+            key=lambda item: (comparable_datetime(item.event_time_utc), item.event_id),
+            reverse=True,
+        )
+        return [clone(item) for item in items[:limit]]
