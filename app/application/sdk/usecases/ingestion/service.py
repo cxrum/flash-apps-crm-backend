@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 from app.application.events_bus.factories.param_update_event import UpdateParamMessageFactory, UpdateParamValue
@@ -24,11 +25,11 @@ from app.domain.uow import CrmUnitOfWorkProtocol
 class IngestionService:
     def __init__(
         self,
-        uow: CrmUnitOfWorkProtocol,
+        uow_factory: Callable[[], CrmUnitOfWorkProtocol],
         async_event_bus: IAsyncEventBus,
         currency_service: CurrencyConvertorClientProtocol
     ) -> None:
-        self._uow = uow
+        self._uow_factory = uow_factory
         self._async_event_bus = async_event_bus
         self._currency_service = currency_service
 
@@ -58,7 +59,7 @@ class IngestionService:
 
     async def process_install(self, command: SdkInstallCommand) -> SdkInstallResponse:
 
-        with self._uow as uow:
+        with self._uow_factory() as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
             
             if app_platform.platform_id is None:
@@ -161,7 +162,7 @@ class IngestionService:
         return updatet_params
     
     async def process_batch_events(self, command: SdkEventsCommand):
-        with self._uow as uow:
+        with self._uow_factory() as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
             click = uow.click_repo.get_by_id(command.click_id)       
             
@@ -224,7 +225,7 @@ class IngestionService:
         
     
     async def udate_params(self, command: SdkParamsUpdateCommand):
-        with self._uow as uow:
+        with self._uow_factory() as uow:
             click = uow.click_repo.get_by_id(command.click_id)
             
             if click is None:

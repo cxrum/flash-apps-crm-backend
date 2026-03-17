@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator
 from types import TracebackType
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -32,6 +33,7 @@ from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
 from app.domain.user_app_access.user_app_access_repository_protocol import CrmUserAppAccessRepositoryProtocol
 from app.domain.user_role.user_role_repository_protocol import CrmUserRoleRepositoryProtocol
 from app.infra.db.repositories.factory import CrmSqlAlchemyRepositoryFactory
+from app.infra.db.session import SessionFactory
 
 #FIXME: Temporary decision. Divide this class to smaller ones for each application service. 
 
@@ -121,3 +123,12 @@ class SqlAlchemyUnitOfWork(CrmUnitOfWorkProtocol):
         if self.session is None:
             raise RuntimeError("UoW session is not started")
         self.session.rollback()
+
+
+class SqlAlchemyUnitOfWorkFactory:
+    
+    def __init__(self, sesion_factory: Callable[[], Session]) -> None:
+        self.__sesion_facoty = sesion_factory
+    
+    def __call__(self, *args: Any, **kwds: Any) -> SqlAlchemyUnitOfWork:
+        return SqlAlchemyUnitOfWork(self.__sesion_facoty)

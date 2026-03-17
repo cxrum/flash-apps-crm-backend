@@ -12,7 +12,7 @@ from tests.unit.builders import (
     build_s2s_click_command,
 )
 from tests.unit.builders.entities import build_param_definition_entity
-from tests.unit.doubles.domain.uow import StubUnitOfWork
+from tests.unit.doubles.domain.uow import StubUnitOfWork, StubUoWFactory
 
 
 def _seed_platform(
@@ -33,7 +33,7 @@ def _seed_platform(
 
 
 def test_process_click_raises_for_unknown_app_code() -> None:
-    service = S2SService(StubUnitOfWork())
+    service = S2SService(StubUoWFactory(StubUnitOfWork()))
 
     with pytest.raises(ApplicationError, match="Unknown app code"):
         service.process_click(build_s2s_click_command(app_code="missing-app"))
@@ -41,7 +41,7 @@ def test_process_click_raises_for_unknown_app_code() -> None:
 
 def test_process_click_raises_for_unknown_platform() -> None:
     uow = StubUnitOfWork()
-    service = S2SService(uow)
+    service = S2SService(StubUoWFactory(uow))
     _seed_platform(uow, platform="ios")
 
     with pytest.raises(ApplicationError, match="is not configured"):
@@ -50,7 +50,7 @@ def test_process_click_raises_for_unknown_platform() -> None:
 
 def test_process_click_inserts_click_with_s2s_metadata() -> None:
     uow = StubUnitOfWork()
-    service = S2SService(uow)
+    service = S2SService(StubUoWFactory(uow))
     platform = _seed_platform(uow)
 
     uow.param_definition_repo.save(
@@ -83,7 +83,7 @@ def test_process_click_inserts_click_with_s2s_metadata() -> None:
 
 def test_process_click_returns_existing_click_for_idempotent_retry() -> None:
     uow = StubUnitOfWork()
-    service = S2SService(uow)
+    service = S2SService(StubUoWFactory(uow))
     platform = _seed_platform(uow)
     existing_click = uow.click_repo.insert(
         build_click_entity(

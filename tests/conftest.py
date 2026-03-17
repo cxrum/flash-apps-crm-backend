@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections.abc import Callable
 
 import pytest
 
@@ -9,18 +10,20 @@ from app.infra.event_bus.async_bus.in_memory import InMemoryAsyncEventBus
 from app.infra.services.currency import CurrencyConvertorClient
 from tests.unit.base import UnitTestContext
 from tests.unit.doubles.application.encryption import StubEncryptionService
-from tests.unit.doubles.domain.uow import StubRepositoryFactory, StubUnitOfWork
+from tests.unit.doubles.domain.uow import StubRepositoryFactory, StubUnitOfWork, StubUoWFactory
 
 
 @pytest.fixture
 def stub_uow() -> StubUnitOfWork:
     return StubUnitOfWork()
 
+@pytest.fixture
+def stub_uow_factory(stub_uow: StubUnitOfWork) -> StubUoWFactory:
+    return StubUoWFactory(stub_uow)
 
 @pytest.fixture
 def stub_repository_factory(stub_uow: StubUnitOfWork) -> StubRepositoryFactory:
     return StubRepositoryFactory(stub_uow=stub_uow)
-
 
 @pytest.fixture
 def stub_encryption_service() -> StubEncryptionService:
@@ -38,16 +41,17 @@ def async_event_bus() -> IAsyncEventBus:
 def currency_service() -> CurrencyConvertorClientProtocol:
     return CurrencyConvertorClient()
 
-
 @pytest.fixture
 def unit_test_context(
     stub_uow: StubUnitOfWork,
+    stub_uow_factory: Callable[[], StubUnitOfWork] ,
     stub_encryption_service: StubEncryptionService,
     async_event_bus: IAsyncEventBus,
     currency_service: CurrencyConvertorClientProtocol
 ) -> UnitTestContext:
     return UnitTestContext(
         uow=stub_uow,
+        uow_factory=stub_uow_factory,
         encryption_service=stub_encryption_service,
         async_event_bus=async_event_bus,
         currency_service=currency_service

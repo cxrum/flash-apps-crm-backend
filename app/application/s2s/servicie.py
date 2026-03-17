@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from app.application.exceptions import ApplicationError
 from app.application.s2s.commands import S2SClickCommand
 from app.application.s2s.resposes import S2SClickResponse
@@ -11,9 +13,9 @@ from app.domain.uow import CrmUnitOfWorkProtocol
 class S2SService:
     def __init__(
         self,
-        uow: CrmUnitOfWorkProtocol,
+        uow_factory: Callable[[], CrmUnitOfWorkProtocol],
     ) -> None:
-        self._uow = uow
+        self._uow_factory = uow_factory
 
     def _resolve_platform(
         self,
@@ -33,7 +35,7 @@ class S2SService:
         return None
 
     def process_click(self, command: S2SClickCommand) -> S2SClickResponse:
-        with self._uow as uow:
+        with self._uow_factory() as uow:
             platform = self._resolve_platform(command.platform, command.app_code, uow)
              
             if platform is None:

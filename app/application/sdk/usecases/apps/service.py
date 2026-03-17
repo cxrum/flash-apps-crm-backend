@@ -1,3 +1,5 @@
+from collections.abc import Callable, Iterator
+
 from app.application.contracts.encryption import EncryptionServiceProtocol
 from app.application.sdk.entities import SdkApplicationConfigurationCommand, SdkCreateAppCommand, SdkCreateAppPlatformCommand
 from app.application.exceptions import ApplicationError
@@ -11,21 +13,22 @@ from app.domain.uow import CrmUnitOfWorkProtocol
 
 class AppService:
     def __init__(self, 
-                 uow: CrmUnitOfWorkProtocol, 
-                 encryption_service: EncryptionServiceProtocol
-                 ) -> None:
-        self._uow = uow
+            uow_factory: Callable[[], CrmUnitOfWorkProtocol], 
+            encryption_service: EncryptionServiceProtocol
+        ) -> None:
+        self._uow_factory = uow_factory
         self._encryption_service = encryption_service
 
     def create_app(self, command: SdkCreateAppCommand) -> CreateAppResponse:
         app = SdkDomainMapper.app_from_command(command)
         app.draft()
 
-        saved_app = self._uow.app_repo.save(app)
+        with self._uow_factory() as uow:
+            saved_app = uow.app_repo.save(app)
             
-        if saved_app.app_id is None:
-            raise ApplicationError("App repository returned entity without app_id")
-        
+            if saved_app.app_id is None:
+                raise ApplicationError("App repository returned entity without app_id")
+            
         return CreateAppResponse(app_id=saved_app.app_id)
 
     def create_platform(self, command: SdkCreateAppPlatformCommand) -> CreatePlatformResponse:
@@ -34,14 +37,15 @@ class AppService:
         if not platform_app.is_valid_platform():
             raise ApplicationError("App platform does not valid")
 
-        app = self._uow.app_repo.get_by_id(platform_app.app_id)
-        if app is None:
-            raise ApplicationError(f"App with id {platform_app.app_id} doesnt exist")
+        with self._uow_factory() as uow:
+            app = uow.app_repo.get_by_id(platform_app.app_id)
+            if app is None:
+                raise ApplicationError(f"App with id {platform_app.app_id} doesnt exist")
 
-        saved_platform_app = self._uow.app_platform_repo.save(platform_app)
-            
-        if saved_platform_app.platform_id is None:
-            raise ApplicationError("App platfrom repository returned empty entity")
+            saved_platform_app = uow.app_platform_repo.save(platform_app)
+                
+            if saved_platform_app.platform_id is None:
+                raise ApplicationError("App platfrom repository returned empty entity")
         
         return CreatePlatformResponse(platform_id=saved_platform_app.platform_id)
 
@@ -85,23 +89,25 @@ class AppService:
         )
 
     def get_app_config_secrets(self, command: SdkApplicationConfigurationCommand) -> AppConfigQueryResponse:
-        platform = self._select_platform(
-            self._uow.app_platform_repo.list_by_app_id(command.app_id),
-            command.platform,
-        )
         
-        if platform is None or platform.platform_id is None:
-            raise ApplicationError(
-                f"Platform {command.platform} is not configured for app {command.app_id}",
+        with self._uow_factory() as uow:
+            platform = self._select_platform(
+                uow.app_platform_repo.list_by_app_id(command.app_id),
+                command.platform,
             )
+            
+            if platform is None or platform.platform_id is None:
+                raise ApplicationError(
+                    f"Platform {command.platform} is not configured for app {command.app_id}",
+                )
 
-        templates = self._uow.secret_template_repo.list_all()
-        latest_secrets = self._latest_secrets_by_template(
-            self._uow.app_secret_repo.list_active_by_app(
-                command.app_id,
-                platform_id=platform.platform_id,
+            templates = uow.secret_template_repo.list_all()
+            latest_secrets = self._latest_secrets_by_template(
+                uow.app_secret_repo.list_active_by_app(
+                    command.app_id,
+                    platform_id=platform.platform_id,
+                )
             )
-        )
 
         configurations: list[AppConfigQueryEntry] = []
         for template in templates:

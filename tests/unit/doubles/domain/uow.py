@@ -216,3 +216,10 @@ class StubRepositoryFactory(CallRecorderMixin):
 
     def audit_log_repo(self, session: object) -> object:
         return self._repo("audit_log_repo", session)
+
+class StubUoWFactory:
+    def __init__(self, stub_uow: StubUnitOfWork | None = None) -> None:
+        self.stub_uow = stub_uow or StubUnitOfWork()
+
+    def __call__(self, *args: Any, **kwds: Any) -> StubUnitOfWork:
+        return self.stub_uow
