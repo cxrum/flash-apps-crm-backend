@@ -5,17 +5,18 @@ from fastapi import Depends
 
 from app.application.contracts.encryption import EncryptionServiceProtocol
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
-from app.infra.event_bus.in_memory import InMemoryEventBus, InMemoryMessageQueue
-from app.application.events_bus.service import IEventBus, IMessageQueue
+from app.domain.event_bus.service_protocol import IAsyncEventBus
 from app.application.s2s.servicie import S2SService
 from app.application.sdk.usecases.apps.service import AppService
 from app.application.sdk.usecases.ingestion.service import IngestionService
 from app.domain.uow import CrmUnitOfWorkProtocol
 from app.infra.db.puow import SqlAlchemyUnitOfWork
 from app.infra.db.session import SessionFactory
+from app.infra.event_bus.async_bus.in_memory import InMemoryAsyncEventBus
 from app.infra.services.currency import CurrencyConvertorClient
 from app.infra.services.encription import EncryptionService
 
+SHARED_ASYNC_MEMORY_BUS = InMemoryAsyncEventBus()
 
 def get_uow() -> Iterator[CrmUnitOfWorkProtocol]:
     with SqlAlchemyUnitOfWork(SessionFactory) as uow:
@@ -28,10 +29,8 @@ def get_app_seacrets_encryptor() -> EncryptionServiceProtocol:
 def get_currecncy_client() -> CurrencyConvertorClientProtocol:
     return CurrencyConvertorClient()
 
-
-@lru_cache(maxsize=1)
-def get_in_memory_event_bus() -> IEventBus:
-    return InMemoryEventBus()
+def get_in_memory_event_bus() -> IAsyncEventBus:
+    return SHARED_ASYNC_MEMORY_BUS
 
 def get_sdk_app_service(
     uow: CrmUnitOfWorkProtocol = Depends(get_uow),
@@ -41,7 +40,7 @@ def get_sdk_app_service(
 
 def get_sdk_ingestion_service(
     uow: CrmUnitOfWorkProtocol = Depends(get_uow),
-    event_bus: IEventBus = Depends(get_in_memory_event_bus),
+    event_bus: IAsyncEventBus = Depends(get_in_memory_event_bus),
     currency_service = Depends(get_currecncy_client)
 ) -> IngestionService:
     return IngestionService(uow, event_bus, currency_service)

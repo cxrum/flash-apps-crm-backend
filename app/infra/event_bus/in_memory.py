@@ -27,7 +27,6 @@ class InMemoryMessageQueue(IMessageQueue):
     def size(self) -> int:
         return len(self._messages)
 
-
 class InMemoryEventBus(IEventBus):
     def __init__(self, message_queue: IMessageQueue | None = None) -> None:
         self._message_queue = message_queue or InMemoryMessageQueue()
@@ -72,3 +71,5 @@ class InMemoryEventBus(IEventBus):
             metadata=dict(message.metadata),
             occurred_at=message.occurred_at,
         )
+
+SHARED_MEMORY_BUS = InMemoryEventBus()

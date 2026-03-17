@@ -13,7 +13,7 @@ from app.domain.click.CrmClickEntity import CrmClickEntity
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.domain.currency.entity import Money
 from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
-from app.domain.event_bus.service_protocol import IEventBus
+from app.domain.event_bus.service_protocol import IAsyncEventBus
 from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
@@ -25,11 +25,11 @@ class IngestionService:
     def __init__(
         self,
         uow: CrmUnitOfWorkProtocol,
-        event_bus: IEventBus,
+        async_event_bus: IAsyncEventBus,
         currency_service: CurrencyConvertorClientProtocol
     ) -> None:
         self._uow = uow
-        self._event_bus = event_bus
+        self._async_event_bus = async_event_bus
         self._currency_service = currency_service
 
 
@@ -56,7 +56,7 @@ class IngestionService:
             )
         )
 
-    def process_install(self, command: SdkInstallCommand) -> SdkInstallResponse:
+    async def process_install(self, command: SdkInstallCommand) -> SdkInstallResponse:
 
         with self._uow as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
@@ -91,7 +91,8 @@ class IngestionService:
             )
             
             saved_event = uow.event_repo.insert(event)
-            self._event_bus.publish(SdkEventMessageFactory.from_event(saved_event))
+            
+        await self._async_event_bus.publish(SdkEventMessageFactory.from_event(saved_event))
         
         return SdkInstallResponse(
             click_id=click.click_id, 
@@ -159,17 +160,13 @@ class IngestionService:
         updatet_params = uow.current_param_repo.save_many(new_params)
         return updatet_params
     
-    def process_batch_events(self, command: SdkEventsCommand):
+    async def process_batch_events(self, command: SdkEventsCommand):
         with self._uow as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
             click = uow.click_repo.get_by_id(command.click_id)       
             
             if app_platform.platform_id is None:
                 raise ApplicationError(f"Unknown platfrom")
-            
-            default_param_dictionary = uow.param_definition_repo.list_by_app_id(None) 
-            app_param_dictionary = uow.param_definition_repo.list_by_app_id(app_platform.platform_id) 
-            params_dictionary = default_param_dictionary + app_param_dictionary
             
             if click is None:
                 raise ApplicationError("Click does not exist")
@@ -223,10 +220,10 @@ class IngestionService:
                 
             inserted = uow.event_repo.insert_many(events_list)
             
-        self._event_bus.publish_many(SdkEventMessageFactory.from_events(inserted))
+        await self._async_event_bus.publish_many(SdkEventMessageFactory.from_events(inserted))
         
     
-    def udate_params(self, command: SdkParamsUpdateCommand):
+    async def udate_params(self, command: SdkParamsUpdateCommand):
         with self._uow as uow:
             click = uow.click_repo.get_by_id(command.click_id)
             
@@ -242,4 +239,4 @@ class IngestionService:
             occured_at=command.event_time or datetime.now(UTC)
         )
         
-        self._event_bus.publish(UpdateParamMessageFactory.from_raw_payload(value=value))
+        await self._async_event_bus.publish(UpdateParamMessageFactory.from_raw_payload(value=value))
