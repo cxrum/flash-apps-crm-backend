@@ -7,13 +7,13 @@ from app.application.sdk.usecases.ingestion.service import IngestionService
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.click.CrmClickEntity import CrmClickEntity
 from app.domain.event_bus.service_protocol import IEventBus
-from app.domain.uow import CrmUnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
 
 
 class S2SService:
     def __init__(
         self,
-        uow_factory: Callable[[], CrmUnitOfWorkProtocol],
+        uow_factory: UnitOfWorkFacotyProtocol,
     ) -> None:
         self._uow_factory = uow_factory
 
@@ -21,7 +21,7 @@ class S2SService:
         self,
         platform: str,
         app_code: str,
-        uow: CrmUnitOfWorkProtocol,
+        uow: UnitOfWorkProtocol,
     ) -> CrmAppPlatformEntity | None:
         app = uow.app_repo.get_by_slug(app_code)
         if app is None:
@@ -35,7 +35,7 @@ class S2SService:
         return None
 
     def process_click(self, command: S2SClickCommand) -> S2SClickResponse:
-        with self._uow_factory() as uow:
+        with self._uow_factory.create() as uow:
             platform = self._resolve_platform(command.platform, command.app_code, uow)
              
             if platform is None:

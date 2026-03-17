@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from types import TracebackType
-from typing import Protocol
+from typing import Any, Protocol
 
 from app.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
 from app.domain.app_platform.app_platform_repository_protocol import CrmAppPlatformRepositoryProtocol
@@ -30,7 +30,7 @@ from app.domain.user_app_access.user_app_access_repository_protocol import CrmUs
 from app.domain.user_role.user_role_repository_protocol import CrmUserRoleRepositoryProtocol
 
 
-class CrmUnitOfWorkProtocol(Protocol):
+class UnitOfWorkProtocol(Protocol):
     app_repo: CrmAppRepositoryProtocol
     app_platform_repo: CrmAppPlatformRepositoryProtocol
     user_repo: CrmUserRepositoryProtocol
@@ -55,7 +55,7 @@ class CrmUnitOfWorkProtocol(Protocol):
     push_event_repo: CrmPushEventRepositoryProtocol
     audit_log_repo: CrmAuditLogRepositoryProtocol
 
-    def __enter__(self) -> "CrmUnitOfWorkProtocol": ...
+    def __enter__(self) -> "UnitOfWorkProtocol": ...
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
@@ -64,3 +64,7 @@ class CrmUnitOfWorkProtocol(Protocol):
     ) -> None: ...
     def commit(self) -> None: ...
     def rollback(self) -> None: ...
+
+
+class UnitOfWorkFacotyProtocol(Protocol):
+    def create(self, *args: Any, **kwds: Any) -> UnitOfWorkProtocol: ...

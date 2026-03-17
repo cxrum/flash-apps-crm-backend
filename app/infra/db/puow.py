@@ -28,7 +28,7 @@ from app.domain.push_token.push_token_repository_protocol import CrmPushTokenRep
 from app.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
 from app.domain.role_permission.role_permission_repository_protocol import CrmRolePermissionRepositoryProtocol
 from app.domain.secret_template.secret_template_repository_protocol import CrmSecretTemplateRepositoryProtocol
-from app.domain.uow import CrmUnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
 from app.domain.user_app_access.user_app_access_repository_protocol import CrmUserAppAccessRepositoryProtocol
 from app.domain.user_role.user_role_repository_protocol import CrmUserRoleRepositoryProtocol
@@ -37,7 +37,7 @@ from app.infra.db.session import SessionFactory
 
 #FIXME: Temporary decision. Divide this class to smaller ones for each application service. 
 
-class SqlAlchemyUnitOfWork(CrmUnitOfWorkProtocol):
+class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
     app_repo: CrmAppRepositoryProtocol
     app_platform_repo: CrmAppPlatformRepositoryProtocol
     user_repo: CrmUserRepositoryProtocol
@@ -125,10 +125,10 @@ class SqlAlchemyUnitOfWork(CrmUnitOfWorkProtocol):
         self.session.rollback()
 
 
-class SqlAlchemyUnitOfWorkFactory:
+class SqlAlchemyUnitOfWorkFactory(UnitOfWorkFacotyProtocol):
     
     def __init__(self, sesion_factory: Callable[[], Session]) -> None:
         self.__sesion_facoty = sesion_factory
     
-    def __call__(self, *args: Any, **kwds: Any) -> SqlAlchemyUnitOfWork:
+    def create(self, *args: Any, **kwds: Any) -> SqlAlchemyUnitOfWork:
         return SqlAlchemyUnitOfWork(self.__sesion_facoty)

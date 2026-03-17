@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from app.domain.uow import CrmUnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkProtocol
 from tests.unit.doubles.application.encryption import StubEncryptionService
 from tests.unit.doubles.registry import PROTOCOL_DOUBLE_REGISTRY
 from tests.unit.doubles.domain.uow import StubUnitOfWork
@@ -37,7 +37,7 @@ def test_protocol_registry_covers_all_current_application_and_domain_protocols()
 def test_stub_unit_of_work_exposes_full_protocol_surface() -> None:
     uow = StubUnitOfWork()
 
-    for attribute_name in CrmUnitOfWorkProtocol.__annotations__:
+    for attribute_name in UnitOfWorkProtocol.__annotations__:
         assert hasattr(uow, attribute_name)
 
     assert hasattr(uow, "__enter__")

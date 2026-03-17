@@ -8,12 +8,12 @@ from app.application.sdk.usecases.apps.responses import AppConfigQueryEntry, App
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
-from app.domain.uow import CrmUnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFacotyProtocol
 
 
 class AppService:
     def __init__(self, 
-            uow_factory: Callable[[], CrmUnitOfWorkProtocol], 
+            uow_factory: UnitOfWorkFacotyProtocol, 
             encryption_service: EncryptionServiceProtocol
         ) -> None:
         self._uow_factory = uow_factory
@@ -23,7 +23,7 @@ class AppService:
         app = SdkDomainMapper.app_from_command(command)
         app.draft()
 
-        with self._uow_factory() as uow:
+        with self._uow_factory.create() as uow:
             saved_app = uow.app_repo.save(app)
             
             if saved_app.app_id is None:
@@ -37,7 +37,7 @@ class AppService:
         if not platform_app.is_valid_platform():
             raise ApplicationError("App platform does not valid")
 
-        with self._uow_factory() as uow:
+        with self._uow_factory.create() as uow:
             app = uow.app_repo.get_by_id(platform_app.app_id)
             if app is None:
                 raise ApplicationError(f"App with id {platform_app.app_id} doesnt exist")
@@ -90,7 +90,7 @@ class AppService:
 
     def get_app_config_secrets(self, command: SdkApplicationConfigurationCommand) -> AppConfigQueryResponse:
         
-        with self._uow_factory() as uow:
+        with self._uow_factory.create() as uow:
             platform = self._select_platform(
                 uow.app_platform_repo.list_by_app_id(command.app_id),
                 command.platform,

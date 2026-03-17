@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import TracebackType
 from typing import Any
 
-from app.domain.uow import CrmUnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
 from tests.unit.doubles.base import CallRecorderMixin
 from tests.unit.doubles.domain.repositories import (
     InMemoryCrmAppPlatformRepository,
@@ -32,7 +32,7 @@ from tests.unit.doubles.domain.repositories import (
 )
 
 
-class StubUnitOfWork(CallRecorderMixin, CrmUnitOfWorkProtocol):
+class StubUnitOfWork(CallRecorderMixin, UnitOfWorkProtocol):
     def __init__(self, **overrides: Any) -> None:
         super().__init__()
         self.enter_count = 0
@@ -217,9 +217,9 @@ class StubRepositoryFactory(CallRecorderMixin):
     def audit_log_repo(self, session: object) -> object:
         return self._repo("audit_log_repo", session)
 
-class StubUoWFactory:
+class StubUoWFactory(UnitOfWorkFacotyProtocol):
     def __init__(self, stub_uow: StubUnitOfWork | None = None) -> None:
         self.stub_uow = stub_uow or StubUnitOfWork()
 
-    def __call__(self, *args: Any, **kwds: Any) -> StubUnitOfWork:
+    def create(self, *args: Any, **kwds: Any) -> StubUnitOfWork:
         return self.stub_uow

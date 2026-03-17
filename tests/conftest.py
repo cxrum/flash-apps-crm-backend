@@ -5,6 +5,7 @@ import pytest
 
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.domain.event_bus.service_protocol import IAsyncEventBus, IEventBus
+from app.domain.uow import UnitOfWorkFacotyProtocol
 from app.infra.event_bus.in_memory import InMemoryEventBus
 from app.infra.event_bus.async_bus.in_memory import InMemoryAsyncEventBus
 from app.infra.services.currency import CurrencyConvertorClient
@@ -44,7 +45,7 @@ def currency_service() -> CurrencyConvertorClientProtocol:
 @pytest.fixture
 def unit_test_context(
     stub_uow: StubUnitOfWork,
-    stub_uow_factory: Callable[[], StubUnitOfWork] ,
+    stub_uow_factory: UnitOfWorkFacotyProtocol,
     stub_encryption_service: StubEncryptionService,
     async_event_bus: IAsyncEventBus,
     currency_service: CurrencyConvertorClientProtocol

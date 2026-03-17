@@ -1,3 +1,3 @@
-from app.domain.uow import CrmUnitOfWorkProtocol as UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkProtocol as UnitOfWorkProtocol
 
 __all__ = ["UnitOfWorkProtocol"]

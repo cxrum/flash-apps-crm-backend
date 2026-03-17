@@ -49,7 +49,7 @@ from app.domain.repositories import (
     CrmUserRepositoryProtocol,
     CrmUserRoleRepositoryProtocol,
 )
-from app.domain.uow import CrmUnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkProtocol
 
 __all__ = [
     "CrmAppEntity",
@@ -96,7 +96,7 @@ __all__ = [
     "CrmRolePermissionRepositoryProtocol",
     "CrmRoleRepositoryProtocol",
     "CrmSecretTemplateRepositoryProtocol",
-    "CrmUnitOfWorkProtocol",
+    "UnitOfWorkProtocol",
     "CrmUserAppAccessRepositoryProtocol",
     "CrmUserRepositoryProtocol",
     "CrmUserRoleRepositoryProtocol",

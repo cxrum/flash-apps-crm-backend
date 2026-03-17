@@ -18,14 +18,14 @@ from app.domain.event_bus.service_protocol import IAsyncEventBus
 from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
-from app.domain.uow import CrmUnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
 
 
 
 class IngestionService:
     def __init__(
         self,
-        uow_factory: Callable[[], CrmUnitOfWorkProtocol],
+        uow_factory: UnitOfWorkFacotyProtocol,
         async_event_bus: IAsyncEventBus,
         currency_service: CurrencyConvertorClientProtocol
     ) -> None:
@@ -34,7 +34,7 @@ class IngestionService:
         self._currency_service = currency_service
 
 
-    def _resolve_platform(self, install_key: str, uow: CrmUnitOfWorkProtocol,) -> CrmAppPlatformEntity:
+    def _resolve_platform(self, install_key: str, uow: UnitOfWorkProtocol,) -> CrmAppPlatformEntity:
         platform = uow.app_platform_repo.get_by_install_key(install_key)
         
         if platform is None or platform.platform_id is None:
@@ -42,7 +42,7 @@ class IngestionService:
         
         return platform
 
-    def _resolve_click(self, command: SdkInstallCommand, app_platform_id: int, uow: CrmUnitOfWorkProtocol,) -> CrmClickEntity:
+    def _resolve_click(self, command: SdkInstallCommand, app_platform_id: int, uow: UnitOfWorkProtocol,) -> CrmClickEntity:
         click_id = command.click_id or CrmClickEntity.generate_click_id()
         existing = uow.click_repo.get_by_id(click_id)
         
@@ -59,7 +59,7 @@ class IngestionService:
 
     async def process_install(self, command: SdkInstallCommand) -> SdkInstallResponse:
 
-        with self._uow_factory() as uow:
+        with self._uow_factory.create() as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
             
             if app_platform.platform_id is None:
@@ -129,7 +129,7 @@ class IngestionService:
 
     # TODO Move this processing task to Event-Domain-Bus. Make it async, because its such a heavy task.
     @staticmethod
-    def _update_params(uow: CrmUnitOfWorkProtocol, *, params: dict, click_id: str, params_dictionary: list[CrmParamDefinitionEntity], updated_at: datetime | None = None)->list[CrmCurrentParamEntity]:
+    def _update_params(uow: UnitOfWorkProtocol, *, params: dict, click_id: str, params_dictionary: list[CrmParamDefinitionEntity], updated_at: datetime | None = None)->list[CrmCurrentParamEntity]:
         
         new_params = []
         
@@ -162,7 +162,7 @@ class IngestionService:
         return updatet_params
     
     async def process_batch_events(self, command: SdkEventsCommand):
-        with self._uow_factory() as uow:
+        with self._uow_factory.create() as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
             click = uow.click_repo.get_by_id(command.click_id)       
             
@@ -225,7 +225,7 @@ class IngestionService:
         
     
     async def udate_params(self, command: SdkParamsUpdateCommand):
-        with self._uow_factory() as uow:
+        with self._uow_factory.create()  as uow:
             click = uow.click_repo.get_by_id(command.click_id)
             
             if click is None:
