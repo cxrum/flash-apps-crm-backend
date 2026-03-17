@@ -26,6 +26,7 @@ class SdkInstallPayload(TransportPayload):
 
 
 class SdkEventPayload(TransportPayload):
+    idempotency_key: str
     type: Literal["metric", "conversion"]
     key: str
     event_time: datetime | None = None

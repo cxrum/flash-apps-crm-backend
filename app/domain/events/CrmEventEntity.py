@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Any
 
 
-@dataclass(frozen=True)
+@dataclass
 class EventEntity:
     event_id: str
     click_id: str

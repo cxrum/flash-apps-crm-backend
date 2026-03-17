@@ -112,6 +112,7 @@ def build_sdk_event_command(**overrides: Any) -> SdkEventCommand:
     return _build(
         SdkEventCommand,
         {
+            "idempotency_key": "events-idempotency-1",
             "type": "metric",
             "key": "first_open",
             "event_time": _FIXED_NOW,

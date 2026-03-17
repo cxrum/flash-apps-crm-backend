@@ -257,8 +257,6 @@ def test_process_install_exist_user_installed_on_another_device(
     asyncio.run(scenario())
     
     
-    
-
 def test_process_batch_event_types(
     unit_test_context: UnitTestContext,
 ) -> None:
@@ -275,16 +273,27 @@ def test_process_batch_event_types(
         events = build_sdk_events_command(
             events=[
                 build_sdk_event_command(
+                    idempotency_key="events-idempotency-1",
                     type="metric"
                 ),
                 build_sdk_event_command(
+                    idempotency_key="events-idempotency-2",
                     type="conversion",
                     currency = "EUR",
                     amount="5",
                     key="purchase"
                 ),
                 build_sdk_event_command(
+                    idempotency_key="events-idempotency-3",
                     type="conversion"
+                ),
+                build_sdk_event_command(
+                    idempotency_key="events-idempotency-3",
+                    type="conversion"
+                ),
+                build_sdk_event_command(
+                    idempotency_key="events-idempotency-3",
+                    type="metric"
                 ),
             ]
         )
@@ -327,16 +336,19 @@ def test_process_batch_event_buss(
         events = build_sdk_events_command(
             events=[
                 build_sdk_event_command(
+                    idempotency_key="events-idempotency-1",
                     type="metric",
                     key="paywall"
                 ),
                 build_sdk_event_command(
+                    idempotency_key="events-idempotency-2",
                     type="conversion",
                     key="purchase",
                     currency = "EUR",
                     amount="5"
                 ),
                 build_sdk_event_command(
+                    idempotency_key="events-idempotency-3",
                     type="conversion",
                     key="shop"
                 ),

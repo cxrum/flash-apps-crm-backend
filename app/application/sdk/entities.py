@@ -26,6 +26,7 @@ class SdkInstallCommand(FlexibleCommand):
 
 
 class SdkEventCommand(FlexibleCommand):
+    idempotency_key: str
     type: Literal["metric", "conversion"]
     key: str
     event_time: datetime | None = None
