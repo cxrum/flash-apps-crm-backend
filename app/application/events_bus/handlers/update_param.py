@@ -26,7 +26,7 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
 
             if value is None:
                 continue
-                
+            
             current_param = uow.current_param_repo.get_by_click_and_key(click_id, definiton.machine_key)
             
             if updated_at is None:
@@ -35,14 +35,11 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
                 _updated_at = updated_at
                 
             if current_param is None:
-                current_param = uow.current_param_repo.save(
-                    CrmCurrentParamEntity(
-                        click_id=click_id,
-                        param_key=definiton.machine_key,
-                        updated_at=_updated_at 
-                    )
+                current_param = CrmCurrentParamEntity(
+                    click_id=click_id,
+                    param_key=definiton.machine_key,
+                    updated_at=_updated_at,
                 )
-            
 
             current_param.update_param(definiton.overwrite_policy, value)
             new_params.append(current_param)
@@ -53,8 +50,7 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
                 f"from payload keys={sorted(params.keys())}"
             )
         
-        #TODO Change the save method to update 
-        updatet_params = uow.current_param_repo.save_many(new_params)
+        updatet_params = uow.current_param_repo.create_or_update_many(new_params)
         return updatet_params
     
     
@@ -67,7 +63,6 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
         
         with self.__uow_factory.create() as uow:
             
-            # TODO Make it more efficient. Yo dont need to load the params_dictionary every time this event is handled.
             click = uow.click_repo.get_by_id(message.click_id)
             
             if click is None:

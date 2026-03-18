@@ -78,6 +78,10 @@ class InMemoryCrmCurrentParamRepository(CallRecorderMixin, CrmCurrentParamReposi
         self._record("save_many", clone(entities))
         return [self.save(entity) for entity in entities]
 
+    def create_or_update_many(self, entities: list[CrmCurrentParamEntity]) -> list[CrmCurrentParamEntity]:
+        self._record("create_or_update_many", clone(entities))
+        return [self.save(entity) for entity in entities]
+
     def get_by_click_and_key(self, click_id: str, param_key: str) -> CrmCurrentParamEntity | None:
         self._record("get_by_click_and_key", click_id, param_key)
         item = self._items.get((click_id, param_key))

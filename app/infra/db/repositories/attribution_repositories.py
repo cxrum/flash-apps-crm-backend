@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
-from sqlalchemy import desc, select
+from sqlalchemy import RowMapping, desc, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
@@ -95,6 +95,17 @@ class SqlAlchemyCrmCurrentParamRepository(CrmCurrentParamRepositoryProtocol):
             updated_at=row.updated_at,
         )
 
+    def _mapping_to_domain(self, row: RowMapping) -> CrmCurrentParamEntity:
+        return CrmCurrentParamEntity(
+            click_id=row["click_id"],
+            param_key=row["param_key"],
+            value_string=row["value_string"],
+            value_number=row["value_number"],
+            value_bool=row["value_bool"],
+            value_json=row["value_json"],
+            updated_at=row["updated_at"],
+        )
+
     def _to_row(self, entity: CrmCurrentParamEntity) -> CurrentParam:
         kwargs: dict[str, object] = {
             "click_id": entity.click_id,
@@ -109,14 +120,33 @@ class SqlAlchemyCrmCurrentParamRepository(CrmCurrentParamRepositoryProtocol):
         return CurrentParam(**kwargs)
 
     def save(self, entity: CrmCurrentParamEntity) -> CrmCurrentParamEntity:
-        row = self.session.merge(self._to_row(entity))
-        self.session.flush()
-        return self._to_domain(row)
+        rows = self.create_or_update_many([entity])
+        return rows[0]
 
     def save_many(self, entities: list[CrmCurrentParamEntity]) -> list[CrmCurrentParamEntity]:
-        rows = [self.session.merge(self._to_row(entity)) for entity in entities]
-        self.session.flush()
-        return [self._to_domain(row) for row in rows]
+        return self.create_or_update_many(entities)
+
+    def create_or_update_many(self, entities: list[CrmCurrentParamEntity]) -> list[CrmCurrentParamEntity]:
+        if not entities:
+            return []
+
+        insert_stmt = pg_insert(CurrentParam)
+        stmt = (
+            insert_stmt
+            .values([self._to_row(entity) for entity in entities])
+            .on_conflict_do_update(
+                index_elements=[CurrentParam.click_id, CurrentParam.param_key],
+                set_={
+                    "value_string": insert_stmt.excluded.value_string,
+                    "value_number": insert_stmt.excluded.value_number,
+                    "value_bool": insert_stmt.excluded.value_bool,
+                    "value_json": insert_stmt.excluded.value_json,
+                    "updated_at": insert_stmt.excluded.updated_at,
+                },
+            )
+        )
+        rows = self.session.execute(stmt).mappings().all()
+        return [self._mapping_to_domain(row) for row in rows]
 
     def get_by_click_and_key(self, click_id: str, param_key: str) -> CrmCurrentParamEntity | None:
         row = self.session.get(CurrentParam, {"click_id": click_id, "param_key": param_key})

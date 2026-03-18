@@ -42,7 +42,7 @@ class MetricDefinition(Base):
         onupdate=func.now(),
     )
 
-# Dictaionary of conversion defifnitios (MetricDefinition.machine_key == Event.event_key, Event.event_type == "conversion") 
+# Dictaionary of conversion defifnitios (ConversionDefinition.machine_key == Event.event_key, Event.event_type == "conversion") 
 class ConversionDefinition(Base):
     __tablename__ = "crm_conversion_definitions"
     __table_args__ = (

@@ -5,8 +5,11 @@ from typing import Any, Sequence
 from fastapi import Depends
 
 from app.application.contracts.encryption import EncryptionServiceProtocol
+from app.application.events_bus.handlers.conversion import AsyncConversionHandler
+from app.application.events_bus.handlers.metric import AsyncMetricHandler
 from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
+from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
 from app.domain.event_bus.service_protocol import AsyncEventMessageHandler, IAsyncEventBus
 from app.application.s2s.servicie import S2SService
@@ -39,11 +42,23 @@ def build_update_param_handler(
     ) -> AsyncEventMessageHandler:
     return AsyncUpdateParamHandler(uow_factory)
 
+def build_metric_handler(
+        uow_factory: UnitOfWorkFacotyProtocol
+    ) -> AsyncEventMessageHandler:
+    return AsyncMetricHandler(uow_factory)
+
+def build_conversion_handler(
+        uow_factory: UnitOfWorkFacotyProtocol
+    ) -> AsyncEventMessageHandler:
+    return AsyncConversionHandler(uow_factory)
+
 def get_event_subscribers() -> list[tuple[str, AsyncEventMessageHandler]]:
     uow_factory = get_uow_factory()
     
     return [
         (UpdateCurrentParamMessage.EVENT_NAME, build_update_param_handler(uow_factory)),
+        (MetricEventMessage.EVENT_NAME, build_metric_handler(uow_factory)),
+        (ConversionEventMessage.EVENT_NAME, build_conversion_handler(uow_factory)),
     ]
 
 def register_event_handlers(
