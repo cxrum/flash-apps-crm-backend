@@ -5,13 +5,14 @@ from typing import Any, Sequence
 from fastapi import Depends
 
 from app.application.contracts.encryption import EncryptionServiceProtocol
+from app.infra.exception_bus.exception_bus import AsyncExceptionBusAdapter
 from app.application.events_bus.handlers.conversion import AsyncConversionHandler
 from app.application.events_bus.handlers.metric import AsyncMetricHandler
 from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
-from app.domain.event_bus.service_protocol import AsyncEventMessageHandler, IAsyncEventBus
+from app.domain.event_bus.service_protocol import AsyncEventMessageHandler, IAsyncEventBus, IAsyncExceptionBus
 from app.application.s2s.servicie import S2SService
 from app.application.sdk.usecases.apps.service import AppService
 from app.application.sdk.usecases.ingestion.service import IngestionService
@@ -24,6 +25,7 @@ from app.infra.services.encription import EncryptionService
 
 SHARED_ASYNC_MEMORY_BUS = InMemoryAsyncEventBus()
 
+SHARED_ASYNC_MEMORY_EXCEPTION_BUS = AsyncExceptionBusAdapter(InMemoryAsyncEventBus())
 
 def get_uow_factory() -> UnitOfWorkFacotyProtocol:
     return SqlAlchemyUnitOfWorkFactory(SessionFactory)
@@ -36,6 +38,9 @@ def get_currecncy_client() -> CurrencyConvertorClientProtocol:
 
 def get_in_memory_event_bus() -> IAsyncEventBus:
     return SHARED_ASYNC_MEMORY_BUS
+
+def get_in_memory_exception_event_bus() -> IAsyncExceptionBus:
+    return SHARED_ASYNC_MEMORY_EXCEPTION_BUS
 
 def build_update_param_handler(
         uow_factory: UnitOfWorkFacotyProtocol
@@ -52,6 +57,19 @@ def build_conversion_handler(
     ) -> AsyncEventMessageHandler:
     return AsyncConversionHandler(uow_factory)
 
+def get_exception_event_subscribers() -> list[tuple[str, AsyncEventMessageHandler]]:
+    return [
+    ]
+    
+def register_exception_event_handlers(
+        async_handlers: list[tuple[str, AsyncEventMessageHandler]] = get_exception_event_subscribers(),
+        async_memory_bus: IAsyncExceptionBus = get_in_memory_exception_event_bus(), 
+    ):
+    
+    for (event_name, handler) in async_handlers:
+        async_memory_bus.subscribe(event_name, handler) 
+
+    
 def get_event_subscribers() -> list[tuple[str, AsyncEventMessageHandler]]:
     uow_factory = get_uow_factory()
     
@@ -68,7 +86,7 @@ def register_event_handlers(
     
     for (event_name, handler) in async_handlers:
         async_memory_bus.subscribe(event_name, handler) 
-
+        
 def get_sdk_app_service(
     uow_factory: UnitOfWorkFacotyProtocol = Depends(get_uow_factory),
     encryption_service: EncryptionServiceProtocol = Depends(get_app_seacrets_encryptor),
