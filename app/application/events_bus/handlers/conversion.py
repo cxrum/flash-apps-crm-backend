@@ -2,7 +2,7 @@ from app.application.exceptions import ApplicationError
 from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
     CrmConversionDefinitionEntity,
 )
-from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_events import ConversionEventMessage
 from app.domain.event_bus.service_protocol import AsyncEventMessageHandler
 from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol

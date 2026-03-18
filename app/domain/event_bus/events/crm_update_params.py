@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.exceptions import DomainError
 
 

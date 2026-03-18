@@ -4,7 +4,7 @@ from app.application.exceptions import ApplicationError
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.click import CrmClickEntity
 from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
-from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
 from app.domain.event_bus.service_protocol import AsyncEventMessageHandler
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity

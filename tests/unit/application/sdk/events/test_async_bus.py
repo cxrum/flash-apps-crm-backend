@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 import pytest
 
 from app.application.exceptions import ApplicationError
-from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.entity import DomainEventMessage
 from app.infra.event_bus.async_bus.in_memory import (
     InMemoryAsyncEventBus,
     InMemoryAsyncMessageQueue,

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Protocol
 
-from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.entity import DomainEventMessage
 
 
 class EventMessageHandler(Protocol):

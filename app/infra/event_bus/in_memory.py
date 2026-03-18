@@ -3,7 +3,7 @@ from collections.abc import Sequence
 from collections import deque
 
 from app.application.exceptions import ApplicationError
-from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.service_protocol import EventMessageHandler, IEventBus, IMessageQueue
 
 

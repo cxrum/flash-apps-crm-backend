@@ -10,7 +10,7 @@ from app.application.events_bus.handlers.metric import AsyncMetricHandler
 from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
 from app.application.exceptions import ApplicationError
 from app.di.dependencies import get_event_subscribers
-from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
 from tests.unit.builders import build_app_entity, build_app_platform_entity, build_click_entity

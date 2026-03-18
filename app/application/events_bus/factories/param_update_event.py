@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Any, Sequence
 
 from app.application.base import JsonDict
-from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
 
 @dataclass(frozen=True)

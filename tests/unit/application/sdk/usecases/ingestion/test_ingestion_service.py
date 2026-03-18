@@ -8,7 +8,7 @@ from app.application.events_bus.handlers.update_param import AsyncUpdateParamHan
 from app.application.exceptions import ApplicationError
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.currency.entity import Money
-from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
 from app.domain.exceptions import DomainError

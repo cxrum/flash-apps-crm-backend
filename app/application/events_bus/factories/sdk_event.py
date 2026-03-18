@@ -1,5 +1,5 @@
 from app.application.events_bus.factories.raw_event import RawEventMessageFactory
-from app.domain.event_bus.base_event import DomainEventMessage
+from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage, RawEventMessage
 from app.domain.events.CrmEventEntity import EventEntity
 
