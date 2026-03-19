@@ -1,9 +1,17 @@
+from datetime import date, datetime
+import json
+from typing import Any
+
 from app.application.events_bus.factories.param_update_event import UpdateParamMessageFactory, UpdateParamValue
+from app.application.events_bus.handlers.utils.update_statistic import StatisticAgreagates
 from app.application.exceptions import ApplicationError
+from app.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import CustomParamsStatisticsAggregateEntity
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_events import MetricEventMessage
 from app.domain.event_bus.service_protocol import AsyncEventMessageHandler, IAsyncEventBus
 from app.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
+from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
+from app.domain.statistics_aggregate import StatisticsAggregateEntity
 from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
 
 
@@ -48,7 +56,7 @@ class AsyncMetricHandler(AsyncEventMessageHandler):
 
             app_platform = uow.app_platform_repo.get_by_id(click.app_platform_id)
 
-            if app_platform is None:
+            if app_platform is None or app_platform.platform_id is None:
                 raise ApplicationError(
                     "AsyncMetricHandler could not find app platform "
                     f"with id='{click.app_platform_id}' for click_id='{message.click_id}'"
@@ -84,4 +92,10 @@ class AsyncMetricHandler(AsyncEventMessageHandler):
                     "AsyncMetricHandler metric events do not support revenue fields "
                     f"for event_id='{message.event_id}' and click_id='{message.click_id}'"
                 )
-                
+
+            StatisticAgreagates.update(
+                uow=uow,
+                message=message,
+                revenue_enabled=False,
+                app_platform=app_platform
+            )

@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
+
+from app.domain.currency.entity import Money
+from app.domain.exceptions import DomainError
 
 
-@dataclass(frozen=True)
+@dataclass()
 class CustomParamsStatisticsAggregateEntity:
     app_platform_id: int
     geo: str
-    date: datetime
+    ddate: date
     event_type: str
     event_key: str
     param_key: str
@@ -18,3 +21,20 @@ class CustomParamsStatisticsAggregateEntity:
     amount_usd: float | None = None
     updated_at: datetime | None = None
     created_at: datetime | None = None
+
+    def increase_count(self)->None:
+        self.count += 1
+        
+    def increase_amount_usd(self, amount: Money):
+        if amount.base != "USD":
+            raise DomainError()
+        
+        self.amount_usd = self.amount_usd if self.amount_usd is not None else 0.0  
+        self.amount_usd += amount.value
+    
+    def decrease_amount_usd(self, amount: Money):
+        if amount.base != "USD":
+            raise DomainError()
+        
+        self.amount_usd = self.amount_usd if self.amount_usd is not None else 0.0  
+        self.amount_usd -= amount.value

@@ -25,6 +25,24 @@ class CrmParamDefinitionEntity:
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
+    
+    @staticmethod
+    def get_params_for_aggeregation(*, params: dict[str, Any], params_dictionary: list[CrmParamDefinitionEntity]) ->dict[str, Any]:
+        filtered_params = {}
+        
+        for definiton in params_dictionary:
+            if not definiton.groupable:
+                continue
+            
+            value = definiton.get_param_value(params)
+
+            if value is None:
+                continue
+
+            filtered_params[definiton.machine_key] = value
+        
+        return filtered_params
+        
     def get_param_value(self, params: dict[str, Any]) -> object | None:
         if self.machine_key not in params:
             return None

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import date
 
 from tests.unit.builders import (
     build_app_entity,
@@ -100,13 +100,13 @@ def test_statistics_repository_save_get_and_list_by_platform_id() -> None:
     first = repository.save(
         build_statistics_aggregate_entity(
             app_platform_id=7,
-            date=datetime(2026, 3, 10, 10, 0, tzinfo=UTC),
+            ddate=date(2026, 3, 10),
         )
     )
     second = repository.save(
         build_statistics_aggregate_entity(
             app_platform_id=7,
-            date=datetime(2026, 3, 11, 10, 0, tzinfo=UTC),
+            ddate=date(2026, 3, 11),
             event_key="purchase",
         )
     )
@@ -119,19 +119,60 @@ def test_statistics_repository_save_get_and_list_by_platform_id() -> None:
     ]
 
 
+def test_statistics_repository_can_filter_by_dynamic_fields() -> None:
+    repository = InMemoryStatisticsRepository()
+
+    repository.save(
+        build_statistics_aggregate_entity(
+            app_platform_id=7,
+            geo="US",
+            event_type="metric",
+            event_key="first_open",
+            ddate=date(2026, 3, 10),
+        )
+    )
+    expected = repository.save(
+        build_statistics_aggregate_entity(
+            app_platform_id=7,
+            geo="CA",
+            event_type="conversion",
+            event_key="purchase",
+            ddate=date(2026, 3, 11),
+        )
+    )
+    repository.save(
+        build_statistics_aggregate_entity(
+            app_platform_id=8,
+            geo="CA",
+            event_type="conversion",
+            event_key="purchase",
+            ddate=date(2026, 3, 12),
+        )
+    )
+
+    filtered = repository.list_by_filters(
+        app_platform_id=7,
+        geo="CA",
+        event_type="conversion",
+        event_key="purchase",
+    )
+
+    assert filtered == [expected]
+
+
 def test_custom_params_statistics_repository_save_get_and_list_by_platform_id() -> None:
     repository = InMemoryCustomParamsStatisticsRepository()
 
     first = repository.save(
         build_custom_params_statistics_aggregate_entity(
             app_platform_id=5,
-            date=datetime(2026, 3, 10, 10, 0, tzinfo=UTC),
+            ddate=date(2026, 3, 10),
         )
     )
     second = repository.save(
         build_custom_params_statistics_aggregate_entity(
             app_platform_id=5,
-            date=datetime(2026, 3, 11, 10, 0, tzinfo=UTC),
+            ddate=date(2026, 3, 11),
             param_value="paid",
         )
     )
@@ -142,3 +183,52 @@ def test_custom_params_statistics_repository_save_get_and_list_by_platform_id() 
         second.aggregate_id,
         first.aggregate_id,
     ]
+
+
+def test_custom_params_statistics_repository_can_filter_by_dynamic_fields() -> None:
+    repository = InMemoryCustomParamsStatisticsRepository()
+
+    repository.save(
+        build_custom_params_statistics_aggregate_entity(
+            app_platform_id=5,
+            geo="US",
+            event_type="metric",
+            event_key="first_open",
+            param_key="utm_source",
+            param_value="organic",
+            ddate=date(2026, 3, 10),
+        )
+    )
+    expected = repository.save(
+        build_custom_params_statistics_aggregate_entity(
+            app_platform_id=5,
+            geo="CA",
+            event_type="conversion",
+            event_key="purchase",
+            param_key="campaign",
+            param_value="paid",
+            ddate=date(2026, 3, 11),
+        )
+    )
+    repository.save(
+        build_custom_params_statistics_aggregate_entity(
+            app_platform_id=6,
+            geo="CA",
+            event_type="conversion",
+            event_key="purchase",
+            param_key="campaign",
+            param_value="paid",
+            ddate=date(2026, 3, 12),
+        )
+    )
+
+    filtered = repository.list_by_filters(
+        app_platform_id=5,
+        geo="CA",
+        event_type="conversion",
+        event_key="purchase",
+        param_key="campaign",
+        param_value="paid",
+    )
+
+    assert filtered == [expected]

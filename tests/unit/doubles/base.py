@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from dataclasses import dataclass, replace
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any, TypeVar
 
 T = TypeVar("T")
@@ -23,7 +23,7 @@ def utcnow() -> datetime:
     return datetime.now(tz=UTC)
 
 
-def comparable_datetime(value: datetime | None) -> datetime:
+def comparable_datetime(value: date | None) -> date:
     return value or datetime.min.replace(tzinfo=UTC)
 
 

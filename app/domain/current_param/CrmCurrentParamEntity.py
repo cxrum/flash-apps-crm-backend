@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import Any, ClassVar, Protocol
 
 from app.domain.exceptions import DomainError
+from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 
 
 class CurrentParamUpdateStrategyProtocol(Protocol):

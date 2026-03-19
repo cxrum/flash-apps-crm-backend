@@ -145,7 +145,7 @@ def build_custom_params_statistics_aggregate_entity(
             {
                 "app_platform_id": 1,
                 "geo": "US",
-                "date": _now(),
+                "ddate": _now().date(),
                 "event_type": "metric",
                 "event_key": "first_open",
                 "param_key": "utm_source",
@@ -205,6 +205,7 @@ def build_param_definition_entity(**overrides: Any) -> CrmParamDefinitionEntity:
                 "machine_key": "utm_source",
                 "data_type": "string",
                 "app_id": 1,
+                "groupable": False
             },
             overrides,
         )
@@ -298,7 +299,7 @@ def build_statistics_aggregate_entity(**overrides: Any) -> StatisticsAggregateEn
             {
                 "app_platform_id": 1,
                 "geo": "US",
-                "date": _now(),
+                "ddate": _now().date(),
                 "event_type": "metric",
                 "event_key": "first_open",
                 "count": 1,

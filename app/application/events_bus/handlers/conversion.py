@@ -1,3 +1,8 @@
+import json
+from datetime import UTC, date, datetime
+from typing import Any
+
+from app.application.events_bus.handlers.utils.update_statistic import StatisticAgreagates
 from app.application.exceptions import ApplicationError
 from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
     CrmConversionDefinitionEntity,
@@ -49,12 +54,12 @@ class AsyncConversionHandler(AsyncEventMessageHandler):
 
             app_platform = uow.app_platform_repo.get_by_id(click.app_platform_id)
 
-            if app_platform is None:
+            if app_platform is None or app_platform.platform_id is None:
                 raise ApplicationError(
                     "AsyncConversionHandler could not find app platform "
                     f"with id='{click.app_platform_id}' for click_id='{message.click_id}'"
                 )
-
+            
             definition_lookup = self._get_definition_lookup(
                 uow,
                 app_id=app_platform.app_id,
@@ -115,3 +120,10 @@ class AsyncConversionHandler(AsyncEventMessageHandler):
                     f"for event_key='{message.event_key}' requires amount and currency "
                     "when amount_usd is present"
                 )
+                
+            StatisticAgreagates.update(
+                uow=uow,
+                message=message,
+                revenue_enabled=definition.revenue_enabled,
+                app_platform=app_platform
+            )

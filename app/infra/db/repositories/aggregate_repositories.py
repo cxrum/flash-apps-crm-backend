@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date, datetime
+
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
@@ -23,7 +25,7 @@ class SqlAlchemyStatisticsRepository(StatisticsRepositoryProtocol):
             aggregate_id=row.aggregate_id,
             app_platform_id=row.app_platform_id,
             geo=row.geo,
-            date=row.date,
+            ddate=row.date,
             event_type=row.event_type,
             event_key=row.event_key,
             count=row.count,
@@ -36,7 +38,7 @@ class SqlAlchemyStatisticsRepository(StatisticsRepositoryProtocol):
         kwargs: dict[str, object] = {
             "app_platform_id": entity.app_platform_id,
             "geo": entity.geo,
-            "date": entity.date,
+            "date": entity.ddate,
             "event_type": entity.event_type,
             "event_key": entity.event_key,
             "count": entity.count,
@@ -66,19 +68,53 @@ class SqlAlchemyStatisticsRepository(StatisticsRepositoryProtocol):
         row = self.session.get(StatisticsAggregate, aggregate_id)
         return self._to_domain(row) if row is not None else None
 
+    def list_by_filters(
+        self,
+        *,
+        aggregate_id: int | None = None,
+        app_platform_id: int | None = None,
+        geo: str | None = None,
+        ddate: date | None = None,
+        event_type: str | None = None,
+        event_key: str | None = None,
+        count: int | None = None,
+        amount_usd: float | None = None,
+        updated_at: datetime | None = None,
+        created_at: datetime | None = None,
+        limit: int = 100,
+    ) -> list[StatisticsAggregateEntity]:
+        filter_values = {
+            "aggregate_id": aggregate_id,
+            "app_platform_id": app_platform_id,
+            "geo": geo,
+            "date": ddate,
+            "event_type": event_type,
+            "event_key": event_key,
+            "count": count,
+            "amount_usd": amount_usd,
+            "updated_at": updated_at,
+            "created_at": created_at,
+        }
+
+        stmt = select(StatisticsAggregate)
+        for field_name, value in filter_values.items():
+            if value is not None:
+                stmt = stmt.where(getattr(StatisticsAggregate, field_name) == value)
+
+        rows = self.session.scalars(
+            stmt
+            .order_by(desc(StatisticsAggregate.date), desc(StatisticsAggregate.aggregate_id))
+            .limit(limit)
+        ).all()
+        return [self._to_domain(row) for row in rows]
+
     def list_by_app_platform_id(
         self,
         app_platform_id: int,
         *,
         limit: int = 100,
     ) -> list[StatisticsAggregateEntity]:
-        rows = self.session.scalars(
-            select(StatisticsAggregate)
-            .where(StatisticsAggregate.app_platform_id == app_platform_id)
-            .order_by(desc(StatisticsAggregate.date), desc(StatisticsAggregate.aggregate_id))
-            .limit(limit)
-        ).all()
-        return [self._to_domain(row) for row in rows]
+        return self.list_by_filters(app_platform_id=app_platform_id, limit=limit)
 
 
 class SqlAlchemyCustomParamsStatisticsRepository(CustomParamsStatisticsRepositoryProtocol):
@@ -90,7 +126,7 @@ class SqlAlchemyCustomParamsStatisticsRepository(CustomParamsStatisticsRepositor
             aggregate_id=row.aggregate_id,
             app_platform_id=row.app_platform_id,
             geo=row.geo,
-            date=row.date,
+            ddate=row.date,
             event_type=row.event_type,
             event_key=row.event_key,
             param_key=row.param_key,
@@ -105,7 +141,7 @@ class SqlAlchemyCustomParamsStatisticsRepository(CustomParamsStatisticsRepositor
         kwargs: dict[str, object] = {
             "app_platform_id": entity.app_platform_id,
             "geo": entity.geo,
-            "date": entity.date,
+            "date": entity.ddate,
             "event_type": entity.event_type,
             "event_key": entity.event_key,
             "param_key": entity.param_key,
@@ -140,15 +176,45 @@ class SqlAlchemyCustomParamsStatisticsRepository(CustomParamsStatisticsRepositor
         row = self.session.get(CustomParamsStatisticsAggregate, aggregate_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_app_platform_id(
+    def list_by_filters(
         self,
-        app_platform_id: int,
         *,
+        aggregate_id: int | None = None,
+        app_platform_id: int | None = None,
+        geo: str | None = None,
+        ddate: date | None = None,
+        event_type: str | None = None,
+        event_key: str | None = None,
+        param_key: str | None = None,
+        param_value: str | None = None,
+        count: int | None = None,
+        amount_usd: float | None = None,
+        updated_at: datetime | None = None,
+        created_at: datetime | None = None,
         limit: int = 100,
     ) -> list[CustomParamsStatisticsAggregateEntity]:
+        filter_values = {
+            "aggregate_id": aggregate_id,
+            "app_platform_id": app_platform_id,
+            "geo": geo,
+            "date": ddate,
+            "event_type": event_type,
+            "event_key": event_key,
+            "param_key": param_key,
+            "param_value": param_value,
+            "count": count,
+            "amount_usd": amount_usd,
+            "updated_at": updated_at,
+            "created_at": created_at,
+        }
+
+        stmt = select(CustomParamsStatisticsAggregate)
+        for field_name, value in filter_values.items():
+            if value is not None:
+                stmt = stmt.where(getattr(CustomParamsStatisticsAggregate, field_name) == value)
+
         rows = self.session.scalars(
-            select(CustomParamsStatisticsAggregate)
-            .where(CustomParamsStatisticsAggregate.app_platform_id == app_platform_id)
+            stmt
             .order_by(
                 desc(CustomParamsStatisticsAggregate.date),
                 desc(CustomParamsStatisticsAggregate.aggregate_id),
@@ -156,3 +222,11 @@ class SqlAlchemyCustomParamsStatisticsRepository(CustomParamsStatisticsRepositor
             .limit(limit)
         ).all()
         return [self._to_domain(row) for row in rows]
+
+    def list_by_app_platform_id(
+        self,
+        app_platform_id: int,
+        *,
+        limit: int = 100,
+    ) -> list[CustomParamsStatisticsAggregateEntity]:
+        return self.list_by_filters(app_platform_id=app_platform_id, limit=limit)
