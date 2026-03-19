@@ -1,3 +1,7 @@
+from tests.unit.doubles.domain.repositories.aggregates import (
+    InMemoryCustomParamsStatisticsRepository,
+    InMemoryStatisticsRepository,
+)
 from tests.unit.doubles.domain.repositories.access import InMemoryCrmUserAppAccessRepository
 from tests.unit.doubles.domain.repositories.apps import (
     InMemoryCrmAppPlatformRepository,
@@ -33,6 +37,7 @@ from tests.unit.doubles.domain.repositories.push import (
 )
 
 __all__ = [
+    "InMemoryCustomParamsStatisticsRepository",
     "InMemoryCrmAppPlatformRepository",
     "InMemoryCrmAppRepository",
     "InMemoryCrmAppSecretRepository",
@@ -56,4 +61,5 @@ __all__ = [
     "InMemoryCrmUserAppAccessRepository",
     "InMemoryCrmUserRepository",
     "InMemoryCrmUserRoleRepository",
+    "InMemoryStatisticsRepository",
 ]

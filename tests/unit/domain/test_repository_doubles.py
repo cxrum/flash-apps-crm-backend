@@ -1,11 +1,19 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 from tests.unit.builders import (
     build_app_entity,
     build_app_platform_entity,
     build_app_secret_entity,
     build_click_entity,
+    build_custom_params_statistics_aggregate_entity,
     build_event_entity,
+    build_statistics_aggregate_entity,
+)
+from tests.unit.doubles.domain.repositories.aggregates import (
+    InMemoryCustomParamsStatisticsRepository,
+    InMemoryStatisticsRepository,
 )
 from tests.unit.doubles.domain.repositories.apps import InMemoryCrmAppPlatformRepository, InMemoryCrmAppRepository
 from tests.unit.doubles.domain.repositories.attribution import InMemoryCrmClickRepository, InMemoryCrmEventRepository
@@ -84,3 +92,53 @@ def test_app_secret_repository_filters_by_app_platform_and_active_flag() -> None
 
     assert [item.secret_id for item in all_ios] == [1, 2]
     assert [item.secret_id for item in active_ios] == [1]
+
+
+def test_statistics_repository_save_get_and_list_by_platform_id() -> None:
+    repository = InMemoryStatisticsRepository()
+
+    first = repository.save(
+        build_statistics_aggregate_entity(
+            app_platform_id=7,
+            date=datetime(2026, 3, 10, 10, 0, tzinfo=UTC),
+        )
+    )
+    second = repository.save(
+        build_statistics_aggregate_entity(
+            app_platform_id=7,
+            date=datetime(2026, 3, 11, 10, 0, tzinfo=UTC),
+            event_key="purchase",
+        )
+    )
+    repository.save(build_statistics_aggregate_entity(app_platform_id=8, event_key="ignored"))
+
+    assert repository.get_by_id(first.aggregate_id or 0) == first
+    assert [item.aggregate_id for item in repository.list_by_app_platform_id(7)] == [
+        second.aggregate_id,
+        first.aggregate_id,
+    ]
+
+
+def test_custom_params_statistics_repository_save_get_and_list_by_platform_id() -> None:
+    repository = InMemoryCustomParamsStatisticsRepository()
+
+    first = repository.save(
+        build_custom_params_statistics_aggregate_entity(
+            app_platform_id=5,
+            date=datetime(2026, 3, 10, 10, 0, tzinfo=UTC),
+        )
+    )
+    second = repository.save(
+        build_custom_params_statistics_aggregate_entity(
+            app_platform_id=5,
+            date=datetime(2026, 3, 11, 10, 0, tzinfo=UTC),
+            param_value="paid",
+        )
+    )
+    repository.save(build_custom_params_statistics_aggregate_entity(app_platform_id=6, param_value="ignored"))
+
+    assert repository.get_by_id(second.aggregate_id or 0) == second
+    assert [item.aggregate_id for item in repository.list_by_app_platform_id(5)] == [
+        second.aggregate_id,
+        first.aggregate_id,
+    ]

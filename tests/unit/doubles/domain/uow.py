@@ -6,6 +6,8 @@ from typing import Any
 from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
 from tests.unit.doubles.base import CallRecorderMixin
 from tests.unit.doubles.domain.repositories import (
+    InMemoryCustomParamsStatisticsRepository,
+    InMemoryStatisticsRepository,
     InMemoryCrmAppPlatformRepository,
     InMemoryCrmAppRepository,
     InMemoryCrmAppSecretRepository,
@@ -61,6 +63,14 @@ class StubUnitOfWork(CallRecorderMixin, UnitOfWorkProtocol):
         self.current_param_repo = overrides.get(
             "current_param_repo",
             InMemoryCrmCurrentParamRepository(),
+        )
+        self.statistics_repo = overrides.get(
+            "statistics_repo",
+            InMemoryStatisticsRepository(),
+        )
+        self.custom_params_statistics_repo = overrides.get(
+            "custom_params_statistics_repo",
+            InMemoryCustomParamsStatisticsRepository(),
         )
         self.metric_definition_repo = overrides.get(
             "metric_definition_repo",
@@ -186,6 +196,12 @@ class StubRepositoryFactory(CallRecorderMixin):
 
     def current_param_repo(self, session: object) -> object:
         return self._repo("current_param_repo", session)
+
+    def statistics_repo(self, session: object) -> object:
+        return self._repo("statistics_repo", session)
+
+    def custom_params_statistics_repo(self, session: object) -> object:
+        return self._repo("custom_params_statistics_repo", session)
 
     def metric_definition_repo(self, session: object) -> object:
         return self._repo("metric_definition_repo", session)

@@ -1,5 +1,9 @@
 """Database repositories package."""
 
+from app.infra.db.repositories.aggregate_repositories import (
+    SqlAlchemyCustomParamsStatisticsRepository,
+    SqlAlchemyStatisticsRepository,
+)
 from app.infra.db.repositories.access_repositories import SqlAlchemyCrmUserAppAccessRepository
 from app.infra.db.repositories.apps_repositories import (
     SqlAlchemyCrmAppPlatformRepository,
@@ -37,6 +41,7 @@ from app.infra.db.repositories.push_repositories import (
 
 __all__ = [
     "CrmSqlAlchemyRepositoryFactory",
+    "SqlAlchemyCustomParamsStatisticsRepository",
     "SqlAlchemyCrmAppPlatformRepository",
     "SqlAlchemyCrmAppRepository",
     "SqlAlchemyCrmAppSecretRepository",
@@ -60,4 +65,5 @@ __all__ = [
     "SqlAlchemyCrmUserAppAccessRepository",
     "SqlAlchemyCrmUserRepository",
     "SqlAlchemyCrmUserRoleRepository",
+    "SqlAlchemyStatisticsRepository",
 ]

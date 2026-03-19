@@ -10,6 +10,9 @@ from app.domain.conversion_definition.conversion_definition_repository_protocol 
 )
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
+from app.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
+    CustomParamsStatisticsRepositoryProtocol,
+)
 from app.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
 from app.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
 from app.domain.metric_definition.metric_definition_repository_protocol import (
@@ -28,6 +31,7 @@ from app.domain.role_permission.role_permission_repository_protocol import (
 from app.domain.secret_template.secret_template_repository_protocol import (
     CrmSecretTemplateRepositoryProtocol,
 )
+from app.domain.statistics_aggregate.statistics_aggregate_repository_protocol import StatisticsRepositoryProtocol
 from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
 from app.domain.user_app_access.user_app_access_repository_protocol import (
@@ -37,6 +41,8 @@ from app.domain.user_role.user_role_repository_protocol import CrmUserRoleReposi
 from app.infra.services.currency import CurrencyConvertorClient
 from tests.unit.doubles.application.encryption import StubEncryptionService
 from tests.unit.doubles.domain.repositories import (
+    InMemoryCustomParamsStatisticsRepository,
+    InMemoryStatisticsRepository,
     InMemoryCrmAppPlatformRepository,
     InMemoryCrmAppRepository,
     InMemoryCrmAppSecretRepository,
@@ -75,6 +81,7 @@ PROTOCOL_DOUBLE_REGISTRY = {
     CrmClickRepositoryProtocol: InMemoryCrmClickRepository,
     CrmConversionDefinitionRepositoryProtocol: InMemoryCrmConversionDefinitionRepository,
     CrmCurrentParamRepositoryProtocol: InMemoryCrmCurrentParamRepository,
+    CustomParamsStatisticsRepositoryProtocol: InMemoryCustomParamsStatisticsRepository,
     CrmEventRepositoryProtocol: InMemoryCrmEventRepository,
     CrmInstallRepositoryProtocol: InMemoryCrmInstallRepository,
     CrmMetricDefinitionRepositoryProtocol: InMemoryCrmMetricDefinitionRepository,
@@ -87,6 +94,7 @@ PROTOCOL_DOUBLE_REGISTRY = {
     CrmRolePermissionRepositoryProtocol: InMemoryCrmRolePermissionRepository,
     CrmRoleRepositoryProtocol: InMemoryCrmRoleRepository,
     CrmSecretTemplateRepositoryProtocol: InMemoryCrmSecretTemplateRepository,
+    StatisticsRepositoryProtocol: InMemoryStatisticsRepository,
     CrmUserAppAccessRepositoryProtocol: InMemoryCrmUserAppAccessRepository,
     CrmUserRepositoryProtocol: InMemoryCrmUserRepository,
     CrmUserRoleRepositoryProtocol: InMemoryCrmUserRoleRepository,

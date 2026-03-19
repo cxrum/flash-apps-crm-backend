@@ -14,6 +14,9 @@ from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
 )
 from app.domain.currency.entity import Money
 from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
+from app.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
+    CustomParamsStatisticsAggregateEntity,
+)
 from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
@@ -26,6 +29,7 @@ from app.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
 from app.domain.role.CrmRoleEntity import CrmRoleEntity
 from app.domain.role_permission.CrmRolePermissionEntity import CrmRolePermissionEntity
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
+from app.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
 from app.domain.user.CrmUserEntity import CrmUserEntity
 from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
 from app.domain.user_role.CrmUserRoleEntity import CrmUserRoleEntity
@@ -127,6 +131,26 @@ def build_current_param_entity(**overrides: Any) -> CrmCurrentParamEntity:
                 "param_key": "utm_source",
                 "value_string": "organic",
                 "updated_at": _now(),
+            },
+            overrides,
+        )
+    )
+
+
+def build_custom_params_statistics_aggregate_entity(
+    **overrides: Any,
+) -> CustomParamsStatisticsAggregateEntity:
+    return CustomParamsStatisticsAggregateEntity(
+        **_merge(
+            {
+                "app_platform_id": 1,
+                "geo": "US",
+                "date": _now(),
+                "event_type": "metric",
+                "event_key": "first_open",
+                "param_key": "utm_source",
+                "param_value": "organic",
+                "count": 1,
             },
             overrides,
         )
@@ -262,6 +286,22 @@ def build_secret_template_entity(**overrides: Any) -> CrmSecretTemplateEntity:
                 "display_name": "API Key",
                 "scope": "client_public",
                 "value_type": "text",
+            },
+            overrides,
+        )
+    )
+
+
+def build_statistics_aggregate_entity(**overrides: Any) -> StatisticsAggregateEntity:
+    return StatisticsAggregateEntity(
+        **_merge(
+            {
+                "app_platform_id": 1,
+                "geo": "US",
+                "date": _now(),
+                "event_type": "metric",
+                "event_key": "first_open",
+                "count": 1,
             },
             overrides,
         )

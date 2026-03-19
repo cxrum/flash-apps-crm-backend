@@ -1,6 +1,7 @@
 """Import model modules so SQLAlchemy metadata is populated."""
 
 from app.infra.db.access import models as access_models  # noqa: F401
+from app.infra.db.aggregates import models as aggregate_models  # noqa: F401
 from app.infra.db.apps import models as apps_models  # noqa: F401
 from app.infra.db.attribution import models as attribution_models  # noqa: F401
 from app.infra.db.audit import models as audit_models  # noqa: F401

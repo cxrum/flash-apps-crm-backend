@@ -16,6 +16,9 @@ from app.domain.conversion_definition.conversion_definition_repository_protocol 
     CrmConversionDefinitionRepositoryProtocol,
 )
 from app.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
+from app.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
+    CustomParamsStatisticsRepositoryProtocol,
+)
 from app.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
 from app.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
 from app.domain.metric_definition.metric_definition_repository_protocol import CrmMetricDefinitionRepositoryProtocol
@@ -28,6 +31,7 @@ from app.domain.push_token.push_token_repository_protocol import CrmPushTokenRep
 from app.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
 from app.domain.role_permission.role_permission_repository_protocol import CrmRolePermissionRepositoryProtocol
 from app.domain.secret_template.secret_template_repository_protocol import CrmSecretTemplateRepositoryProtocol
+from app.domain.statistics_aggregate.statistics_aggregate_repository_protocol import StatisticsRepositoryProtocol
 from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
 from app.domain.user_app_access.user_app_access_repository_protocol import CrmUserAppAccessRepositoryProtocol
@@ -51,6 +55,8 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
     install_repo: CrmInstallRepositoryProtocol
     event_repo: CrmEventRepositoryProtocol
     current_param_repo: CrmCurrentParamRepositoryProtocol
+    statistics_repo: StatisticsRepositoryProtocol
+    custom_params_statistics_repo: CustomParamsStatisticsRepositoryProtocol
     metric_definition_repo: CrmMetricDefinitionRepositoryProtocol
     conversion_definition_repo: CrmConversionDefinitionRepositoryProtocol
     secret_template_repo: CrmSecretTemplateRepositoryProtocol
@@ -86,6 +92,8 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
         self.install_repo = self._repository_factory.install_repo(self.session)
         self.event_repo = self._repository_factory.event_repo(self.session)
         self.current_param_repo = self._repository_factory.current_param_repo(self.session)
+        self.statistics_repo = self._repository_factory.statistics_repo(self.session)
+        self.custom_params_statistics_repo = self._repository_factory.custom_params_statistics_repo(self.session)
         self.metric_definition_repo = self._repository_factory.metric_definition_repo(self.session)
         self.conversion_definition_repo = self._repository_factory.conversion_definition_repo(self.session)
         self.secret_template_repo = self._repository_factory.secret_template_repo(self.session)

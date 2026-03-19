@@ -17,9 +17,13 @@ from app.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
+from app.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
+    CustomParamsStatisticsAggregateEntity,
+)
 from app.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
 from app.domain.conversion_definition.CrmConversionDefinitionEntity import CrmConversionDefinitionEntity
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
+from app.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
 from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 from app.domain.postback_rule.CrmPostbackRuleEntity import CrmPostbackRuleEntity
@@ -42,9 +46,11 @@ __all__ = [
     "CrmInstallEntity",
     "EventEntity",
     "CrmCurrentParamEntity",
+    "CustomParamsStatisticsAggregateEntity",
     "CrmMetricDefinitionEntity",
     "CrmConversionDefinitionEntity",
     "CrmSecretTemplateEntity",
+    "StatisticsAggregateEntity",
     "CrmAppSecretEntity",
     "CrmParamDefinitionEntity",
     "CrmPostbackRuleEntity",

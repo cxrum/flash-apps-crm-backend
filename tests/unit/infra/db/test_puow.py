@@ -17,6 +17,8 @@ def test_sqlalchemy_uow_commits_closes_and_populates_repositories() -> None:
         assert entered.session is session
         assert entered.app_repo is backing_uow.app_repo
         assert entered.event_repo is backing_uow.event_repo
+        assert entered.statistics_repo is backing_uow.statistics_repo
+        assert entered.custom_params_statistics_repo is backing_uow.custom_params_statistics_repo
 
     assert session.commit_calls == 1
     assert session.rollback_calls == 0

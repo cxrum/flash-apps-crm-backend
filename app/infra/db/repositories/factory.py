@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from app.infra.db.repositories.aggregate_repositories import (
+    SqlAlchemyCustomParamsStatisticsRepository,
+    SqlAlchemyStatisticsRepository,
+)
 from app.infra.db.repositories.access_repositories import SqlAlchemyCrmUserAppAccessRepository
 from app.infra.db.repositories.apps_repositories import (
     SqlAlchemyCrmAppPlatformRepository,
@@ -76,6 +80,12 @@ class CrmSqlAlchemyRepositoryFactory:
 
     def current_param_repo(self, session: Session) -> SqlAlchemyCrmCurrentParamRepository:
         return SqlAlchemyCrmCurrentParamRepository(session)
+
+    def statistics_repo(self, session: Session) -> SqlAlchemyStatisticsRepository:
+        return SqlAlchemyStatisticsRepository(session)
+
+    def custom_params_statistics_repo(self, session: Session) -> SqlAlchemyCustomParamsStatisticsRepository:
+        return SqlAlchemyCustomParamsStatisticsRepository(session)
 
     def metric_definition_repo(self, session: Session) -> SqlAlchemyCrmMetricDefinitionRepository:
         return SqlAlchemyCrmMetricDefinitionRepository(session)
