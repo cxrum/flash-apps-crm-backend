@@ -3,7 +3,7 @@ import json
 from typing import Any
 
 from app.application.events_bus.factories.param_update_event import UpdateParamMessageFactory, UpdateParamValue
-from app.application.events_bus.handlers.utils.update_statistic import StatisticAgreagates
+from app.application.sdk.usecases.ingestion.update_statistic import StatisticAgreagates
 from app.application.exceptions import ApplicationError
 from app.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import CustomParamsStatisticsAggregateEntity
 from app.domain.event_bus.entity import DomainEventMessage

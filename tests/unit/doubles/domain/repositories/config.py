@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import datetime
 
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
@@ -278,6 +279,111 @@ class InMemoryCrmPostbackRuleRepository(CallRecorderMixin, CrmPostbackRuleReposi
         self._record("get_by_id", rule_id)
         item = self._items.get(rule_id)
         return clone(item) if item is not None else None
+
+    def _filter_items(
+        self,
+        *,
+        rule_id: int | None = None,
+        platfrom_app_id: int | None = None,
+        name: str | None = None,
+        endpoint_url: str | None = None,
+        trigger_type: str | None = None,
+        http_method: str | None = None,
+        headers: dict[str, object] | None = None,
+        auth_params: dict[str, str] | None = None,
+        timeout: int | None = None,
+        event_key: str | None = None,
+        template: dict[str, object] | None = None,
+        retry_policy: dict[str, object] | None = None,
+        is_active: bool | None = None,
+        updated_at: datetime | None = None,
+        created_at: datetime | None = None,
+    ) -> list[CrmPostbackRuleEntity]:
+        filters = {
+            "rule_id": rule_id,
+            "platfrom_app_id": platfrom_app_id,
+            "name": name,
+            "endpoint_url": endpoint_url,
+            "trigger_type": trigger_type,
+            "http_method": http_method,
+            "headers": headers,
+            "auth_params": auth_params,
+            "timeout": timeout,
+            "event_key": event_key,
+            "template": template,
+            "retry_policy": retry_policy,
+            "is_active": is_active,
+            "updated_at": updated_at,
+            "created_at": created_at,
+        }
+        return [
+            item
+            for item in self._items.values()
+            if all(
+                getattr(item, field_name) == value
+                for field_name, value in filters.items()
+                if value is not None
+            )
+        ]
+
+    def list_by_filters(
+        self,
+        *,
+        rule_id: int | None = None,
+        platfrom_app_id: int | None = None,
+        name: str | None = None,
+        endpoint_url: str | None = None,
+        trigger_type: str | None = None,
+        http_method: str | None = None,
+        headers: dict[str, object] | None = None,
+        auth_params: dict[str, str] | None = None,
+        timeout: int | None = None,
+        event_key: str | None = None,
+        template: dict[str, object] | None = None,
+        retry_policy: dict[str, object] | None = None,
+        is_active: bool | None = None,
+        updated_at: datetime | None = None,
+        created_at: datetime | None = None,
+        limit: int = 100,
+    ) -> list[CrmPostbackRuleEntity]:
+        self._record(
+            "list_by_filters",
+            rule_id=rule_id,
+            platfrom_app_id=platfrom_app_id,
+            name=name,
+            endpoint_url=endpoint_url,
+            trigger_type=trigger_type,
+            http_method=http_method,
+            headers=headers,
+            auth_params=auth_params,
+            timeout=timeout,
+            event_key=event_key,
+            template=template,
+            retry_policy=retry_policy,
+            is_active=is_active,
+            updated_at=updated_at,
+            created_at=created_at,
+            limit=limit,
+        )
+        items = self._filter_items(
+            rule_id=rule_id,
+            platfrom_app_id=platfrom_app_id,
+            name=name,
+            endpoint_url=endpoint_url,
+            trigger_type=trigger_type,
+            http_method=http_method,
+            headers=headers,
+            auth_params=auth_params,
+            timeout=timeout,
+            event_key=event_key,
+            template=template,
+            retry_policy=retry_policy,
+            is_active=is_active,
+            updated_at=updated_at,
+            created_at=created_at,
+        )
+        items.sort(key=lambda item: item.rule_id or 0)
+        return [clone(item) for item in items[:limit]]
 
     def list_by_app_id(self, app_id: int) -> list[CrmPostbackRuleEntity]:
         self._record("list_by_app_id", app_id)

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -19,6 +21,7 @@ from app.domain.param_definition.param_definition_repository_protocol import (
 )
 from app.domain.postback_rule.CrmPostbackRuleEntity import CrmPostbackRuleEntity
 from app.domain.postback_rule.postback_rule_repository_protocol import CrmPostbackRuleRepositoryProtocol
+from app.domain.postback_rule.template import PostbackTemplateEntity
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
 from app.domain.secret_template.secret_template_repository_protocol import (
     CrmSecretTemplateRepositoryProtocol,
@@ -298,7 +301,7 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
             timeout=row.timeout,
             event_key=row.event_key,
             trigger_type=row.trigger_type,
-            template=dict(row.template),
+            template=PostbackTemplateEntity.from_dict(row.template),
             retry_policy=dict(row.retry_policy),
             is_active=row.is_active,
             created_at=row.created_at,
@@ -341,6 +344,56 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
     def get_by_id(self, rule_id: int) -> CrmPostbackRuleEntity | None:
         row = self.session.get(PostbackRule, rule_id)
         return self._to_domain(row) if row is not None else None
+
+    def list_by_filters(
+        self,
+        *,
+        rule_id: int | None = None,
+        platfrom_app_id: int | None = None,
+        name: str | None = None,
+        endpoint_url: str | None = None,
+        trigger_type: str | None = None,
+        http_method: str | None = None,
+        headers: dict[str, object] | None = None,
+        auth_params: dict[str, str] | None = None,
+        timeout: int | None = None,
+        event_key: str | None = None,
+        template: dict[str, object] | None = None,
+        retry_policy: dict[str, object] | None = None,
+        is_active: bool | None = None,
+        updated_at: datetime | None = None,
+        created_at: datetime | None = None,
+        limit: int = 100,
+    ) -> list[CrmPostbackRuleEntity]:
+        filter_values = {
+            "rule_id": rule_id,
+            "platfrom_app_id": platfrom_app_id,
+            "name": name,
+            "endpoint_url": endpoint_url,
+            "trigger_type": trigger_type,
+            "http_method": http_method,
+            "headers": headers,
+            "auth_params": auth_params,
+            "timeout": timeout,
+            "event_key": event_key,
+            "template": template,
+            "retry_policy": retry_policy,
+            "is_active": is_active,
+            "updated_at": updated_at,
+            "created_at": created_at,
+        }
+
+        stmt = select(PostbackRule)
+        for field_name, value in filter_values.items():
+            if value is not None:
+                stmt = stmt.where(getattr(PostbackRule, field_name) == value)
+
+        rows = self.session.scalars(
+            stmt
+            .order_by(PostbackRule.rule_id.asc())
+            .limit(limit)
+        ).all()
+        return [self._to_domain(row) for row in rows]
 
     def list_by_app_id(self, app_id: int) -> list[CrmPostbackRuleEntity]:
         rows = self.session.scalars(

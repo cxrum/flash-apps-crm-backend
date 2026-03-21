@@ -2,7 +2,7 @@ import json
 from datetime import UTC, date, datetime
 from typing import Any
 
-from app.application.events_bus.handlers.utils.update_statistic import StatisticAgreagates
+from app.application.sdk.usecases.ingestion.update_statistic import StatisticAgreagates
 from app.application.exceptions import ApplicationError
 from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
     CrmConversionDefinitionEntity,

@@ -67,7 +67,7 @@ def _build_metric_message(
             "currency": currency,
             "amount_usd": amount_usd,
             "event_time_utc": occurred_at,
-            "payload": {},
+            "payload": {"geo": "UK"},
             "created_at": occurred_at,
         },
         occurred_at=occurred_at,
@@ -154,14 +154,23 @@ def test_async_metric_handler_accepts_valid_metric_event() -> None:
         handler = AsyncMetricHandler(StubUoWFactory(uow))
         app, _, click = _seed_click_context(uow)
         
-        uow.param_definition_repo.save(
-            build_param_definition_entity(
-                display_name="First open",
-                machine_key="first_open",
-                data_type="string",
-                app_id=app.app_id,
-                groupable=True
-            )
+        uow.param_definition_repo.save_many(
+            [
+                build_param_definition_entity(
+                    display_name="First open",
+                    machine_key="first_open",
+                    data_type="string",
+                    app_id=app.app_id,
+                    groupable=True
+                ),
+                build_param_definition_entity(
+                    display_name="Geo",
+                    machine_key="geo",
+                    data_type="string",
+                    app_id=app.app_id,
+                    groupable=True
+                ),
+            ]
         )
         
         uow.metric_definition_repo.save(

@@ -15,6 +15,8 @@ from app.application.admin.entities import (
     CreatePushCampaignCommand,
     CreateRoleCommand,
     CreateSecretTemplateCommand,
+    EvaluatePostbackRuleCommand,
+    ExecutePostbackRuleCommand,
     GetAuditLogCommand,
     GetStatsCommand,
     ListAppPlatformsCommand,
@@ -407,9 +409,45 @@ def build_admin_create_postback_rule_command(
         {
             "app_id": 1,
             "name": "Install Rule",
-            "event_key": "install",
+            "platform_app_id": None,
+            "trigger_type": "install",
+            "event_key": None,
             "url": "https://example.com/postback",
+            "http_method": "POST",
+            "headers": {},
+            "auth_params": {},
+            "timeout": 30,
+            "retry_policy": {},
             "is_active": True,
+            "tempalte": {},
+        },
+        overrides,
+    )
+
+
+def build_admin_evaluate_postback_rule_command(
+    **overrides: Any,
+) -> EvaluatePostbackRuleCommand:
+    return _build(
+        EvaluatePostbackRuleCommand,
+        {
+            "event_id": "evt-1",
+            "trigger_type": "conversion",
+            "event_key": "purchase",
+        },
+        overrides,
+    )
+
+
+def build_admin_execute_postback_rule_command(
+    **overrides: Any,
+) -> ExecutePostbackRuleCommand:
+    return _build(
+        ExecutePostbackRuleCommand,
+        {
+            "postback_rule_id": 1,
+            "event_id": "evt-1",
+            "istall_id": None,
         },
         overrides,
     )

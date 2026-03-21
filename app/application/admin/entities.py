@@ -93,12 +93,29 @@ class ListPostbackRulesCommand(PaginationCommand):
 
 
 class CreatePostbackRuleCommand(FlexibleCommand):
-    app_id: int | None = None
-    name: str | None = None
+    app_id: int 
+    platform_app_id: int | None = None
+    name: str
+    trigger_type: str
     event_key: str | None = None
-    url: str | None = None
-    is_active: bool | None = None
+    url: str
+    http_method: str
+    headers: JsonDict
+    auth_params: JsonDict
+    timeout: int
+    retry_policy: JsonDict
+    is_active: bool = False
+    tempalte: JsonDict = Field(default_factory=JsonDict)
 
+class EvaluatePostbackRuleCommand(FlexibleCommand):
+    event_id: str
+    trigger_type: str
+    event_key: str | None = None
+    
+class ExecutePostbackRuleCommand(FlexibleCommand):
+    postback_rule_id: int
+    event_id: str
+    istall_id: int | None = None
 
 class ListPushCampaignsCommand(PaginationCommand):
     app_id: int | None = None

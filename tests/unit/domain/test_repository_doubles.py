@@ -9,6 +9,7 @@ from tests.unit.builders import (
     build_click_entity,
     build_custom_params_statistics_aggregate_entity,
     build_event_entity,
+    build_postback_rule_entity,
     build_statistics_aggregate_entity,
 )
 from tests.unit.doubles.domain.repositories.aggregates import (
@@ -17,7 +18,10 @@ from tests.unit.doubles.domain.repositories.aggregates import (
 )
 from tests.unit.doubles.domain.repositories.apps import InMemoryCrmAppPlatformRepository, InMemoryCrmAppRepository
 from tests.unit.doubles.domain.repositories.attribution import InMemoryCrmClickRepository, InMemoryCrmEventRepository
-from tests.unit.doubles.domain.repositories.config import InMemoryCrmAppSecretRepository
+from tests.unit.doubles.domain.repositories.config import (
+    InMemoryCrmAppSecretRepository,
+    InMemoryCrmPostbackRuleRepository,
+)
 
 
 def test_app_repository_save_get_and_list_are_deterministic() -> None:
@@ -229,6 +233,106 @@ def test_custom_params_statistics_repository_can_filter_by_dynamic_fields() -> N
         event_key="purchase",
         param_key="campaign",
         param_value="paid",
+    )
+
+    assert filtered == [expected]
+
+
+def test_postback_rule_repository_save_get_and_list_by_app() -> None:
+    app_platform_repo = InMemoryCrmAppPlatformRepository()
+    ios_platform = app_platform_repo.save(build_app_platform_entity(app_id=1, platform="ios"))
+    android_platform = app_platform_repo.save(
+        build_app_platform_entity(app_id=1, platform="android", install_key="install-key-android")
+    )
+    other_platform = app_platform_repo.save(
+        build_app_platform_entity(app_id=2, platform="ios", install_key="install-key-ios-other")
+    )
+
+    repository = InMemoryCrmPostbackRuleRepository(platform_lookup=app_platform_repo.get_by_id)
+    first = repository.save(
+        build_postback_rule_entity(
+            platfrom_app_id=ios_platform.platform_id or 0,
+            is_active=True,
+        )
+    )
+    second = repository.save(
+        build_postback_rule_entity(
+            platfrom_app_id=android_platform.platform_id or 0,
+            name="Purchase postback",
+            trigger_type="conversion",
+            event_key="purchase",
+            is_active=False,
+        )
+    )
+    repository.save(
+        build_postback_rule_entity(
+            platfrom_app_id=other_platform.platform_id or 0,
+            name="Other app postback",
+        )
+    )
+
+    assert repository.get_by_id(second.rule_id or 0) == second
+    assert [item.rule_id for item in repository.list_by_app_id(1)] == [first.rule_id, second.rule_id]
+    assert [item.rule_id for item in repository.list_active_by_app(1)] == [first.rule_id]
+
+
+def test_postback_rule_repository_can_filter_by_dynamic_fields() -> None:
+    app_platform_repo = InMemoryCrmAppPlatformRepository()
+    ios_platform = app_platform_repo.save(build_app_platform_entity(app_id=1, platform="ios"))
+    android_platform = app_platform_repo.save(
+        build_app_platform_entity(app_id=1, platform="android", install_key="install-key-android")
+    )
+
+    repository = InMemoryCrmPostbackRuleRepository(platform_lookup=app_platform_repo.get_by_id)
+    repository.save(
+        build_postback_rule_entity(
+            platfrom_app_id=ios_platform.platform_id or 0,
+            name="Install postback",
+            trigger_type="install",
+            http_method="POST",
+            is_active=True,
+        )
+    )
+    expected = repository.save(
+        build_postback_rule_entity(
+            platfrom_app_id=ios_platform.platform_id or 0,
+            name="Purchase postback",
+            endpoint_url="https://example.com/postback/purchase",
+            trigger_type="conversion",
+            http_method="GET",
+            event_key="purchase",
+            auth_params={"Authorization": "api_key"},
+            timeout=45,
+            retry_policy={"attempts": 3},
+            is_active=False,
+        )
+    )
+    repository.save(
+        build_postback_rule_entity(
+            platfrom_app_id=android_platform.platform_id or 0,
+            name="Purchase postback",
+            endpoint_url="https://example.com/postback/purchase",
+            trigger_type="conversion",
+            http_method="GET",
+            event_key="purchase",
+            auth_params={"Authorization": "api_key"},
+            timeout=45,
+            retry_policy={"attempts": 3},
+            is_active=False,
+        )
+    )
+
+    filtered = repository.list_by_filters(
+        platfrom_app_id=ios_platform.platform_id,
+        name="Purchase postback",
+        endpoint_url="https://example.com/postback/purchase",
+        trigger_type="conversion",
+        http_method="GET",
+        event_key="purchase",
+        auth_params={"Authorization": "api_key"},
+        timeout=45,
+        retry_policy={"attempts": 3},
+        is_active=False,
     )
 
     assert filtered == [expected]

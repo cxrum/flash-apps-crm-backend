@@ -1,4 +1,5 @@
 from app.application.contracts.encryption import EncryptionServiceProtocol
+from app.application.contracts.requester import S2SRequesterProtocol
 from app.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
 from app.domain.app_platform.app_platform_repository_protocol import CrmAppPlatformRepositoryProtocol
 from app.domain.app_secret.app_secret_repository_protocol import CrmAppSecretRepositoryProtocol
@@ -40,6 +41,7 @@ from app.domain.user_app_access.user_app_access_repository_protocol import (
 from app.domain.user_role.user_role_repository_protocol import CrmUserRoleRepositoryProtocol
 from app.infra.services.currency import CurrencyConvertorClient
 from tests.unit.doubles.application.encryption import StubEncryptionService
+from tests.unit.doubles.application.requester import StubS2SRequester
 from tests.unit.doubles.domain.repositories import (
     InMemoryCustomParamsStatisticsRepository,
     InMemoryStatisticsRepository,
@@ -99,4 +101,5 @@ PROTOCOL_DOUBLE_REGISTRY = {
     CrmUserRepositoryProtocol: InMemoryCrmUserRepository,
     CrmUserRoleRepositoryProtocol: InMemoryCrmUserRoleRepository,
     CurrencyConvertorClientProtocol: CurrencyConvertorClient,
+    S2SRequesterProtocol: StubS2SRequester
 }

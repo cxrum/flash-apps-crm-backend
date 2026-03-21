@@ -1,6 +1,5 @@
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal
 from typing import Any
 
 
@@ -17,3 +16,15 @@ class EventEntity:
     amount_usd: float | None = None
     payload: dict[str, Any] = field(default_factory=dict)
     created_at: datetime | None = None
+
+    def payload_value(self, key: str, default: Any = None) -> Any:
+        return self.payload.get(key, default)
+
+    def geo(self) -> Any | None:
+        return self.payload_value("geo")
+
+    def ip(self) -> Any | None:
+        return self.payload_value("ip")
+
+    def ua(self) -> Any | None:
+        return self.payload_value("ua")
