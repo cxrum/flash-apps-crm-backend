@@ -19,4 +19,11 @@ class CrmSecretTemplateEntity:
     def is_server_private(self) -> bool:
         return self.scope == "server_private"
     
-    
+    @staticmethod
+    def mask(value: str) -> str:
+        _new_value = "***"
+        
+        if len(value) > 3:
+            _new_value = value[:3] + _new_value
+        
+        return _new_value

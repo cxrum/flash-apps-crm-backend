@@ -22,7 +22,7 @@ def test_create_app_drafts_and_saves_app(unit_test_context: UnitTestContext) -> 
     saved_app = unit_test_context.uow.app_repo.get_by_id(response.app_id)
 
     assert saved_app is not None
-    assert saved_app.status == "draft"
+    assert saved_app.status == "active"
     assert saved_app.code_slug == "test-app"
 
 

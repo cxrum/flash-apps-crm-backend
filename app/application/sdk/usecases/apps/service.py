@@ -8,7 +8,7 @@ from app.application.sdk.usecases.apps.responses import AppConfigQueryEntry, App
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
-from app.domain.uow import UnitOfWorkFacotyProtocol
+from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
 
 
 class AppService:
@@ -19,9 +19,12 @@ class AppService:
         self._uow_factory = uow_factory
         self._encryption_service = encryption_service
 
+    @staticmethod
+    def ensure_app_exists(uow: UnitOfWorkProtocol, app_id): ...
+    
     def create_app(self, command: SdkCreateAppCommand) -> CreateAppResponse:
         app = SdkDomainMapper.app_from_command(command)
-        app.draft()
+        app.activate()
 
         with self._uow_factory.create() as uow:
             saved_app = uow.app_repo.save(app)

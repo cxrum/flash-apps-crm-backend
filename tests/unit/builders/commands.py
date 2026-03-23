@@ -31,6 +31,9 @@ from app.application.admin.entities import (
     ListPushCampaignsCommand,
     ListRolesCommand,
     ListSecretTemplatesCommand,
+    UpdateConversionDefinitionCommand,
+    UpdateMetricDefinitionCommand,
+    UpdateParamDefinitionCommand,
     UpsertAppSecretsCommand,
 )
 from app.application.base import FlexibleCommand
@@ -291,6 +294,23 @@ def build_admin_create_metric_definition_command(
     )
 
 
+def build_admin_update_metric_definition_command(
+    **overrides: Any,
+) -> UpdateMetricDefinitionCommand:
+    return _build(
+        UpdateMetricDefinitionCommand,
+        {
+            "app_id": 1,
+            "metric_definition_id": 1,
+            "key": "first_open_updated",
+            "name": "First Open Updated",
+            "description": "Updated metric definition",
+            "is_active": True,
+        },
+        overrides,
+    )
+
+
 def build_admin_list_conversion_definitions_command(
     **overrides: Any,
 ) -> ListConversionDefinitionsCommand:
@@ -313,6 +333,26 @@ def build_admin_create_conversion_definition_command(
     )
 
 
+def build_admin_update_conversion_definition_command(
+    **overrides: Any,
+) -> UpdateConversionDefinitionCommand:
+    return _build(
+        UpdateConversionDefinitionCommand,
+        {
+            "app_id": 1,
+            "conversion_definition_id": 1,
+            "key": "purchase_updated",
+            "name": "Purchase Updated",
+            "description": "Updated conversion definition",
+            "revenue_enabled": True,
+            "expects_amount": True,
+            "expects_currency": True,
+            "dedup_mode": "none",
+        },
+        overrides,
+    )
+
+
 def build_admin_list_param_definitions_command(**overrides: Any) -> ListParamDefinitionsCommand:
     return _build(ListParamDefinitionsCommand, _pagination_defaults(), overrides)
 
@@ -327,6 +367,25 @@ def build_admin_create_param_definition_command(
             "label": "UTM Source",
             "param_type": "string",
             "is_required": False,
+        },
+        overrides,
+    )
+
+
+def build_admin_update_param_definition_command(
+    **overrides: Any,
+) -> UpdateParamDefinitionCommand:
+    return _build(
+        UpdateParamDefinitionCommand,
+        {
+            "app_id": 1,
+            "param_definition_id": 1,
+            "key": "utm_source_updated",
+            "label": "UTM Source Updated",
+            "param_type": "string",
+            "description": "Updated param definition",
+            "visible_in_stats": True,
+            "groupable": True,
         },
         overrides,
     )
