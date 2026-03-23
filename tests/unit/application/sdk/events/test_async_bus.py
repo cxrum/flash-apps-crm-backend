@@ -7,6 +7,7 @@ import pytest
 
 from app.application.exceptions import ApplicationError
 from app.domain.event_bus.entity import DomainEventMessage
+from app.domain.event_bus.events.exception_event import ExceptionEvent
 from app.infra.event_bus.async_bus.in_memory import (
     InMemoryAsyncEventBus,
     InMemoryAsyncMessageQueue,
@@ -57,6 +58,7 @@ def test_async_event_bus_publish_enqueues_normalized_copy_without_inline_dispatc
         handler = RecordingHandler()
         message = DomainEventMessage(
             name="  crm.events.saved  ",
+            correlation_id="corr-1",
             payload={"event_id": "evt-1"},
             metadata={"source": "sdk"},
             occurred_at=datetime(2026, 3, 13, 12, 0, tzinfo=UTC),
@@ -71,9 +73,43 @@ def test_async_event_bus_publish_enqueues_normalized_copy_without_inline_dispatc
         assert queue.size() == 1
         queued = await queue.dequeue()
         assert queued.name == "crm.events.saved"
+        assert queued.correlation_id == "corr-1"
         assert queued.payload == {"event_id": "evt-1"}
         assert queued.metadata == {"source": "sdk"}
         assert queued.occurred_at == datetime(2026, 3, 13, 12, 0, tzinfo=UTC)
+
+    asyncio.run(scenario())
+
+
+def test_async_event_bus_preserves_typed_messages_for_handlers() -> None:
+    async def scenario() -> None:
+        bus = InMemoryAsyncEventBus()
+        handler = AsyncRecordingHandler()
+        message = ExceptionEvent(
+            name=ExceptionEvent.EVENT_NAME,
+            correlation_id="corr-typed",
+            payload={
+                "exception_type": "RuntimeError",
+                "exception_message": "boom",
+                "context": {"source": "sdk"},
+            },
+        )
+
+        bus.subscribe(ExceptionEvent.EVENT_NAME, handler)
+
+        await bus.start()
+        try:
+            await bus.publish(message)
+            await asyncio.wait_for(handler.called.wait(), timeout=1)
+        finally:
+            await bus.stop()
+
+        handled_message = handler.messages[0]
+        assert isinstance(handled_message, ExceptionEvent)
+        assert handled_message.correlation_id == "corr-typed"
+        assert handled_message.exception_type == "RuntimeError"
+        assert handled_message.exception_message == "boom"
+        assert handled_message.context == {"source": "sdk"}
 
     asyncio.run(scenario())
 

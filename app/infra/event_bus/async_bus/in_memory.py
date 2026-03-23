@@ -148,10 +148,23 @@ class InMemoryAsyncEventBus(IAsyncEventBus):
         return normalized_event_name
 
     def _normalize_message(self, message: DomainEventMessage) -> DomainEventMessage:
-        return DomainEventMessage(
-            name=self._normalize_event_name(message.name),
-            payload=dict(message.payload),
-            metadata=dict(message.metadata),
-            occurred_at=message.occurred_at,
-        )
+        normalized_name = self._normalize_event_name(message.name)
+        normalized_payload = dict(message.payload)
+        normalized_metadata = dict(message.metadata)
 
+        try:
+            return type(message)(
+                name=normalized_name,
+                correlation_id=message.correlation_id,
+                payload=normalized_payload,
+                metadata=normalized_metadata,
+                occurred_at=message.occurred_at,
+            )
+        except TypeError:
+            return DomainEventMessage(
+                name=normalized_name,
+                correlation_id=message.correlation_id,
+                payload=normalized_payload,
+                metadata=normalized_metadata,
+                occurred_at=message.occurred_at,
+            )
