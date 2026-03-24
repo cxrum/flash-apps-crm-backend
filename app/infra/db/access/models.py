@@ -11,10 +11,8 @@ from datetime import datetime
 class CrmUserAppAccess(Base):
     __tablename__ = "crm_user_app_access"
     __table_args__ = (
-        CheckConstraint("access_level IN ('viewer', 'manager', 'owner')", name="ck_crm_user_app_access_level"),
-        PrimaryKeyConstraint("user_id", "app_id", name="pk_crm_user_app_access"),
+        PrimaryKeyConstraint("user_id", "app_id", "role_id", name="pk_crm_user_app_access"),
     )
-
     user_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("crm_users.user_id", ondelete="CASCADE"),
@@ -25,7 +23,11 @@ class CrmUserAppAccess(Base):
         ForeignKey("crm_apps.app_id", ondelete="CASCADE"),
         nullable=False,
     )
-    access_level: Mapped[str] = mapped_column(String(32), nullable=False, default="manager")
+    role_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("crm_roles.role_id", ondelete="CASCADE"),
+        nullable=False,
+    )
     assigned_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

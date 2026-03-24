@@ -26,12 +26,11 @@ from app.domain.push_campaign.push_campaign_repository_protocol import CrmPushCa
 from app.domain.push_event.push_event_repository_protocol import CrmPushEventRepositoryProtocol
 from app.domain.push_token.push_token_repository_protocol import CrmPushTokenRepositoryProtocol
 from app.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
-from app.domain.role_permission.role_permission_repository_protocol import CrmRolePermissionRepositoryProtocol
 from app.domain.secret_template.secret_template_repository_protocol import CrmSecretTemplateRepositoryProtocol
 from app.domain.statistics_aggregate.statistics_aggregate_repository_protocol import StatisticsRepositoryProtocol
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
 from app.domain.user_app_access.user_app_access_repository_protocol import CrmUserAppAccessRepositoryProtocol
-from app.domain.user_role.user_role_repository_protocol import CrmUserRoleRepositoryProtocol
+from app.domain.user_permissions.user_permissions_repository_protocol import CrmUserPermissionsRepositoryProtocol
 
 
 class UnitOfWorkProtocol(Protocol):
@@ -40,8 +39,7 @@ class UnitOfWorkProtocol(Protocol):
     user_repo: CrmUserRepositoryProtocol
     role_repo: CrmRoleRepositoryProtocol
     permission_repo: CrmPermissionRepositoryProtocol
-    role_permission_repo: CrmRolePermissionRepositoryProtocol
-    user_role_repo: CrmUserRoleRepositoryProtocol
+    user_permissions_repo: CrmUserPermissionsRepositoryProtocol
     user_app_access_repo: CrmUserAppAccessRepositoryProtocol
     click_repo: CrmClickRepositoryProtocol
     app_user_repo: CrmAppUserRepositoryProtocol

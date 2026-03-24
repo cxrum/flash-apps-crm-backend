@@ -6,5 +6,5 @@ from datetime import datetime
 class CrmUserAppAccessEntity:
     user_id: int
     app_id: int
-    access_level: str = "manager"
+    role_id: int
     assigned_at: datetime | None = None

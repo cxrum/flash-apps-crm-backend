@@ -47,7 +47,7 @@ class DefenitionsService:
         self,
         command: ListMetricDefinitionsCommand,
     ) -> ListMetricDefinitionsResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             def_list = uow.metric_definition_repo.list_by_app_id(command.app_id)
@@ -81,7 +81,7 @@ class DefenitionsService:
         self,
         command: UpdateMetricDefinitionCommand,
     ) -> UpdateMetricDefinitionResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             definition = self._get_metric_definition(
@@ -101,7 +101,7 @@ class DefenitionsService:
         self,
         command: CreateMetricDefinitionCommand,
     ) -> CreateMetricDefinitionResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         entity = AdminDomainMapper.metric_definition_from_command(command)
 
         with self._uow_factory.create() as uow:
@@ -114,7 +114,7 @@ class DefenitionsService:
         self,
         command: ListConversionDefinitionsCommand,
     ) -> ListConversionDefinitionsResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             def_list = uow.conversion_definition_repo.list_by_app_id(command.app_id)
@@ -143,7 +143,7 @@ class DefenitionsService:
         self,
         command: UpdateConversionDefinitionCommand,
     ) -> UpdateConversionDefinitionResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             definition = self._get_conversion_definition(
@@ -163,7 +163,7 @@ class DefenitionsService:
         self,
         command: CreateConversionDefinitionCommand,
     ) -> CreateConversionDefinitionResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         entity = AdminDomainMapper.conversion_definition_from_command(command)
 
         with self._uow_factory.create() as uow:
@@ -176,7 +176,7 @@ class DefenitionsService:
         self,
         command: ListParamDefinitionsCommand,
     ) -> ListParamDefinitionsResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             def_list = uow.param_definition_repo.list_by_app_id(command.app_id)
@@ -203,7 +203,7 @@ class DefenitionsService:
         self,
         command: UpdateParamDefinitionCommand,
     ) -> UpdateParamDefinitionResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             definition = self._get_param_definition(
@@ -223,7 +223,7 @@ class DefenitionsService:
         self,
         command: CreateParamDefinitionCommand,
     ) -> CreateParamDefinitionResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         entity = AdminDomainMapper.param_definition_from_command(command)
 
         with self._uow_factory.create() as uow:

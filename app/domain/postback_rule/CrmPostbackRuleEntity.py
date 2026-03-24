@@ -7,7 +7,7 @@ from app.domain.exceptions import DomainError
 from app.domain.postback_rule.template import PostbackTemplateEntity
 
 
-@dataclass()
+@dataclass
 class CrmPostbackRuleEntity:
     platfrom_app_id: int
     name: str

@@ -7,20 +7,15 @@ from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.permission.permission_repository_protocol import CrmPermissionRepositoryProtocol
 from app.domain.role.CrmRoleEntity import CrmRoleEntity
 from app.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
-from app.domain.role_permission.CrmRolePermissionEntity import CrmRolePermissionEntity
-from app.domain.role_permission.role_permission_repository_protocol import (
-    CrmRolePermissionRepositoryProtocol,
-)
 from app.domain.user.CrmUserEntity import CrmUserEntity
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
-from app.domain.user_role.CrmUserRoleEntity import CrmUserRoleEntity
-from app.domain.user_role.user_role_repository_protocol import CrmUserRoleRepositoryProtocol
+from app.domain.user_permissions.CrmUserPermisionEntity import CrmUserPermisionEntity
+from app.domain.user_permissions.user_permissions_repository_protocol import CrmUserPermissionsRepositoryProtocol
 from app.infra.db.crm.models import (
     CrmPermission,
     CrmRole,
-    CrmRolePermission,
+    CrmUserPermisions,
     CrmUser,
-    CrmUserRole,
 )
 
 
@@ -131,7 +126,8 @@ class SqlAlchemyCrmPermissionRepository(CrmPermissionRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def _to_domain(self, row: CrmPermission) -> CrmPermissionEntity:
+    @staticmethod
+    def _to_domain(row: CrmPermission) -> CrmPermissionEntity:
         return CrmPermissionEntity(
             permission_id=row.permission_id,
             code=row.code,
@@ -173,95 +169,59 @@ class SqlAlchemyCrmPermissionRepository(CrmPermissionRepositoryProtocol):
         return [self._to_domain(row) for row in rows]
 
 
-class SqlAlchemyCrmRolePermissionRepository(CrmRolePermissionRepositoryProtocol):
+class SqlAlchemyCrmUserPermisionRepository(CrmUserPermissionsRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def _to_domain(self, row: CrmRolePermission) -> CrmRolePermissionEntity:
-        return CrmRolePermissionEntity(
-            role_id=row.role_id,
-            permission_id=row.permission_id,
-            created_at=row.created_at,
-        )
-
-    def _to_row(self, entity: CrmRolePermissionEntity) -> CrmRolePermission:
-        kwargs: dict[str, object] = {
-            "role_id": entity.role_id,
-            "permission_id": entity.permission_id,
-        }
-        if entity.created_at is not None:
-            kwargs["created_at"] = entity.created_at
-        return CrmRolePermission(**kwargs)
-
-    def save(self, entity: CrmRolePermissionEntity) -> CrmRolePermissionEntity:
-        row = self.session.merge(self._to_row(entity))
-        self.session.flush()
-        return self._to_domain(row)
-
-    def save_many(self, entities: list[CrmRolePermissionEntity]) -> list[CrmRolePermissionEntity]:
-        rows = [self.session.merge(self._to_row(entity)) for entity in entities]
-        self.session.flush()
-        return [self._to_domain(row) for row in rows]
-
-    def list_by_role_id(self, role_id: int) -> list[CrmRolePermissionEntity]:
-        rows = self.session.scalars(
-            select(CrmRolePermission)
-            .where(CrmRolePermission.role_id == role_id)
-            .order_by(CrmRolePermission.permission_id.asc())
-        ).all()
-        return [self._to_domain(row) for row in rows]
-
-    def list_by_permission_id(self, permission_id: int) -> list[CrmRolePermissionEntity]:
-        rows = self.session.scalars(
-            select(CrmRolePermission)
-            .where(CrmRolePermission.permission_id == permission_id)
-            .order_by(CrmRolePermission.role_id.asc())
-        ).all()
-        return [self._to_domain(row) for row in rows]
-
-
-class SqlAlchemyCrmUserRoleRepository(CrmUserRoleRepositoryProtocol):
-    def __init__(self, session: Session) -> None:
-        self.session = session
-
-    def _to_domain(self, row: CrmUserRole) -> CrmUserRoleEntity:
-        return CrmUserRoleEntity(
+    def _to_domain(self, row: CrmUserPermisions) -> CrmUserPermisionEntity:
+        return CrmUserPermisionEntity(
             user_id=row.user_id,
-            role_id=row.role_id,
+            app_id=row.app_id,
+            permission_id=row.permission_id,
             assigned_at=row.assigned_at,
         )
 
-    def _to_row(self, entity: CrmUserRoleEntity) -> CrmUserRole:
+    def _to_row(self, entity: CrmUserPermisionEntity) -> CrmUserPermisions:
         kwargs: dict[str, object] = {
             "user_id": entity.user_id,
-            "role_id": entity.role_id,
+            "app_id": entity.app_id,
+            "permission_id": entity.permission_id,
         }
         if entity.assigned_at is not None:
             kwargs["assigned_at"] = entity.assigned_at
-        return CrmUserRole(**kwargs)
+        return CrmUserPermisions(**kwargs)
 
-    def save(self, entity: CrmUserRoleEntity) -> CrmUserRoleEntity:
+    def save(self, entity: CrmUserPermisionEntity) -> CrmUserPermisionEntity:
         row = self.session.merge(self._to_row(entity))
         self.session.flush()
         return self._to_domain(row)
 
-    def save_many(self, entities: list[CrmUserRoleEntity]) -> list[CrmUserRoleEntity]:
+    def save_many(self, entities: list[CrmUserPermisionEntity]) -> list[CrmUserPermisionEntity]:
         rows = [self.session.merge(self._to_row(entity)) for entity in entities]
         self.session.flush()
         return [self._to_domain(row) for row in rows]
 
-    def list_by_user_id(self, user_id: int) -> list[CrmUserRoleEntity]:
+    def list_by_user_id(self, user_id: int) -> list[CrmUserPermisionEntity]:
         rows = self.session.scalars(
-            select(CrmUserRole)
-            .where(CrmUserRole.user_id == user_id)
-            .order_by(CrmUserRole.role_id.asc())
+            select(CrmUserPermisions)
+            .where(CrmUserPermisions.user_id == user_id)
+            .order_by(CrmUserPermisions.permission_id.asc())
         ).all()
         return [self._to_domain(row) for row in rows]
 
-    def list_by_role_id(self, role_id: int) -> list[CrmUserRoleEntity]:
+    def list_by_permision_id(self, permission_id: int) -> list[CrmUserPermisionEntity]:
         rows = self.session.scalars(
-            select(CrmUserRole)
-            .where(CrmUserRole.role_id == role_id)
-            .order_by(CrmUserRole.user_id.asc())
+            select(CrmUserPermisions)
+            .where(CrmUserPermisions.permission_id == permission_id)
+            .order_by(CrmUserPermisions.user_id.asc())
         ).all()
         return [self._to_domain(row) for row in rows]
+
+    def list_by_user_id_per_app(self, user_id: int, app_id: int) -> list[CrmPermissionEntity]:
+        rows = self.session.scalars(
+            select(CrmPermission)
+            .join(CrmUserPermisions, CrmPermission.permission_id == CrmUserPermisions.permission_id)
+            .where(CrmUserPermisions.user_id == user_id, CrmUserPermisions.app_id == app_id)
+            .order_by(CrmUserPermisions.permission_id.asc())
+        ).all()
+        return [SqlAlchemyCrmPermissionRepository._to_domain(row) for row in rows]

@@ -27,12 +27,11 @@ from app.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
 from app.domain.push_event.CrmPushEventEntity import CrmPushEventEntity
 from app.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
 from app.domain.role.CrmRoleEntity import CrmRoleEntity
-from app.domain.role_permission.CrmRolePermissionEntity import CrmRolePermissionEntity
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
 from app.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
 from app.domain.user.CrmUserEntity import CrmUserEntity
 from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
-from app.domain.user_role.CrmUserRoleEntity import CrmUserRoleEntity
+from app.domain.user_permissions.CrmUserPermisionEntity import CrmUserPermisionEntity
 
 
 def _merge(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
@@ -273,12 +272,6 @@ def build_role_entity(**overrides: Any) -> CrmRoleEntity:
     return CrmRoleEntity(**_merge({"code": "manager", "display_name": "Manager"}, overrides))
 
 
-def build_role_permission_entity(**overrides: Any) -> CrmRolePermissionEntity:
-    return CrmRolePermissionEntity(
-        **_merge({"role_id": 1, "permission_id": 1}, overrides)
-    )
-
-
 def build_secret_template_entity(**overrides: Any) -> CrmSecretTemplateEntity:
     return CrmSecretTemplateEntity(
         **_merge(
@@ -326,8 +319,8 @@ def build_user_app_access_entity(**overrides: Any) -> CrmUserAppAccessEntity:
     return CrmUserAppAccessEntity(**_merge({"user_id": 1, "app_id": 1}, overrides))
 
 
-def build_user_role_entity(**overrides: Any) -> CrmUserRoleEntity:
-    return CrmUserRoleEntity(**_merge({"user_id": 1, "role_id": 1}, overrides))
+def build_user_role_entity(**overrides: Any) -> CrmUserPermisionEntity:
+    return CrmUserPermisionEntity(**_merge({"user_id": 1, "role_id": 1}, overrides))
 
 def build_currency_entity(**overrides: Any) -> Money:
     return Money(

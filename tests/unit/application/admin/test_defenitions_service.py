@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 import pytest
 
-from app.application.admin.crm_users.service import ChechUserAccessToAppCommand
 from app.application.admin.defenitions.service import DefenitionsService
 from app.application.exceptions import ApplicationError
 from tests.unit.builders.commands import (
@@ -25,6 +26,12 @@ from tests.unit.builders.entities import (
 from tests.unit.doubles.domain.uow import StubUnitOfWork, StubUoWFactory
 
 
+@dataclass(frozen=True)
+class ChechUserAccessToAppCommand:
+    app_id: int
+    crm_user_id: int
+
+
 class StubCrmUsersService:
     def __init__(self, *, has_access: bool = True) -> None:
         self.has_access = has_access
@@ -37,7 +44,7 @@ class StubCrmUsersService:
         has_access = self.user_has_acces_to_app(
             ChechUserAccessToAppCommand(
                 app_id=app_id,
-                user_id=crm_user_id,
+                crm_user_id=crm_user_id,
             )
         )
         if not has_access:
@@ -67,7 +74,7 @@ def test_list_metrics_returns_response_entries_for_app() -> None:
     )
 
     assert [item.metric_definition_id for item in response.metric_definitions] == [1, 2]
-    assert user_service.calls == [ChechUserAccessToAppCommand(app_id=1, user_id=77)]
+    assert user_service.calls == [ChechUserAccessToAppCommand(app_id=1, crm_user_id=77)]
 
 
 def test_create_metric_definition_saves_and_maps_metric() -> None:
@@ -137,7 +144,7 @@ def test_list_conversions_returns_response_entries_for_app() -> None:
     )
 
     assert [item.conversion_definition_id for item in response.conversion_definitions] == [1]
-    assert user_service.calls == [ChechUserAccessToAppCommand(app_id=1, user_id=88)]
+    assert user_service.calls == [ChechUserAccessToAppCommand(app_id=1, crm_user_id=88)]
 
 
 def test_create_conversion_definition_saves_explicit_revenue_flags() -> None:
@@ -220,7 +227,7 @@ def test_list_params_returns_response_entries_for_app() -> None:
     )
 
     assert [item.param_definition_id for item in response.param_definitions] == [1, 2]
-    assert user_service.calls == [ChechUserAccessToAppCommand(app_id=1, user_id=91)]
+    assert user_service.calls == [ChechUserAccessToAppCommand(app_id=1, crm_user_id=91)]
 
 
 def test_create_param_definition_saves_param() -> None:

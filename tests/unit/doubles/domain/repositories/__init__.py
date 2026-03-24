@@ -25,10 +25,9 @@ from tests.unit.doubles.domain.repositories.config import (
 )
 from tests.unit.doubles.domain.repositories.crm import (
     InMemoryCrmPermissionRepository,
-    InMemoryCrmRolePermissionRepository,
     InMemoryCrmRoleRepository,
     InMemoryCrmUserRepository,
-    InMemoryCrmUserRoleRepository,
+    InMemoryCrmUserPermissionsRepository,
 )
 from tests.unit.doubles.domain.repositories.push import (
     InMemoryCrmPushCampaignRepository,
@@ -55,11 +54,10 @@ __all__ = [
     "InMemoryCrmPushCampaignRepository",
     "InMemoryCrmPushEventRepository",
     "InMemoryCrmPushTokenRepository",
-    "InMemoryCrmRolePermissionRepository",
     "InMemoryCrmRoleRepository",
     "InMemoryCrmSecretTemplateRepository",
     "InMemoryCrmUserAppAccessRepository",
     "InMemoryCrmUserRepository",
-    "InMemoryCrmUserRoleRepository",
+    "InMemoryCrmUserPermissionsRepository",
     "InMemoryStatisticsRepository",
 ]

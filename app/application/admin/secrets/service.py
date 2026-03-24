@@ -45,12 +45,12 @@ class SecretsService:
         return crm_user_id
     
     def _check_admin_access(self, crm_user_id: int, app_id: int):
-        has_admin_access = self._user_service.is_user_admin_permision_access(crm_user_id, app_id)
+        has_admin_access = self._user_service.is_user_admin_permision_access(crm_user_id=crm_user_id, app_id=app_id)
         if not has_admin_access:
             raise ApplicationError()
         
     def _check_manager_access(self, crm_user_id: int, app_id: int):
-        has_admin_access = self._user_service.is_user_manager_permision_access(crm_user_id, app_id)
+        has_admin_access = self._user_service.is_user_manager_permision_access(crm_user_id=crm_user_id, app_id=app_id)
         if not has_admin_access:
             raise ApplicationError()
     
@@ -70,7 +70,7 @@ class SecretsService:
         self,
         command: GetSecretTemplatesCommand
     ) -> GetSecretTemplatesResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         self._check_manager_access(command.crm_user_id, command.app_id)
 
         with self._uow_factory.create() as uow:
@@ -84,7 +84,7 @@ class SecretsService:
         self,
         command: ListSecretTemplatesCommand,
     ) -> ListSecretTemplatesResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         self._check_manager_access(command.crm_user_id, command.app_id)
         
         with self._uow_factory.create() as uow:
@@ -97,7 +97,7 @@ class SecretsService:
         self,
         command: UpdateSecretTemplateCommand,
     ) -> CreateSecretTemplateResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         crm_user_id = self._require_crm_user_id(command.crm_user_id)
         self._check_admin_access(crm_user_id, command.app_id)
 
@@ -130,7 +130,7 @@ class SecretsService:
         self,
         command: CreateSecretTemplateCommand,
     ) -> CreateSecretTemplateResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         self._check_admin_access(command.crm_user_id, command.app_id)
         
         entity = AdminDomainMapper.secret_template_from_command(command)
@@ -170,7 +170,7 @@ class SecretsService:
         self,
         command: CreateAppSecretCommand,
     ) -> CreateAppSecretResponse: 
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         crm_user_id = self._require_crm_user_id(command.crm_user_id)
         
         encrypted_value=self._encryption_service.encrypt(command.value)
@@ -210,7 +210,7 @@ class SecretsService:
     ) -> list[AppSecretResponseEntry]:
         
         result_response: list[AppSecretResponseEntry] = []
-        has_admin_access = user_service.is_user_admin_permision_access(crm_user_id, app_id)
+        has_admin_access = user_service.is_user_admin_permision_access(crm_user_id=crm_user_id, app_id=app_id)
         
         for app_secret in app_secrets:
             template = uow.secret_template_repo.get_by_id(app_secret.template_id)
@@ -247,7 +247,7 @@ class SecretsService:
         self,
         command: GetAppSecretValueCommand,
     ) -> GetAppSecretResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         crm_user_id = self._require_crm_user_id(command.crm_user_id)
 
         with self._uow_factory.create() as uow:
@@ -272,7 +272,7 @@ class SecretsService:
         self,
         command: ListAppSecretsCommand,
     ) -> ListAppSecretsResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         crm_user_id = self._require_crm_user_id(command.crm_user_id)
 
         with self._uow_factory.create() as uow:
@@ -296,11 +296,11 @@ class SecretsService:
         self,
         command: UpdateAppSecretCommand,
     ) -> UpdateAppSecretResponse:
-        self._user_service.check_user_app_access(command.app_id, command.crm_user_id)
+        self._user_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         crm_user_id = self._require_crm_user_id(command.crm_user_id)
         self._check_admin_access(crm_user_id, command.app_id)
 
-        has_admin_access = self._user_service.is_user_admin_permision_access(crm_user_id, command.app_id)
+        has_admin_access = self._user_service.is_user_admin_permision_access(crm_user_id=crm_user_id, app_id=command.app_id)
         if not has_admin_access:
             raise ApplicationError()
         

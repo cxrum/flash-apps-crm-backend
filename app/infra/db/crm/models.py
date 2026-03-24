@@ -55,33 +55,10 @@ class CrmPermission(Base):
     )
 
 
-class CrmRolePermission(Base):
-    __tablename__ = "crm_role_permissions"
+class CrmUserPermisions(Base):
+    __tablename__ = "crm_user_permisions"
     __table_args__ = (
-        PrimaryKeyConstraint("role_id", "permission_id", name="pk_crm_role_permissions"),
-    )
-
-    role_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("crm_roles.role_id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    permission_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("crm_permissions.permission_id", ondelete="CASCADE"),
-        nullable=False,
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),
-    )
-
-
-class CrmUserRole(Base):
-    __tablename__ = "crm_user_roles"
-    __table_args__ = (
-        PrimaryKeyConstraint("user_id", "role_id", name="pk_crm_user_roles"),
+        PrimaryKeyConstraint("user_id", "permission_id", "app_id", name="pk_crm_user_permision"),
     )
 
     user_id: Mapped[int] = mapped_column(
@@ -89,9 +66,14 @@ class CrmUserRole(Base):
         ForeignKey("crm_users.user_id", ondelete="CASCADE"),
         nullable=False,
     )
-    role_id: Mapped[int] = mapped_column(
-        Integer,
-        ForeignKey("crm_roles.role_id", ondelete="CASCADE"),
+    permission_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("crm_permissions.permission_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    app_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("crm_apps.app_id", ondelete="CASCADE"),
         nullable=False,
     )
     assigned_at: Mapped[datetime] = mapped_column(

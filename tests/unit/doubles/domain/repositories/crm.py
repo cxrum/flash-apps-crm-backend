@@ -4,14 +4,10 @@ from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.permission.permission_repository_protocol import CrmPermissionRepositoryProtocol
 from app.domain.role.CrmRoleEntity import CrmRoleEntity
 from app.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
-from app.domain.role_permission.CrmRolePermissionEntity import CrmRolePermissionEntity
-from app.domain.role_permission.role_permission_repository_protocol import (
-    CrmRolePermissionRepositoryProtocol,
-)
 from app.domain.user.CrmUserEntity import CrmUserEntity
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
-from app.domain.user_role.CrmUserRoleEntity import CrmUserRoleEntity
-from app.domain.user_role.user_role_repository_protocol import CrmUserRoleRepositoryProtocol
+from app.domain.user_permissions.CrmUserPermisionEntity import CrmUserPermisionEntity
+from app.domain.user_permissions.user_permissions_repository_protocol import CrmUserPermissionsRepositoryProtocol
 from tests.unit.doubles.base import CallRecorderMixin, IntegerSequence, clone, evolve, utcnow
 
 
@@ -148,63 +144,51 @@ class InMemoryCrmPermissionRepository(CallRecorderMixin, CrmPermissionRepository
         return [clone(item) for item in sorted(self._items.values(), key=lambda item: item.permission_id or 0)]
 
 
-class InMemoryCrmRolePermissionRepository(CallRecorderMixin, CrmRolePermissionRepositoryProtocol):
+class InMemoryCrmUserPermissionsRepository(CallRecorderMixin, CrmUserPermissionsRepositoryProtocol):
     def __init__(self) -> None:
         super().__init__()
-        self._items: dict[tuple[int, int], CrmRolePermissionEntity] = {}
+        self._items: dict[tuple[int, int], CrmUserPermisionEntity] = {}
 
-    def save(self, entity: CrmRolePermissionEntity) -> CrmRolePermissionEntity:
+    def set_permissions(self, permisions_repo: CrmPermissionRepositoryProtocol):
+        self._permisions_repo = permisions_repo
+    
+    def save(self, entity: CrmUserPermisionEntity) -> CrmUserPermisionEntity:
         self._record("save", clone(entity))
-        self._items[(entity.role_id, entity.permission_id)] = clone(entity)
+        self._items[(entity.user_id, entity.permission_id)] = clone(entity)
         return clone(entity)
 
-    def save_many(self, entities: list[CrmRolePermissionEntity]) -> list[CrmRolePermissionEntity]:
+    def save_many(self, entities: list[CrmUserPermisionEntity]) -> list[CrmUserPermisionEntity]:
         self._record("save_many", clone(entities))
         return [self.save(entity) for entity in entities]
 
-    def list_by_role_id(self, role_id: int) -> list[CrmRolePermissionEntity]:
-        self._record("list_by_role_id", role_id)
+    def list_by_user_id(self, user_id: int) -> list[CrmUserPermisionEntity]:
+        self._record("list_by_user_id", user_id)
         items = sorted(
-            (item for item in self._items.values() if item.role_id == role_id),
+            (item for item in self._items.values() if item.user_id == user_id),
             key=lambda item: item.permission_id,
         )
         return [clone(item) for item in items]
 
-    def list_by_permission_id(self, permission_id: int) -> list[CrmRolePermissionEntity]:
+    def list_by_permision_id(self, permission_id: int) -> list[CrmUserPermisionEntity]:
         self._record("list_by_permission_id", permission_id)
         items = sorted(
             (item for item in self._items.values() if item.permission_id == permission_id),
-            key=lambda item: item.role_id,
-        )
-        return [clone(item) for item in items]
-
-
-class InMemoryCrmUserRoleRepository(CallRecorderMixin, CrmUserRoleRepositoryProtocol):
-    def __init__(self) -> None:
-        super().__init__()
-        self._items: dict[tuple[int, int], CrmUserRoleEntity] = {}
-
-    def save(self, entity: CrmUserRoleEntity) -> CrmUserRoleEntity:
-        self._record("save", clone(entity))
-        self._items[(entity.user_id, entity.role_id)] = clone(entity)
-        return clone(entity)
-
-    def save_many(self, entities: list[CrmUserRoleEntity]) -> list[CrmUserRoleEntity]:
-        self._record("save_many", clone(entities))
-        return [self.save(entity) for entity in entities]
-
-    def list_by_user_id(self, user_id: int) -> list[CrmUserRoleEntity]:
-        self._record("list_by_user_id", user_id)
-        items = sorted(
-            (item for item in self._items.values() if item.user_id == user_id),
-            key=lambda item: item.role_id,
-        )
-        return [clone(item) for item in items]
-
-    def list_by_role_id(self, role_id: int) -> list[CrmUserRoleEntity]:
-        self._record("list_by_role_id", role_id)
-        items = sorted(
-            (item for item in self._items.values() if item.role_id == role_id),
             key=lambda item: item.user_id,
         )
         return [clone(item) for item in items]
+
+    def list_by_user_id_per_app(self, user_id: int, app_id: int) -> list[CrmPermissionEntity]:
+        self._record("list_by_user_id_per_app", user_id, app_id)
+        items = sorted(
+            (item for item in self._items.values() if item.app_id == app_id and item.user_id == user_id),
+            key=lambda item: item.user_id,
+        )
+        
+        permission_items = []
+        for item in items:
+            _t = self._permisions_repo.get_by_id(item.permission_id)
+            if _t is None:
+                continue
+            permission_items.append(_t)
+                
+        return [clone(item) for item in permission_items]

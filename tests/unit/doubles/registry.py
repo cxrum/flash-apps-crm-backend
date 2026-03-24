@@ -26,9 +26,6 @@ from app.domain.push_campaign.push_campaign_repository_protocol import CrmPushCa
 from app.domain.push_event.push_event_repository_protocol import CrmPushEventRepositoryProtocol
 from app.domain.push_token.push_token_repository_protocol import CrmPushTokenRepositoryProtocol
 from app.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
-from app.domain.role_permission.role_permission_repository_protocol import (
-    CrmRolePermissionRepositoryProtocol,
-)
 from app.domain.secret_template.secret_template_repository_protocol import (
     CrmSecretTemplateRepositoryProtocol,
 )
@@ -38,7 +35,7 @@ from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
 from app.domain.user_app_access.user_app_access_repository_protocol import (
     CrmUserAppAccessRepositoryProtocol,
 )
-from app.domain.user_role.user_role_repository_protocol import CrmUserRoleRepositoryProtocol
+from app.domain.user_permissions.user_permissions_repository_protocol import CrmUserPermissionsRepositoryProtocol
 from app.infra.services.currency import CurrencyConvertorClient
 from tests.unit.doubles.application.encryption import StubEncryptionService
 from tests.unit.doubles.application.requester import StubS2SRequester
@@ -62,12 +59,11 @@ from tests.unit.doubles.domain.repositories import (
     InMemoryCrmPushCampaignRepository,
     InMemoryCrmPushEventRepository,
     InMemoryCrmPushTokenRepository,
-    InMemoryCrmRolePermissionRepository,
     InMemoryCrmRoleRepository,
     InMemoryCrmSecretTemplateRepository,
     InMemoryCrmUserAppAccessRepository,
     InMemoryCrmUserRepository,
-    InMemoryCrmUserRoleRepository,
+    InMemoryCrmUserPermissionsRepository,
 )
 from tests.unit.doubles.domain.uow import StubUnitOfWork, StubUoWFactory
 
@@ -93,13 +89,12 @@ PROTOCOL_DOUBLE_REGISTRY = {
     CrmPushCampaignRepositoryProtocol: InMemoryCrmPushCampaignRepository,
     CrmPushEventRepositoryProtocol: InMemoryCrmPushEventRepository,
     CrmPushTokenRepositoryProtocol: InMemoryCrmPushTokenRepository,
-    CrmRolePermissionRepositoryProtocol: InMemoryCrmRolePermissionRepository,
     CrmRoleRepositoryProtocol: InMemoryCrmRoleRepository,
     CrmSecretTemplateRepositoryProtocol: InMemoryCrmSecretTemplateRepository,
     StatisticsRepositoryProtocol: InMemoryStatisticsRepository,
     CrmUserAppAccessRepositoryProtocol: InMemoryCrmUserAppAccessRepository,
     CrmUserRepositoryProtocol: InMemoryCrmUserRepository,
-    CrmUserRoleRepositoryProtocol: InMemoryCrmUserRoleRepository,
+    CrmUserPermissionsRepositoryProtocol: InMemoryCrmUserPermissionsRepository,
     CurrencyConvertorClientProtocol: CurrencyConvertorClient,
     S2SRequesterProtocol: StubS2SRequester
 }

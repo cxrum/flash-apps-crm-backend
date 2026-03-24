@@ -15,11 +15,10 @@ from app.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
 from app.domain.push_event.CrmPushEventEntity import CrmPushEventEntity
 from app.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
 from app.domain.role.CrmRoleEntity import CrmRoleEntity
-from app.domain.role_permission.CrmRolePermissionEntity import CrmRolePermissionEntity
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
 from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
 from app.domain.user.CrmUserEntity import CrmUserEntity
-from app.domain.user_role.CrmUserRoleEntity import CrmUserRoleEntity
+from app.domain.user_permissions.CrmUserPermisionEntity import CrmUserPermisionEntity
 from app.domain.audit_log.CrmAuditLogEntity import (
     CrmAuditLogEntity,
 )
@@ -42,12 +41,10 @@ from app.domain.repositories import (
     CrmPushCampaignRepositoryProtocol,
     CrmPushEventRepositoryProtocol,
     CrmPushTokenRepositoryProtocol,
-    CrmRolePermissionRepositoryProtocol,
     CrmRoleRepositoryProtocol,
     CrmSecretTemplateRepositoryProtocol,
     CrmUserAppAccessRepositoryProtocol,
     CrmUserRepositoryProtocol,
-    CrmUserRoleRepositoryProtocol,
 )
 from app.domain.uow import UnitOfWorkProtocol
 
@@ -71,11 +68,10 @@ __all__ = [
     "CrmPushEventEntity",
     "CrmPushTokenEntity",
     "CrmRoleEntity",
-    "CrmRolePermissionEntity",
     "CrmSecretTemplateEntity",
     "CrmUserAppAccessEntity",
     "CrmUserEntity",
-    "CrmUserRoleEntity",
+    "CrmUserPermisionEntity",
     "CrmAppPlatformRepositoryProtocol",
     "CrmAppRepositoryProtocol",
     "CrmAppSecretRepositoryProtocol",
@@ -93,11 +89,9 @@ __all__ = [
     "CrmPushCampaignRepositoryProtocol",
     "CrmPushEventRepositoryProtocol",
     "CrmPushTokenRepositoryProtocol",
-    "CrmRolePermissionRepositoryProtocol",
     "CrmRoleRepositoryProtocol",
     "CrmSecretTemplateRepositoryProtocol",
     "UnitOfWorkProtocol",
     "CrmUserAppAccessRepositoryProtocol",
     "CrmUserRepositoryProtocol",
-    "CrmUserRoleRepositoryProtocol",
 ]

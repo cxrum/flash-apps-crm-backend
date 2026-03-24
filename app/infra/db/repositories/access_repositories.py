@@ -18,7 +18,7 @@ class SqlAlchemyCrmUserAppAccessRepository(CrmUserAppAccessRepositoryProtocol):
         return CrmUserAppAccessEntity(
             user_id=row.user_id,
             app_id=row.app_id,
-            access_level=row.access_level,
+            role_id=row.role_id,
             assigned_at=row.assigned_at,
         )
 
@@ -26,7 +26,7 @@ class SqlAlchemyCrmUserAppAccessRepository(CrmUserAppAccessRepositoryProtocol):
         kwargs: dict[str, object] = {
             "user_id": entity.user_id,
             "app_id": entity.app_id,
-            "access_level": entity.access_level,
+            "role_id": entity.role_id,
         }
         if entity.assigned_at is not None:
             kwargs["assigned_at"] = entity.assigned_at

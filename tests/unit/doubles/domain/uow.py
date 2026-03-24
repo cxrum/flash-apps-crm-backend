@@ -25,12 +25,11 @@ from tests.unit.doubles.domain.repositories import (
     InMemoryCrmPushCampaignRepository,
     InMemoryCrmPushEventRepository,
     InMemoryCrmPushTokenRepository,
-    InMemoryCrmRolePermissionRepository,
     InMemoryCrmRoleRepository,
     InMemoryCrmSecretTemplateRepository,
     InMemoryCrmUserAppAccessRepository,
     InMemoryCrmUserRepository,
-    InMemoryCrmUserRoleRepository,
+    InMemoryCrmUserPermissionsRepository,
 )
 
 
@@ -48,11 +47,11 @@ class StubUnitOfWork(CallRecorderMixin, UnitOfWorkProtocol):
         self.user_repo = overrides.get("user_repo", InMemoryCrmUserRepository())
         self.role_repo = overrides.get("role_repo", InMemoryCrmRoleRepository())
         self.permission_repo = overrides.get("permission_repo", InMemoryCrmPermissionRepository())
-        self.role_permission_repo = overrides.get(
-            "role_permission_repo",
-            InMemoryCrmRolePermissionRepository(),
-        )
-        self.user_role_repo = overrides.get("user_role_repo", InMemoryCrmUserRoleRepository())
+        
+        _crmUserPermissionsRepository = InMemoryCrmUserPermissionsRepository()
+        _crmUserPermissionsRepository.set_permissions(self.permission_repo)
+        
+        self.user_permissions_repo = overrides.get("user_permissions_repo", _crmUserPermissionsRepository)
         self.user_app_access_repo = overrides.get(
             "user_app_access_repo",
             InMemoryCrmUserAppAccessRepository(),
@@ -173,11 +172,8 @@ class StubRepositoryFactory(CallRecorderMixin):
     def permission_repo(self, session: object) -> object:
         return self._repo("permission_repo", session)
 
-    def role_permission_repo(self, session: object) -> object:
-        return self._repo("role_permission_repo", session)
-
-    def user_role_repo(self, session: object) -> object:
-        return self._repo("user_role_repo", session)
+    def user_permissions_repo(self, session: object) -> object:
+        return self._repo("user_permissions_repo", session)
 
     def user_app_access_repo(self, session: object) -> object:
         return self._repo("user_app_access_repo", session)
