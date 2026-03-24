@@ -14,7 +14,7 @@ from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
 from app.domain.event_bus.service_protocol import IAsyncEventBus
 from app.domain.postback_rule import CrmPostbackRuleEntity
 from app.domain.postback_rule.template import PostbackTemplateEntity
-from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
 class TemplateParamResolverProtocol(Protocol):
@@ -119,7 +119,7 @@ class TemplateResolverFactory:
 class PostbackService:
     def __init__(
         self,
-        uow_factory: UnitOfWorkFacotyProtocol,
+        uow_factory: UnitOfWorkFactoryProtocol,
         async_event_bus: IAsyncEventBus,
         s2s_requester: S2SRequesterProtocol,
     ) -> None:

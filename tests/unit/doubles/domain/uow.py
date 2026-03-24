@@ -3,7 +3,7 @@ from __future__ import annotations
 from types import TracebackType
 from typing import Any
 
-from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 from tests.unit.doubles.base import CallRecorderMixin
 from tests.unit.doubles.domain.repositories import (
     InMemoryCustomParamsStatisticsRepository,
@@ -229,7 +229,7 @@ class StubRepositoryFactory(CallRecorderMixin):
     def audit_log_repo(self, session: object) -> object:
         return self._repo("audit_log_repo", session)
 
-class StubUoWFactory(UnitOfWorkFacotyProtocol):
+class StubUoWFactory(UnitOfWorkFactoryProtocol):
     def __init__(self, stub_uow: StubUnitOfWork | None = None) -> None:
         self.stub_uow = stub_uow or StubUnitOfWork()
 

@@ -3,20 +3,20 @@ from dataclasses import dataclass
 from app.application.exceptions import ApplicationError
 from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.role.CrmRoleEntity import CrmRoleEntity
-from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
 
     
 @dataclass(frozen=True)
 class UserPermission:
     code: str
-    descrition: str | None = None
+    description: str | None = None
 
 
 class CrmUsersService:
     def __init__(
         self,
-        uow_factory: UnitOfWorkFacotyProtocol,
+        uow_factory: UnitOfWorkFactoryProtocol,
     ) -> None:
         self._uow_factory = uow_factory
     
@@ -37,7 +37,7 @@ class CrmUsersService:
         
         return role
             
-    def list_permisions(self, *,  app_id: int, crm_user_id: int) -> list[UserPermission]:
+    def list_permissions(self, *,  app_id: int, crm_user_id: int) -> list[UserPermission]:
         mapped: list[UserPermission] = []
         
         with self._uow_factory.create() as uow:
@@ -45,7 +45,7 @@ class CrmUsersService:
             mapped = [
                 UserPermission(
                     code=it.code,
-                    descrition=it.description
+                    description=it.description
                 ) for it in permisions
             ]
             

@@ -6,12 +6,12 @@ from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
 from app.domain.event_bus.service_protocol import AsyncEventMessageHandler
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
-from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
 class AsyncUpdateParamHandler(AsyncEventMessageHandler):
     
-    def __init__(self, uow_factory: UnitOfWorkFacotyProtocol) -> None:
+    def __init__(self, uow_factory: UnitOfWorkFactoryProtocol) -> None:
         self.__uow_factory = uow_factory
     
     @staticmethod

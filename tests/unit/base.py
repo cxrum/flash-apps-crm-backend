@@ -7,7 +7,7 @@ from app.domain.event_bus.service_protocol import IAsyncEventBus
 from app.application.sdk.usecases.apps.service import AppService
 from app.application.sdk.usecases.ingestion.service import IngestionService
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
-from app.domain.uow import UnitOfWorkFacotyProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol
 from tests.unit.doubles.application.encryption import StubEncryptionService
 from tests.unit.doubles.domain.uow import StubUnitOfWork
 
@@ -15,7 +15,7 @@ from tests.unit.doubles.domain.uow import StubUnitOfWork
 @dataclass(slots=True)
 class UnitTestContext:
     uow: StubUnitOfWork
-    uow_factory: UnitOfWorkFacotyProtocol 
+    uow_factory: UnitOfWorkFactoryProtocol 
     encryption_service: StubEncryptionService
     currency_service: CurrencyConvertorClientProtocol
     async_event_bus: IAsyncEventBus

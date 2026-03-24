@@ -8,12 +8,12 @@ from app.application.sdk.usecases.apps.responses import AppConfigQueryEntry, App
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
-from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
 class AppService:
     def __init__(self, 
-            uow_factory: UnitOfWorkFacotyProtocol, 
+            uow_factory: UnitOfWorkFactoryProtocol, 
             encryption_service: EncryptionServiceProtocol
         ) -> None:
         self._uow_factory = uow_factory

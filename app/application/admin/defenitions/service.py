@@ -31,13 +31,13 @@ from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
 )
 from app.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
-from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
 class DefenitionsService:
     def __init__(
         self,
-        uow_factory: UnitOfWorkFacotyProtocol,
+        uow_factory: UnitOfWorkFactoryProtocol,
         user_service: CrmUsersService,
     ) -> None:
         self._uow_factory = uow_factory

@@ -12,11 +12,11 @@ from app.domain.event_bus.service_protocol import AsyncEventMessageHandler, IAsy
 from app.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 from app.domain.statistics_aggregate import StatisticsAggregateEntity
-from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
 class AsyncMetricHandler(AsyncEventMessageHandler):
-    def __init__(self, uow_factory: UnitOfWorkFacotyProtocol) -> None:
+    def __init__(self, uow_factory: UnitOfWorkFactoryProtocol) -> None:
         self.__uow_factory = uow_factory
 
     @staticmethod

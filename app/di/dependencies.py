@@ -23,7 +23,7 @@ from app.domain.event_bus.service_protocol import (
     IAsyncEventBus,
     IAsyncExceptionBus,
 )
-from app.domain.uow import UnitOfWorkFacotyProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol
 from app.infra.db.puow import SqlAlchemyUnitOfWorkFactory
 from app.infra.db.session import SessionFactory
 from app.infra.event_bus.async_bus.in_memory import InMemoryAsyncEventBus
@@ -40,7 +40,7 @@ SHARED_ASYNC_MEMORY_EXCEPTION_BUS = AsyncExceptionBusAdapter(InMemoryAsyncEventB
 logger = logging.getLogger(__name__)
 
 
-def get_uow_factory() -> UnitOfWorkFacotyProtocol:
+def get_uow_factory() -> UnitOfWorkFactoryProtocol:
     return SqlAlchemyUnitOfWorkFactory(SessionFactory)
 
 
@@ -61,19 +61,19 @@ def get_in_memory_exception_event_bus() -> IAsyncExceptionBus:
 
 
 def build_update_param_handler(
-    uow_factory: UnitOfWorkFacotyProtocol,
+    uow_factory: UnitOfWorkFactoryProtocol,
 ) -> AsyncEventMessageHandler:
     return AsyncUpdateParamHandler(uow_factory)
 
 
 def build_metric_handler(
-    uow_factory: UnitOfWorkFacotyProtocol,
+    uow_factory: UnitOfWorkFactoryProtocol,
 ) -> AsyncEventMessageHandler:
     return AsyncMetricHandler(uow_factory)
 
 
 def build_conversion_handler(
-    uow_factory: UnitOfWorkFacotyProtocol,
+    uow_factory: UnitOfWorkFactoryProtocol,
 ) -> AsyncEventMessageHandler:
     return AsyncConversionHandler(uow_factory)
 
@@ -239,14 +239,14 @@ async def application_lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 def get_sdk_app_service(
-    uow_factory: UnitOfWorkFacotyProtocol = Depends(get_uow_factory),
+    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
     encryption_service: EncryptionServiceProtocol = Depends(get_app_seacrets_encryptor),
 ) -> AppService:
     return AppService(uow_factory, encryption_service)
 
 
 def get_sdk_ingestion_service(
-    uow_factory: UnitOfWorkFacotyProtocol = Depends(get_uow_factory),
+    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
     event_bus: IAsyncEventBus = Depends(get_in_memory_event_bus),
     currency_service: CurrencyConvertorClientProtocol = Depends(get_currecncy_client),
 ) -> IngestionService:
@@ -254,6 +254,6 @@ def get_sdk_ingestion_service(
 
 
 def get_s2s_service(
-    uow_factory: UnitOfWorkFacotyProtocol = Depends(get_uow_factory),
+    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
 ) -> S2SService:
     return S2SService(uow_factory)

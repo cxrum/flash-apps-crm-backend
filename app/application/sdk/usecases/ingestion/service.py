@@ -16,14 +16,14 @@ from app.domain.currency.entity import Money
 from app.domain.event_bus.service_protocol import IAsyncEventBus
 from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
-from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
 
 class IngestionService:
     def __init__(
         self,
-        uow_factory: UnitOfWorkFacotyProtocol,
+        uow_factory: UnitOfWorkFactoryProtocol,
         async_event_bus: IAsyncEventBus,
         currency_service: CurrencyConvertorClientProtocol
     ) -> None:

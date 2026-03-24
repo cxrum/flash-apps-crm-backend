@@ -23,14 +23,14 @@ from app.application.contracts.encryption import EncryptionServiceProtocol
 from app.application.exceptions import ApplicationError
 from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
-from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 from app.application.admin.mappers import AdminDomainMapper, AdminResponseMapper
 
 
 class SecretsService:
     def __init__(
         self,
-        uow_factory: UnitOfWorkFacotyProtocol,
+        uow_factory: UnitOfWorkFactoryProtocol,
         user_service: CrmUsersService,
         encryption_service: EncryptionServiceProtocol
     ) -> None:

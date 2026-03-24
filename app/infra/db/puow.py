@@ -31,7 +31,7 @@ from app.domain.push_token.push_token_repository_protocol import CrmPushTokenRep
 from app.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
 from app.domain.secret_template.secret_template_repository_protocol import CrmSecretTemplateRepositoryProtocol
 from app.domain.statistics_aggregate.statistics_aggregate_repository_protocol import StatisticsRepositoryProtocol
-from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
 from app.domain.user_app_access.user_app_access_repository_protocol import CrmUserAppAccessRepositoryProtocol
 from app.domain.user_permissions.user_permissions_repository_protocol import CrmUserPermissionsRepositoryProtocol
@@ -130,7 +130,7 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
         self.session.rollback()
 
 
-class SqlAlchemyUnitOfWorkFactory(UnitOfWorkFacotyProtocol):
+class SqlAlchemyUnitOfWorkFactory(UnitOfWorkFactoryProtocol):
     
     def __init__(self, sesion_factory: Callable[[], Session]) -> None:
         self.__sesion_facoty = sesion_factory

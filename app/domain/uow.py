@@ -70,5 +70,5 @@ class UnitOfWorkProtocol(Protocol):
     def rollback(self) -> None: ...
 
 
-class UnitOfWorkFacotyProtocol(Protocol):
+class UnitOfWorkFactoryProtocol(Protocol):
     def create(self, *args: Any, **kwds: Any) -> UnitOfWorkProtocol: ...

@@ -8,13 +8,13 @@ from app.application.admin.responses import (
     ListClickLogsResponse,
     ListRawEventsResponse,
 )
-from app.domain.uow import UnitOfWorkFacotyProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol
 
 
 class LogsService:
     def __init__(
         self,
-        uow_factory: UnitOfWorkFacotyProtocol,
+        uow_factory: UnitOfWorkFactoryProtocol,
     ) -> None:
         self._uow_factory = uow_factory
         

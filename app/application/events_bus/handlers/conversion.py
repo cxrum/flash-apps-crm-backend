@@ -10,11 +10,11 @@ from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_events import ConversionEventMessage
 from app.domain.event_bus.service_protocol import AsyncEventMessageHandler
-from app.domain.uow import UnitOfWorkFacotyProtocol, UnitOfWorkProtocol
+from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
 class AsyncConversionHandler(AsyncEventMessageHandler):
-    def __init__(self, uow_factory: UnitOfWorkFacotyProtocol) -> None:
+    def __init__(self, uow_factory: UnitOfWorkFactoryProtocol) -> None:
         self.__uow_factory = uow_factory
 
     @staticmethod
