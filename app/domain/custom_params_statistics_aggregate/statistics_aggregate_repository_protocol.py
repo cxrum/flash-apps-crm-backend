@@ -7,14 +7,17 @@ from app.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggrega
     CustomParamsStatisticsAggregateEntity,
 )
 
+from app.domain.pagination import Pagination
 
-class CustomParamsStatisticsRepostitoryProtocol(Protocol):
+
+class CustomParamsStatisticsRepositoryProtocol(Protocol):
     def save(self, entity: CustomParamsStatisticsAggregateEntity) -> CustomParamsStatisticsAggregateEntity: ...
     def save_many(
         self,
         entities: list[CustomParamsStatisticsAggregateEntity],
     ) -> list[CustomParamsStatisticsAggregateEntity]: ...
     def get_by_id(self, aggregate_id: int) -> CustomParamsStatisticsAggregateEntity | None: ...
+    def delete(self, aggregate_id: int) -> CustomParamsStatisticsAggregateEntity: ...
     def list_by_filters(
         self,
         *,
@@ -30,14 +33,14 @@ class CustomParamsStatisticsRepostitoryProtocol(Protocol):
         amount_usd: float | None = None,
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
-        limit: int = 100,
+        pagination: Pagination | None = None,
     ) -> list[CustomParamsStatisticsAggregateEntity]: ...
     def list_by_app_platform_id(
         self,
         app_platform_id: int,
         *,
-        limit: int = 100,
+        pagination: Pagination | None = None,
     ) -> list[CustomParamsStatisticsAggregateEntity]: ...
 
 
-CustomParamsStatisticsRepositoryProtocol = CustomParamsStatisticsRepostitoryProtocol
+CustomParamsStatisticsRepositoryProtocol = CustomParamsStatisticsRepositoryProtocol

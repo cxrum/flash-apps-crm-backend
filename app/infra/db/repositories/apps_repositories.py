@@ -3,6 +3,7 @@ from __future__ import annotations
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
+from app.domain.pagination import Pagination
 from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
@@ -12,6 +13,14 @@ from app.domain.app_user.app_user_repository_protocol import CrmAppUserRepositor
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
 from app.infra.db.apps.models import App, AppPlatform, AppUser, Install
+
+
+def _apply_pagination(stmt, pagination: Pagination | None):
+    if pagination is not None and pagination.offset is not None:
+        stmt = stmt.offset(pagination.offset)
+    if pagination is not None and pagination.limit is not None:
+        stmt = stmt.limit(pagination.limit)
+    return stmt
 
 
 class SqlAlchemyCrmAppRepository(CrmAppRepositoryProtocol):
@@ -55,6 +64,16 @@ class SqlAlchemyCrmAppRepository(CrmAppRepositoryProtocol):
         self.session.flush()
         return self._to_domain(row)
 
+    def delete(self, app_id: int) -> CrmAppEntity:
+        row = self.session.get(App, app_id)
+        if row is None:
+            raise RuntimeError()
+
+        app = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return app
+
     def save_many(self, entities: list[CrmAppEntity]) -> list[CrmAppEntity]:
         rows = [self.session.merge(self._to_row(entity)) for entity in entities]
         self.session.flush()
@@ -70,8 +89,10 @@ class SqlAlchemyCrmAppRepository(CrmAppRepositoryProtocol):
         ).first()
         return self._to_domain(row) if row is not None else None
 
-    def list_all(self) -> list[CrmAppEntity]:
-        rows = self.session.scalars(select(App).order_by(App.app_id.asc())).all()
+    def list_all(self, *, pagination: Pagination | None = None) -> list[CrmAppEntity]:
+        rows = self.session.scalars(
+            _apply_pagination(select(App).order_by(App.app_id.asc()), pagination)
+        ).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -118,6 +139,16 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
         self.session.flush()
         return self._to_domain(row)
 
+    def delete(self, platform_id: int) -> CrmAppPlatformEntity:
+        row = self.session.get(AppPlatform, platform_id)
+        if row is None:
+            raise RuntimeError()
+
+        platform = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return platform
+
     def save_many(self, entities: list[CrmAppPlatformEntity]) -> list[CrmAppPlatformEntity]:
         rows = [self.session.merge(self._to_row(entity)) for entity in entities]
         self.session.flush()
@@ -135,20 +166,32 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
         ).first()
         return self._to_domain(row) if row is not None else None
     
-    def list_by_app_id(self, app_id: int) -> list[CrmAppPlatformEntity]:
-        rows = self.session.scalars(
+    def list_by_app_id(
+        self,
+        app_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmAppPlatformEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(AppPlatform)
             .where(AppPlatform.app_id == app_id)
-            .order_by(AppPlatform.platform_id.asc())
-        ).all()
+            .order_by(AppPlatform.platform_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
-    def list_by_platform(self, platform: str) -> list[CrmAppPlatformEntity]:
-        rows = self.session.scalars(
+    def list_by_platform(
+        self,
+        platform: str,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmAppPlatformEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(AppPlatform)
             .where(AppPlatform.platform == platform)
-            .order_by(AppPlatform.platform_id.asc())
-        ).all()
+            .order_by(AppPlatform.platform_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -187,12 +230,28 @@ class SqlAlchemyCrmAppUserRepository(CrmAppUserRepositoryProtocol):
         row = self.session.get(AppUser, app_user_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_app_id(self, app_id: int) -> list[CrmAppUserEntity]:
-        rows = self.session.scalars(
+    def delete(self, app_user_id: int) -> CrmAppUserEntity:
+        row = self.session.get(AppUser, app_user_id)
+        if row is None:
+            raise RuntimeError()
+
+        app_user = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return app_user
+
+    def list_by_app_id(
+        self,
+        app_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmAppUserEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(AppUser)
             .where(AppUser.app_id == app_id)
-            .order_by(AppUser.app_user_id.asc())
-        ).all()
+            .order_by(AppUser.app_user_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -236,6 +295,16 @@ class SqlAlchemyCrmInstallRepository(CrmInstallRepositoryProtocol):
     def get_by_id(self, install_id: int) -> CrmInstallEntity | None:
         row = self.session.get(Install, install_id)
         return self._to_domain(row) if row is not None else None
+
+    def delete(self, install_id: int) -> CrmInstallEntity:
+        row = self.session.get(Install, install_id)
+        if row is None:
+            raise RuntimeError()
+
+        install = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return install
 
     def get_by_app_user_id(self, app_user_id: int) -> CrmInstallEntity | None:
         row = self.session.scalars(

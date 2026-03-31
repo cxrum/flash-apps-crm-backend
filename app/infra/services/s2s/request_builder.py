@@ -5,7 +5,7 @@ from requests import Response
 import requests
 
 from app.application.base import JsonDict
-from app.application.contracts.requester import S2SRequesterProtocol, S2SResopnse
+from app.application.contracts.requester import S2SRequesterProtocol, S2SResponse
 
 
 class RequestStrategy(Protocol):
@@ -41,7 +41,7 @@ class S2SRequester(S2SRequesterProtocol):
         retry_policy: str = "",
         max_retries: int = 5,
         sleep_time: int = 5
-    ) -> S2SResopnse:
+    ) -> S2SResponse:
         strategy = RequestStrategyFactory.from_http_method(http_method)
         
         # TODO Implement retry_policy logic
@@ -57,7 +57,7 @@ class S2SRequester(S2SRequesterProtocol):
         
         status_code = response.status_code if response is not None else None
         
-        return S2SResopnse(is_success=status_code == 200)
+        return S2SResponse(is_success=status_code == 200)
     
     async def _execute_request(
             self,

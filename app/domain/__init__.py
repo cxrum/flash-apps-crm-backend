@@ -18,7 +18,7 @@ from app.domain.role.CrmRoleEntity import CrmRoleEntity
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
 from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
 from app.domain.user.CrmUserEntity import CrmUserEntity
-from app.domain.user_permissions.CrmUserPermisionEntity import CrmUserPermisionEntity
+from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
 from app.domain.audit_log.CrmAuditLogEntity import (
     CrmAuditLogEntity,
 )
@@ -71,7 +71,7 @@ __all__ = [
     "CrmSecretTemplateEntity",
     "CrmUserAppAccessEntity",
     "CrmUserEntity",
-    "CrmUserPermisionEntity",
+    "CrmUserPermissionEntity",
     "CrmAppPlatformRepositoryProtocol",
     "CrmAppRepositoryProtocol",
     "CrmAppSecretRepositoryProtocol",

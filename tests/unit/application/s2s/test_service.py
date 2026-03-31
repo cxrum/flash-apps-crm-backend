@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from app.application.exceptions import ApplicationError
-from app.application.s2s.servicie import S2SService
+from app.application.s2s.service import S2SService
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from tests.unit.builders import (
     build_app_entity,

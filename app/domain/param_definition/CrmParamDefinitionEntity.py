@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 from app.domain.exceptions import DomainError
 
 
-@dataclass(frozen=True)
+@dataclass
 class CrmParamDefinitionEntity:
     display_name: str
     machine_key: str
@@ -25,6 +25,41 @@ class CrmParamDefinitionEntity:
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
+    def update(
+        self, *,
+        display_name: str | None = None,
+        machine_key: str | None = None,
+        data_type: str | None = None,
+        description: str | None = None,
+        overwrite_policy: str | None = None,
+        is_active: bool | None = None,
+        visible_in_logs: bool | None = None,
+        visible_in_stats: bool | None = None,
+        filterable: bool | None = None,
+        groupable: bool | None = None,
+    ):
+        self.machine_key = machine_key if machine_key is not None else self.machine_key
+        self.display_name = display_name if display_name is not None else self.display_name
+        self.description = description if description is not None else self.description
+        self.visible_in_stats = visible_in_stats if visible_in_stats is not None else self.visible_in_stats
+        self.data_type = data_type if data_type is not None else self.data_type
+        self.overwrite_policy = overwrite_policy if overwrite_policy is not None else self.overwrite_policy
+        self.visible_in_logs = visible_in_logs if visible_in_logs is not None else self.visible_in_logs
+        self.is_active = is_active if is_active is not None else self.is_active
+        self.filterable = filterable if filterable is not None else self.filterable
+        self.groupable = groupable if groupable is not None else self.groupable
+        
+        self.updated_at = datetime.now(UTC)
+
+        self.validate_data_type()
+    
+    def validate_data_type(self):
+        if self.data_type not in self._data_types():
+            raise DomainError()
+    
+    @staticmethod
+    def _data_types() -> list[str]:
+        return ["integer", "float", "boolean", "date", "datetime", "json", "list"]
     
     @staticmethod
     def get_params_for_aggeregation(*, params: dict[str, Any], params_dictionary: list[CrmParamDefinitionEntity]) ->dict[str, Any]:

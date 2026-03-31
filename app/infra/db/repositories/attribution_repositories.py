@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Mapping
 
 from sqlalchemy import RowMapping, desc, select
@@ -12,6 +13,7 @@ from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
 from app.domain.events.CrmEventEntity import EventEntity
 from app.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
+from app.domain.pagination import Pagination
 from app.infra.db.apps.models import AppPlatform
 from app.infra.db.attribution.models import Click, CurrentParam, Event
 
@@ -19,6 +21,13 @@ from app.infra.db.attribution.models import Click, CurrentParam, Event
 class SqlAlchemyCrmClickRepository(CrmClickRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
+
+    @staticmethod
+    def _parse_datetime(value: str | None) -> datetime | None:
+        if value is None:
+            return None
+
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
     def _to_domain(self, row: Click) -> CrmClickEntity:
         return CrmClickEntity(
@@ -70,14 +79,73 @@ class SqlAlchemyCrmClickRepository(CrmClickRepositoryProtocol):
         row = self.session.get(Click, click_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_platform_id(self, app_platform_id: int, *, limit: int = 100) -> list[CrmClickEntity]:
-        rows = self.session.scalars(
-            select(Click)
-            .where(Click.app_platform_id == app_platform_id)
-            .order_by(desc(Click.created_at), desc(Click.click_id))
-            .limit(limit)
-        ).all()
+    def delete(self, click_id: str) -> CrmClickEntity:
+        row = self.session.get(Click, click_id)
+        if row is None:
+            raise RuntimeError()
+
+        click = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return click
+
+    def _list_clicks(
+        self,
+        stmt,
+        *,
+        click_id: str | None = None,
+        pagination: Pagination | None = None,
+    ) -> list[CrmClickEntity]:
+        start_at_value = self._parse_datetime(None if pagination is None else pagination.start_at)
+        end_at_value = self._parse_datetime(None if pagination is None else pagination.end_at)
+
+        if click_id is not None:
+            stmt = stmt.where(Click.click_id == click_id)
+        if start_at_value is not None:
+            stmt = stmt.where(Click.created_at >= start_at_value)
+        if end_at_value is not None:
+            stmt = stmt.where(Click.created_at <= end_at_value)
+
+        stmt = stmt.order_by(desc(Click.created_at), desc(Click.click_id))
+        if pagination is not None and pagination.offset is not None:
+            stmt = stmt.offset(pagination.offset)
+        if pagination is not None and pagination.limit is not None:
+            stmt = stmt.limit(pagination.limit)
+
+        rows = self.session.scalars(stmt).all()
         return [self._to_domain(row) for row in rows]
+
+    def list_by_app_id(
+        self,
+        app_id: int,
+        *,
+        click_id: str | None = None,
+        pagination: Pagination | None = None,
+    ) -> list[CrmClickEntity]:
+        stmt = (
+            select(Click)
+            .join(AppPlatform, Click.app_platform_id == AppPlatform.platform_id)
+            .where(AppPlatform.app_id == app_id)
+        )
+        return self._list_clicks(
+            stmt,
+            click_id=click_id,
+            pagination=pagination,
+        )
+
+    def list_by_platform_id(
+        self,
+        app_platform_id: int,
+        *,
+        click_id: str | None = None,
+        pagination: Pagination | None = None,
+    ) -> list[CrmClickEntity]:
+        stmt = select(Click).where(Click.app_platform_id == app_platform_id)
+        return self._list_clicks(
+            stmt,
+            click_id=click_id,
+            pagination=pagination,
+        )
 
 
 class SqlAlchemyCrmCurrentParamRepository(CrmCurrentParamRepositoryProtocol):
@@ -152,18 +220,36 @@ class SqlAlchemyCrmCurrentParamRepository(CrmCurrentParamRepositoryProtocol):
         row = self.session.get(CurrentParam, {"click_id": click_id, "param_key": param_key})
         return self._to_domain(row) if row is not None else None
 
-    def list_by_click_id(self, click_id: str) -> list[CrmCurrentParamEntity]:
-        rows = self.session.scalars(
+    def list_by_click_id(
+        self,
+        click_id: str,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmCurrentParamEntity]:
+        stmt = (
             select(CurrentParam)
             .where(CurrentParam.click_id == click_id)
             .order_by(CurrentParam.param_key.asc())
-        ).all()
+        )
+        if pagination is not None and pagination.offset is not None:
+            stmt = stmt.offset(pagination.offset)
+        if pagination is not None and pagination.limit is not None:
+            stmt = stmt.limit(pagination.limit)
+
+        rows = self.session.scalars(stmt).all()
         return [self._to_domain(row) for row in rows]
 
 
 class SqlAlchemyCrmEventRepository(CrmEventRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
+
+    @staticmethod
+    def _parse_datetime(value: str | None) -> datetime | None:
+        if value is None:
+            return None
+
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
     def _to_domain(self, row: Event) -> EventEntity:
         return EventEntity(
@@ -265,24 +351,86 @@ class SqlAlchemyCrmEventRepository(CrmEventRepositoryProtocol):
         row = self.session.get(Event, event_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_app_id(self, app_id: int, *, limit: int = 100) -> list[EventEntity]:
-        rows = self.session.scalars(
+    def delete(self, event_id: str) -> EventEntity:
+        row = self.session.get(Event, event_id)
+        if row is None:
+            raise RuntimeError()
+
+        event = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return event
+
+    def _list_events(
+        self,
+        stmt,
+        *,
+        click_id: str | None = None,
+        event_key: str | None = None,
+        pagination: Pagination | None = None,
+    ) -> list[EventEntity]:
+        start_at_value = self._parse_datetime(None if pagination is None else pagination.start_at)
+        end_at_value = self._parse_datetime(None if pagination is None else pagination.end_at)
+
+        if click_id is not None:
+            stmt = stmt.where(Event.click_id == click_id)
+        if event_key is not None:
+            stmt = stmt.where(Event.event_key == event_key)
+        if start_at_value is not None:
+            stmt = stmt.where(Event.event_time_utc >= start_at_value)
+        if end_at_value is not None:
+            stmt = stmt.where(Event.event_time_utc <= end_at_value)
+
+        stmt = stmt.order_by(desc(Event.event_time_utc), desc(Event.event_id))
+        if pagination is not None and pagination.offset is not None:
+            stmt = stmt.offset(pagination.offset)
+        if pagination is not None and pagination.limit is not None:
+            stmt = stmt.limit(pagination.limit)
+
+        rows = self.session.scalars(stmt).all()
+        return [self._to_domain(row) for row in rows]
+
+    def list_by_app_id(
+        self,
+        app_id: int,
+        *,
+        click_id: str | None = None,
+        event_key: str | None = None,
+        pagination: Pagination | None = None,
+    ) -> list[EventEntity]:
+        stmt = (
             select(Event)
             .join(Click, Event.click_id == Click.click_id)
             .join(AppPlatform, Click.app_platform_id == AppPlatform.platform_id)
             .where(AppPlatform.app_id == app_id)
-            .order_by(desc(Event.event_time_utc), desc(Event.event_id))
-            .limit(limit)
-        ).all()
-        return [self._to_domain(row) for row in rows]
+        )
+        return self._list_events(
+            stmt,
+            click_id=click_id,
+            event_key=event_key,
+            pagination=pagination,
+        )
 
-    def list_by_click_id(self, click_id: str, *, limit: int = 100) -> list[EventEntity]:
-        rows = self.session.scalars(
-            select(Event)
-            .where(Event.click_id == click_id)
-            .order_by(desc(Event.event_time_utc), desc(Event.event_id))
-            .limit(limit)
-        ).all()
-        return [self._to_domain(row) for row in rows]
+    def list_by_click_id(
+        self,
+        click_id: str,
+        *,
+        app_id: int | None = None,
+        event_key: str | None = None,
+        pagination: Pagination | None = None,
+    ) -> list[EventEntity]:
+        stmt = select(Event)
+        if app_id is not None:
+            stmt = (
+                stmt
+                .join(Click, Event.click_id == Click.click_id)
+                .join(AppPlatform, Click.app_platform_id == AppPlatform.platform_id)
+                .where(AppPlatform.app_id == app_id)
+            )
 
-    
+        return self._list_events(
+            stmt,
+            click_id=click_id,
+            event_key=event_key,
+            pagination=pagination,
+        )

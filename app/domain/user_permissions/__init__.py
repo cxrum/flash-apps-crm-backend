@@ -1,5 +1,5 @@
 from __future__ import annotations
 
-from app.domain.user_permissions.CrmUserPermisionEntity import CrmUserPermisionEntity
+from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
 
-__all__ = ["CrmUserPermisionEntity"]
+__all__ = ["CrmUserPermissionEntity"]

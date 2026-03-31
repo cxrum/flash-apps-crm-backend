@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class FlexibleCommand(BaseModel):
     model_config = ConfigDict(extra="allow", populate_by_name=True)
+    success: bool = True
 
 
 class PaginationCommand(FlexibleCommand):
@@ -16,3 +17,7 @@ class PaginationCommand(FlexibleCommand):
 
 
 JsonDict = dict[str, Any]
+
+class BaseResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True, frozen=True)
+    

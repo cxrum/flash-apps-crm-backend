@@ -25,6 +25,8 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    debug_mode: bool = Field(default=False, alias="DEBUG_MODE")
+    
     @property
     def sqlalchemy_database_uri(self) -> str:
         if self.database_url:

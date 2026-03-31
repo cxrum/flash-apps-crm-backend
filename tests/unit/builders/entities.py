@@ -31,7 +31,7 @@ from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplate
 from app.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
 from app.domain.user.CrmUserEntity import CrmUserEntity
 from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
-from app.domain.user_permissions.CrmUserPermisionEntity import CrmUserPermisionEntity
+from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
 
 
 def _merge(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
@@ -319,8 +319,8 @@ def build_user_app_access_entity(**overrides: Any) -> CrmUserAppAccessEntity:
     return CrmUserAppAccessEntity(**_merge({"user_id": 1, "app_id": 1}, overrides))
 
 
-def build_user_role_entity(**overrides: Any) -> CrmUserPermisionEntity:
-    return CrmUserPermisionEntity(**_merge({"user_id": 1, "role_id": 1}, overrides))
+def build_user_role_entity(**overrides: Any) -> CrmUserPermissionEntity:
+    return CrmUserPermissionEntity(**_merge({"user_id": 1, "role_id": 1}, overrides))
 
 def build_currency_entity(**overrides: Any) -> Money:
     return Money(

@@ -1,4 +1,3 @@
-
 from dataclasses import dataclass
 
 
@@ -9,4 +8,4 @@ class Money:
     rate_to_USD: float | None = None
     
     
-    #TODO Make money base validation in this value class. Cange money values to this class everywhere. 
+    #TODO Make money base validation in this value class. Change money values to this class everywhere. 

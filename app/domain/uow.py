@@ -72,3 +72,4 @@ class UnitOfWorkProtocol(Protocol):
 
 class UnitOfWorkFactoryProtocol(Protocol):
     def create(self, *args: Any, **kwds: Any) -> UnitOfWorkProtocol: ...
+

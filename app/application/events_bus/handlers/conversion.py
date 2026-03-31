@@ -2,7 +2,7 @@ import json
 from datetime import UTC, date, datetime
 from typing import Any
 
-from app.application.sdk.usecases.ingestion.update_statistic import StatisticAgreagates
+from app.application.sdk.ingestion.update_statistic import StatisticAggregates
 from app.application.exceptions import ApplicationError
 from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
     CrmConversionDefinitionEntity,
@@ -121,7 +121,7 @@ class AsyncConversionHandler(AsyncEventMessageHandler):
                     "when amount_usd is present"
                 )
                 
-            StatisticAgreagates.update(
+            StatisticAggregates.update(
                 uow=uow,
                 message=message,
                 revenue_enabled=definition.revenue_enabled,

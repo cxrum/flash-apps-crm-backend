@@ -3,13 +3,14 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.domain.pagination import Pagination
 from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.permission.permission_repository_protocol import CrmPermissionRepositoryProtocol
 from app.domain.role.CrmRoleEntity import CrmRoleEntity
 from app.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
 from app.domain.user.CrmUserEntity import CrmUserEntity
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
-from app.domain.user_permissions.CrmUserPermisionEntity import CrmUserPermisionEntity
+from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
 from app.domain.user_permissions.user_permissions_repository_protocol import CrmUserPermissionsRepositoryProtocol
 from app.infra.db.crm.models import (
     CrmPermission,
@@ -17,6 +18,14 @@ from app.infra.db.crm.models import (
     CrmUserPermisions,
     CrmUser,
 )
+
+
+def _apply_pagination(stmt, pagination: Pagination | None):
+    if pagination is not None and pagination.offset is not None:
+        stmt = stmt.offset(pagination.offset)
+    if pagination is not None and pagination.limit is not None:
+        stmt = stmt.limit(pagination.limit)
+    return stmt
 
 
 class SqlAlchemyCrmUserRepository(CrmUserRepositoryProtocol):
@@ -65,14 +74,26 @@ class SqlAlchemyCrmUserRepository(CrmUserRepositoryProtocol):
         row = self.session.get(CrmUser, user_id)
         return self._to_domain(row) if row is not None else None
 
+    def delete(self, user_id: int) -> CrmUserEntity:
+        row = self.session.get(CrmUser, user_id)
+        if row is None:
+            raise RuntimeError()
+
+        user = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return user
+
     def get_by_email(self, email: str) -> CrmUserEntity | None:
         row = self.session.scalars(
             select(CrmUser).where(CrmUser.email == email)
         ).first()
         return self._to_domain(row) if row is not None else None
 
-    def list_all(self) -> list[CrmUserEntity]:
-        rows = self.session.scalars(select(CrmUser).order_by(CrmUser.user_id.asc())).all()
+    def list_all(self, *, pagination: Pagination | None = None) -> list[CrmUserEntity]:
+        rows = self.session.scalars(
+            _apply_pagination(select(CrmUser).order_by(CrmUser.user_id.asc()), pagination)
+        ).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -113,12 +134,24 @@ class SqlAlchemyCrmRoleRepository(CrmRoleRepositoryProtocol):
         row = self.session.get(CrmRole, role_id)
         return self._to_domain(row) if row is not None else None
 
+    def delete(self, role_id: int) -> CrmRoleEntity:
+        row = self.session.get(CrmRole, role_id)
+        if row is None:
+            raise RuntimeError()
+
+        role = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return role
+
     def get_by_code(self, code: str) -> CrmRoleEntity | None:
         row = self.session.scalars(select(CrmRole).where(CrmRole.code == code)).first()
         return self._to_domain(row) if row is not None else None
 
-    def list_all(self) -> list[CrmRoleEntity]:
-        rows = self.session.scalars(select(CrmRole).order_by(CrmRole.role_id.asc())).all()
+    def list_all(self, *, pagination: Pagination | None = None) -> list[CrmRoleEntity]:
+        rows = self.session.scalars(
+            _apply_pagination(select(CrmRole).order_by(CrmRole.role_id.asc()), pagination)
+        ).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -160,12 +193,27 @@ class SqlAlchemyCrmPermissionRepository(CrmPermissionRepositoryProtocol):
         row = self.session.get(CrmPermission, permission_id)
         return self._to_domain(row) if row is not None else None
 
+    def delete(self, permission_id: int) -> CrmPermissionEntity:
+        row = self.session.get(CrmPermission, permission_id)
+        if row is None:
+            raise RuntimeError()
+
+        permission = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return permission
+
     def get_by_code(self, code: str) -> CrmPermissionEntity | None:
         row = self.session.scalars(select(CrmPermission).where(CrmPermission.code == code)).first()
         return self._to_domain(row) if row is not None else None
 
-    def list_all(self) -> list[CrmPermissionEntity]:
-        rows = self.session.scalars(select(CrmPermission).order_by(CrmPermission.permission_id.asc())).all()
+    def list_all(self, *, pagination: Pagination | None = None) -> list[CrmPermissionEntity]:
+        rows = self.session.scalars(
+            _apply_pagination(
+                select(CrmPermission).order_by(CrmPermission.permission_id.asc()),
+                pagination,
+            )
+        ).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -173,15 +221,15 @@ class SqlAlchemyCrmUserPermisionRepository(CrmUserPermissionsRepositoryProtocol)
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def _to_domain(self, row: CrmUserPermisions) -> CrmUserPermisionEntity:
-        return CrmUserPermisionEntity(
+    def _to_domain(self, row: CrmUserPermisions) -> CrmUserPermissionEntity:
+        return CrmUserPermissionEntity(
             user_id=row.user_id,
             app_id=row.app_id,
             permission_id=row.permission_id,
             assigned_at=row.assigned_at,
         )
 
-    def _to_row(self, entity: CrmUserPermisionEntity) -> CrmUserPermisions:
+    def _to_row(self, entity: CrmUserPermissionEntity) -> CrmUserPermisions:
         kwargs: dict[str, object] = {
             "user_id": entity.user_id,
             "app_id": entity.app_id,
@@ -191,37 +239,56 @@ class SqlAlchemyCrmUserPermisionRepository(CrmUserPermissionsRepositoryProtocol)
             kwargs["assigned_at"] = entity.assigned_at
         return CrmUserPermisions(**kwargs)
 
-    def save(self, entity: CrmUserPermisionEntity) -> CrmUserPermisionEntity:
+    def save(self, entity: CrmUserPermissionEntity) -> CrmUserPermissionEntity:
         row = self.session.merge(self._to_row(entity))
         self.session.flush()
         return self._to_domain(row)
 
-    def save_many(self, entities: list[CrmUserPermisionEntity]) -> list[CrmUserPermisionEntity]:
+    def save_many(self, entities: list[CrmUserPermissionEntity]) -> list[CrmUserPermissionEntity]:
         rows = [self.session.merge(self._to_row(entity)) for entity in entities]
         self.session.flush()
         return [self._to_domain(row) for row in rows]
 
-    def list_by_user_id(self, user_id: int) -> list[CrmUserPermisionEntity]:
-        rows = self.session.scalars(
+    def list_by_user_id(
+        self,
+        user_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmUserPermissionEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(CrmUserPermisions)
             .where(CrmUserPermisions.user_id == user_id)
-            .order_by(CrmUserPermisions.permission_id.asc())
-        ).all()
+            .order_by(CrmUserPermisions.permission_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
-    def list_by_permision_id(self, permission_id: int) -> list[CrmUserPermisionEntity]:
-        rows = self.session.scalars(
+    def list_by_permission_id(
+        self,
+        permission_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmUserPermissionEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(CrmUserPermisions)
             .where(CrmUserPermisions.permission_id == permission_id)
-            .order_by(CrmUserPermisions.user_id.asc())
-        ).all()
+            .order_by(CrmUserPermisions.user_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
-    def list_by_user_id_per_app(self, user_id: int, app_id: int) -> list[CrmPermissionEntity]:
-        rows = self.session.scalars(
+    def list_by_user_id_per_app(
+        self,
+        user_id: int,
+        app_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmPermissionEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(CrmPermission)
             .join(CrmUserPermisions, CrmPermission.permission_id == CrmUserPermisions.permission_id)
             .where(CrmUserPermisions.user_id == user_id, CrmUserPermisions.app_id == app_id)
-            .order_by(CrmUserPermisions.permission_id.asc())
-        ).all()
+            .order_by(CrmUserPermisions.permission_id.asc()),
+            pagination,
+        )).all()
         return [SqlAlchemyCrmPermissionRepository._to_domain(row) for row in rows]

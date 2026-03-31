@@ -13,7 +13,16 @@ from app.domain.custom_params_statistics_aggregate.statistics_aggregate_reposito
 )
 from app.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
 from app.domain.statistics_aggregate.statistics_aggregate_repository_protocol import StatisticsRepositoryProtocol
+from app.domain.pagination import Pagination
 from app.infra.db.aggregates.models import CustomParamsStatisticsAggregate, StatisticsAggregate
+
+
+def _apply_pagination(stmt, pagination: Pagination | None):
+    if pagination is not None and pagination.offset is not None:
+        stmt = stmt.offset(pagination.offset)
+    if pagination is not None and pagination.limit is not None:
+        stmt = stmt.limit(pagination.limit)
+    return stmt
 
 
 class SqlAlchemyStatisticsRepository(StatisticsRepositoryProtocol):
@@ -68,6 +77,16 @@ class SqlAlchemyStatisticsRepository(StatisticsRepositoryProtocol):
         row = self.session.get(StatisticsAggregate, aggregate_id)
         return self._to_domain(row) if row is not None else None
 
+    def delete(self, aggregate_id: int) -> StatisticsAggregateEntity:
+        row = self.session.get(StatisticsAggregate, aggregate_id)
+        if row is None:
+            raise RuntimeError()
+
+        aggregate = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return aggregate
+
     def list_by_filters(
         self,
         *,
@@ -81,7 +100,7 @@ class SqlAlchemyStatisticsRepository(StatisticsRepositoryProtocol):
         amount_usd: float | None = None,
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
-        limit: int = 100,
+        pagination: Pagination | None = None,
     ) -> list[StatisticsAggregateEntity]:
         filter_values = {
             "aggregate_id": aggregate_id,
@@ -101,20 +120,19 @@ class SqlAlchemyStatisticsRepository(StatisticsRepositoryProtocol):
             if value is not None:
                 stmt = stmt.where(getattr(StatisticsAggregate, field_name) == value)
 
-        rows = self.session.scalars(
-            stmt
-            .order_by(desc(StatisticsAggregate.date), desc(StatisticsAggregate.aggregate_id))
-            .limit(limit)
-        ).all()
+        rows = self.session.scalars(_apply_pagination(
+            stmt.order_by(desc(StatisticsAggregate.date), desc(StatisticsAggregate.aggregate_id)),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
     def list_by_app_platform_id(
         self,
         app_platform_id: int,
         *,
-        limit: int = 100,
+        pagination: Pagination | None = None,
     ) -> list[StatisticsAggregateEntity]:
-        return self.list_by_filters(app_platform_id=app_platform_id, limit=limit)
+        return self.list_by_filters(app_platform_id=app_platform_id, pagination=pagination)
 
 
 class SqlAlchemyCustomParamsStatisticsRepository(CustomParamsStatisticsRepositoryProtocol):
@@ -176,6 +194,16 @@ class SqlAlchemyCustomParamsStatisticsRepository(CustomParamsStatisticsRepositor
         row = self.session.get(CustomParamsStatisticsAggregate, aggregate_id)
         return self._to_domain(row) if row is not None else None
 
+    def delete(self, aggregate_id: int) -> CustomParamsStatisticsAggregateEntity:
+        row = self.session.get(CustomParamsStatisticsAggregate, aggregate_id)
+        if row is None:
+            raise RuntimeError()
+
+        aggregate = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return aggregate
+
     def list_by_filters(
         self,
         *,
@@ -191,7 +219,7 @@ class SqlAlchemyCustomParamsStatisticsRepository(CustomParamsStatisticsRepositor
         amount_usd: float | None = None,
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
-        limit: int = 100,
+        pagination: Pagination | None = None,
     ) -> list[CustomParamsStatisticsAggregateEntity]:
         filter_values = {
             "aggregate_id": aggregate_id,
@@ -213,20 +241,19 @@ class SqlAlchemyCustomParamsStatisticsRepository(CustomParamsStatisticsRepositor
             if value is not None:
                 stmt = stmt.where(getattr(CustomParamsStatisticsAggregate, field_name) == value)
 
-        rows = self.session.scalars(
-            stmt
-            .order_by(
+        rows = self.session.scalars(_apply_pagination(
+            stmt.order_by(
                 desc(CustomParamsStatisticsAggregate.date),
                 desc(CustomParamsStatisticsAggregate.aggregate_id),
-            )
-            .limit(limit)
-        ).all()
+            ),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
     def list_by_app_platform_id(
         self,
         app_platform_id: int,
         *,
-        limit: int = 100,
+        pagination: Pagination | None = None,
     ) -> list[CustomParamsStatisticsAggregateEntity]:
-        return self.list_by_filters(app_platform_id=app_platform_id, limit=limit)
+        return self.list_by_filters(app_platform_id=app_platform_id, pagination=pagination)

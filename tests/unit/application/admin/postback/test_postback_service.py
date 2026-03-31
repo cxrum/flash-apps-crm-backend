@@ -139,7 +139,7 @@ def _assert_saved_rule(
     *,
     platform_id: int,
 ) -> None:
-    assert rule.platfrom_app_id == platform_id
+    assert rule.platform_app_id == platform_id
     assert rule.name == "Conversion Rule"
     assert rule.endpoint_url == "https://example.com/postback/conversion"
     assert rule.trigger_type == "conversion"
@@ -232,7 +232,7 @@ def test_create_rule_creates_rules_for_all_app_platforms(
     uow.secret_template_repo.save(build_secret_template_entity(code="api_key"))
     uow.app_platform_repo.reset_calls()
 
-    service.create_rule(
+    service.create_postback(
         build_admin_create_postback_rule_command(
             app_id=1,
             name="Conversion Rule",
@@ -256,7 +256,7 @@ def test_create_rule_creates_rules_for_all_app_platforms(
 
     saved_rules = uow.postback_rule_repo.list_by_app_id(1)
 
-    assert [rule.platfrom_app_id for rule in saved_rules] == [ios.platform_id, android.platform_id]
+    assert [rule.platform_app_id for rule in saved_rules] == [ios.platform_id, android.platform_id]
     assert len(uow.postback_rule_repo.list_by_app_id(2)) == 0
     assert uow.commit_count == 1
     assert uow.rollback_count == 0
@@ -274,7 +274,7 @@ def test_create_rule_creates_rule_for_selected_platform_only(
     android = _seed_platform(uow, app_id=1, platform="android")
     uow.app_platform_repo.reset_calls()
 
-    service.create_rule(
+    service.create_postback(
         build_admin_create_postback_rule_command(
             app_id=1,
             platform_app_id=android.platform_id,
@@ -286,7 +286,7 @@ def test_create_rule_creates_rule_for_selected_platform_only(
     saved_rules = uow.postback_rule_repo.list_by_app_id(1)
 
     assert len(saved_rules) == 1
-    assert saved_rules[0].platfrom_app_id == android.platform_id
+    assert saved_rules[0].platform_app_id == android.platform_id
     assert saved_rules[0].name == "Install Rule"
     assert saved_rules[0].trigger_type == "install"
     assert uow.commit_count == 1
@@ -300,7 +300,7 @@ def test_create_rule_raises_when_app_has_no_platforms(
     service, _ = _build_service(uow, async_event_bus)
 
     with pytest.raises(ApplicationError):
-        service.create_rule(build_admin_create_postback_rule_command(app_id=1))
+        service.create_postback(build_admin_create_postback_rule_command(app_id=1))
 
     assert uow.commit_count == 0
     assert uow.rollback_count == 1
@@ -314,7 +314,7 @@ def test_create_rule_raises_when_selected_platform_does_not_exist(
     service, _ = _build_service(uow, async_event_bus)
 
     with pytest.raises(ApplicationError, match="Platfrom doesnt exsit"):
-        service.create_rule(
+        service.create_postback(
             build_admin_create_postback_rule_command(
                 app_id=1,
                 platform_app_id=999,
@@ -333,7 +333,7 @@ def test_create_rule_raises_for_unknown_secret_template(
     _seed_platform(uow)
 
     with pytest.raises(DomainError, match="Secret template: missing-secret"):
-        service.create_rule(
+        service.create_postback(
             build_admin_create_postback_rule_command(
                 auth_params={"Authorization": "missing-secret"},
             )
@@ -351,7 +351,7 @@ def test_create_rule_raises_for_invalid_template_placeholder(
     _seed_platform(uow)
 
     with pytest.raises(DomainError):
-        service.create_rule(
+        service.create_postback(
             build_admin_create_postback_rule_command(
                 tempalte={"campaign": "current.utm_source"},
             )

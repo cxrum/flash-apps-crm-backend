@@ -3,46 +3,16 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, TypeVar
 
-from app.application.admin.entities import (
-    AppSecretValueCommand,
-    CommandPreview,
-    CreateAppCommand,
-    CreateAppPlatformCommand,
-    CreateConversionDefinitionCommand,
-    CreateMetricDefinitionCommand,
-    CreateParamDefinitionCommand,
-    CreatePostbackRuleCommand,
-    CreatePushCampaignCommand,
-    CreateRoleCommand,
-    CreateSecretTemplateCommand,
-    EvaluatePostbackRuleCommand,
-    ExecutePostbackRuleCommand,
-    GetAuditLogCommand,
-    GetStatsCommand,
-    ListAppPlatformsCommand,
-    ListAppsCommand,
-    ListAppSecretsCommand,
-    ListClickLogsCommand,
-    ListConversionDefinitionsCommand,
-    ListEventLogsCommand,
-    ListMetricDefinitionsCommand,
-    ListParamDefinitionsCommand,
-    ListPostbackRulesCommand,
-    ListPushCampaignsCommand,
-    ListRolesCommand,
-    ListSecretTemplatesCommand,
-    UpdateConversionDefinitionCommand,
-    UpdateMetricDefinitionCommand,
-    UpdateParamDefinitionCommand,
-    UpsertAppSecretsCommand,
-)
+from app.application.admin.definitions.commands import CreateConversionDefinitionCommand, CreateMetricDefinitionCommand, CreateParamDefinitionCommand, ListConversionDefinitionsCommand, ListMetricDefinitionsCommand, ListParamDefinitionsCommand, UpdateConversionDefinitionCommand, UpdateMetricDefinitionCommand, UpdateParamDefinitionCommand
+
+from app.application.admin.logs.commands import ListAuditLogCommand, ListClickLogsCommand, ListEventLogsCommand
+from app.application.admin.postback.commands import CreatePostbackRuleCommand, EvaluatePostbackRuleCommand, ExecutePostbackRuleCommand, ListPostbackRulesCommand
+from app.application.admin.push.commands import CreatePushCampaignCommand, ListPushCampaignsCommand
+from app.application.admin.secrets.commands import AppSecretValueCommand, CreateSecretTemplateCommand, ListAppSecretsCommand, ListSecretTemplatesCommand, UpsertAppSecretsCommand
 from app.application.base import FlexibleCommand
 from app.application.s2s.commands import S2SClickCommand
-from app.application.sdk.entities import (
-    GetSdkConfigCommand,
-    SdkApplicationConfigurationCommand,
-    SdkCreateAppCommand,
-    SdkCreateAppPlatformCommand,
+from app.application.sdk.apps.commands import CreateAppCommand, CreateAppPlatformCommand, ListAppPlatformsCommand, ListAppsCommand, AppConfigurationCommand
+from app.application.sdk.ingestion.commands import (
     SdkDeviceCommand,
     SdkEventCommand,
     SdkEventsCommand,
@@ -223,9 +193,9 @@ def build_sdk_create_app_platform_command(**overrides: Any) -> SdkCreateAppPlatf
 
 def build_sdk_application_configuration_command(
     **overrides: Any,
-) -> SdkApplicationConfigurationCommand:
+) -> AppConfigurationCommand:
     return _build(
-        SdkApplicationConfigurationCommand,
+        AppConfigurationCommand,
         {
             "app_id": 1,
             "platform": "ios",
@@ -235,13 +205,21 @@ def build_sdk_application_configuration_command(
 
 
 def build_admin_list_apps_command(**overrides: Any) -> ListAppsCommand:
-    return _build(ListAppsCommand, _pagination_defaults(), overrides)
+    return _build(
+        ListAppsCommand,
+        {
+            **_pagination_defaults(),
+            "crm_user_id": 1,
+        },
+        overrides,
+    )
 
 
 def build_admin_create_app_command(**overrides: Any) -> CreateAppCommand:
     return _build(
         CreateAppCommand,
         {
+            "crm_user_id": 1,
             "code": "test-app",
             "name": "Test App",
             "description": "Admin managed application",
@@ -256,6 +234,7 @@ def build_admin_list_app_platforms_command(**overrides: Any) -> ListAppPlatforms
         ListAppPlatformsCommand,
         {
             **_pagination_defaults(),
+            "crm_user_id": 1,
             "app_id": 1,
         },
         overrides,
@@ -266,6 +245,7 @@ def build_admin_create_app_platform_command(**overrides: Any) -> CreateAppPlatfo
     return _build(
         CreateAppPlatformCommand,
         {
+            "crm_user_id": 1,
             "app_id": 1,
             "platform": "ios",
             "install_key": "install-key-ios",
@@ -276,7 +256,15 @@ def build_admin_create_app_platform_command(**overrides: Any) -> CreateAppPlatfo
 
 
 def build_admin_list_metric_definitions_command(**overrides: Any) -> ListMetricDefinitionsCommand:
-    return _build(ListMetricDefinitionsCommand, _pagination_defaults(), overrides)
+    return _build(
+        ListMetricDefinitionsCommand,
+        {
+            **_pagination_defaults(),
+            "crm_user_id": 1,
+            "app_id": 1,
+        },
+        overrides,
+    )
 
 
 def build_admin_create_metric_definition_command(
@@ -285,6 +273,8 @@ def build_admin_create_metric_definition_command(
     return _build(
         CreateMetricDefinitionCommand,
         {
+            "crm_user_id": 1,
+            "app_id": 1,
             "key": "first_open",
             "name": "First Open",
             "description": "Application first open metric",
@@ -314,7 +304,15 @@ def build_admin_update_metric_definition_command(
 def build_admin_list_conversion_definitions_command(
     **overrides: Any,
 ) -> ListConversionDefinitionsCommand:
-    return _build(ListConversionDefinitionsCommand, _pagination_defaults(), overrides)
+    return _build(
+        ListConversionDefinitionsCommand,
+        {
+            **_pagination_defaults(),
+            "crm_user_id": 1,
+            "app_id": 1,
+        },
+        overrides,
+    )
 
 
 def build_admin_create_conversion_definition_command(
@@ -323,6 +321,8 @@ def build_admin_create_conversion_definition_command(
     return _build(
         CreateConversionDefinitionCommand,
         {
+            "crm_user_id": 1,
+            "app_id": 1,
             "key": "purchase",
             "name": "Purchase",
             "description": "In-app purchase conversion",
@@ -354,7 +354,15 @@ def build_admin_update_conversion_definition_command(
 
 
 def build_admin_list_param_definitions_command(**overrides: Any) -> ListParamDefinitionsCommand:
-    return _build(ListParamDefinitionsCommand, _pagination_defaults(), overrides)
+    return _build(
+        ListParamDefinitionsCommand,
+        {
+            **_pagination_defaults(),
+            "crm_user_id": 1,
+            "app_id": 1,
+        },
+        overrides,
+    )
 
 
 def build_admin_create_param_definition_command(
@@ -363,6 +371,8 @@ def build_admin_create_param_definition_command(
     return _build(
         CreateParamDefinitionCommand,
         {
+            "crm_user_id": 1,
+            "app_id": 1,
             "key": "utm_source",
             "label": "UTM Source",
             "param_type": "string",
@@ -394,7 +404,15 @@ def build_admin_update_param_definition_command(
 def build_admin_list_secret_templates_command(
     **overrides: Any,
 ) -> ListSecretTemplatesCommand:
-    return _build(ListSecretTemplatesCommand, _pagination_defaults(), overrides)
+    return _build(
+        ListSecretTemplatesCommand,
+        {
+            **_pagination_defaults(),
+            "crm_user_id": 1,
+            "app_id": 1,
+        },
+        overrides,
+    )
 
 
 def build_admin_create_secret_template_command(
@@ -403,6 +421,8 @@ def build_admin_create_secret_template_command(
     return _build(
         CreateSecretTemplateCommand,
         {
+            "crm_user_id": 1,
+            "app_id": 1,
             "key": "api_key",
             "name": "API Key",
             "secret_type": "text",
@@ -429,6 +449,7 @@ def build_admin_list_app_secrets_command(**overrides: Any) -> ListAppSecretsComm
         ListAppSecretsCommand,
         {
             **_pagination_defaults(),
+            "crm_user_id": 1,
             "app_id": 1,
         },
         overrides,
@@ -439,6 +460,7 @@ def build_admin_upsert_app_secrets_command(**overrides: Any) -> UpsertAppSecrets
     return _build(
         UpsertAppSecretsCommand,
         {
+            "crm_user_id": 1,
             "app_id": 1,
             "platform_id": 1,
             "secrets": [build_admin_app_secret_value_command()],
@@ -454,6 +476,7 @@ def build_admin_list_postback_rules_command(
         ListPostbackRulesCommand,
         {
             **_pagination_defaults(),
+            "crm_user_id": 1,
             "app_id": 1,
         },
         overrides,
@@ -466,6 +489,7 @@ def build_admin_create_postback_rule_command(
     return _build(
         CreatePostbackRuleCommand,
         {
+            "crm_user_id": 1,
             "app_id": 1,
             "name": "Install Rule",
             "platform_app_id": None,
@@ -519,6 +543,7 @@ def build_admin_list_push_campaigns_command(
         ListPushCampaignsCommand,
         {
             **_pagination_defaults(),
+            "crm_user_id": 1,
             "app_id": 1,
         },
         overrides,
@@ -531,6 +556,7 @@ def build_admin_create_push_campaign_command(
     return _build(
         CreatePushCampaignCommand,
         {
+            "crm_user_id": 1,
             "app_id": 1,
             "name": "Welcome Campaign",
             "title": "Hello",
@@ -541,11 +567,12 @@ def build_admin_create_push_campaign_command(
     )
 
 
-def build_admin_get_stats_command(**overrides: Any) -> GetStatsCommand:
+def build_admin_get_stats_command(**overrides: Any) -> GetAuditLogsCommand:
     return _build(
-        GetStatsCommand,
+        GetAuditLogsCommand,
         {
             **_pagination_defaults(),
+            "crm_user_id": 1,
             "app_id": 1,
             "platform": "ios",
             "group_by": "day",
@@ -561,6 +588,7 @@ def build_admin_list_click_logs_command(**overrides: Any) -> ListClickLogsComman
         ListClickLogsCommand,
         {
             **_pagination_defaults(),
+            "crm_user_id": 1,
             "app_id": 1,
             "click_id": "click-1",
             "start_at": "2026-03-01T00:00:00Z",
@@ -575,6 +603,7 @@ def build_admin_list_event_logs_command(**overrides: Any) -> ListEventLogsComman
         ListEventLogsCommand,
         {
             **_pagination_defaults(),
+            "crm_user_id": 1,
             "app_id": 1,
             "click_id": "click-1",
             "event_key": "first_open",
@@ -590,6 +619,7 @@ def build_admin_list_roles_command(**overrides: Any) -> ListRolesCommand:
         ListRolesCommand,
         {
             **_pagination_defaults(),
+            "crm_user_id": 1,
             "app_id": 1,
         },
         overrides,
@@ -600,6 +630,7 @@ def build_admin_create_role_command(**overrides: Any) -> CreateRoleCommand:
     return _build(
         CreateRoleCommand,
         {
+            "crm_user_id": 1,
             "name": "manager",
             "description": "Manager role",
             "permissions": ["apps.view"],
@@ -609,11 +640,12 @@ def build_admin_create_role_command(**overrides: Any) -> CreateRoleCommand:
     )
 
 
-def build_admin_get_audit_log_command(**overrides: Any) -> GetAuditLogCommand:
+def build_admin_get_audit_log_command(**overrides: Any) -> ListAuditLogCommand:
     return _build(
-        GetAuditLogCommand,
+        ListAuditLogCommand,
         {
             **_pagination_defaults(),
+            "crm_user_id": 1,
             "actor_id": 1,
             "entity_type": "app",
             "entity_id": 1,

@@ -9,7 +9,7 @@ from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.user.CrmUserEntity import CrmUserEntity
 from app.domain.role.CrmRoleEntity import CrmRoleEntity
 from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
-from app.domain.user_permissions.CrmUserPermisionEntity import CrmUserPermisionEntity
+from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
 from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
 from app.domain.click.CrmClickEntity import CrmClickEntity
 from app.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
@@ -37,7 +37,7 @@ __all__ = [
     "CrmUserEntity",
     "CrmRoleEntity",
     "CrmPermissionEntity",
-    "CrmUserPermisionEntity",
+    "CrmUserPermissionEntity",
     "CrmUserAppAccessEntity",
     "CrmClickEntity",
     "CrmAppUserEntity",

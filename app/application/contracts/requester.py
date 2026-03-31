@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 @dataclass
-class S2SResopnse:
+class S2SResponse:
     is_success: bool
 
 class S2SRequesterProtocol(Protocol):
@@ -17,4 +17,4 @@ class S2SRequesterProtocol(Protocol):
         retry_policy: str = "",
         max_retries: int = 5,
         sleep_time: int = 5
-        ) -> S2SResopnse: ...
+        ) -> S2SResponse: ...

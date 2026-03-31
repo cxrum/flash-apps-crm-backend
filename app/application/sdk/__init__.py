@@ -1,24 +1,19 @@
-from app.application.sdk.entities import (
-    GetSdkConfigCommand,
+from app.application.sdk.ingestion.commands import (
     SdkDeviceCommand,
     SdkEventCommand,
     SdkEventsCommand,
     SdkInstallCommand,
     SdkParamsUpdateCommand,
     SdkPushRegisterCommand,
-    SdkCreateAppCommand,
 )
-from app.application.sdk.mappers import SdkCommandMapper, SdkDomainMapper
+from app.application.sdk.ingestion.mappers import SdkIngestionCommandMapper
 
 __all__ = [
-    "GetSdkConfigCommand",
     "SdkDeviceCommand",
     "SdkEventCommand",
     "SdkEventsCommand",
     "SdkInstallCommand",
     "SdkParamsUpdateCommand",
     "SdkPushRegisterCommand",
-    "SdkCommandMapper",
-    "SdkDomainMapper",
-    "SdkCreateAppCommand"
+    "SdkIngestionCommandMapper",
 ]

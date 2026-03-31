@@ -10,30 +10,30 @@ class CrmPermissionEntity:
     created_at: datetime | None = None
     
     @classmethod
-    def permision_list(cls) -> dict[str, str]:
+    def permission_list(cls) -> dict[str, str]:
         """
         Returns { code: description } 
         """
 
         return {
-            cls.view_stats_permision(): "",
-            cls.view_raw_logs_permision(): "",
-            cls.manage_push_permision(): "",
-            cls.edit_app_config_permision(): "",
-            cls.export_data_permision(): ""
+            cls.view_stats_permission(): "",
+            cls.view_raw_logs_permission(): "",
+            cls.manage_push_permission(): "",
+            cls.edit_app_config_permission(): "",
+            cls.export_data_permission(): ""
         }
     
     @staticmethod 
-    def view_stats_permision() -> str: return "view_stats"
+    def view_stats_permission() -> str: return "view_stats"
     
     @staticmethod 
-    def view_raw_logs_permision() -> str: return "view_raw_logs"
+    def view_raw_logs_permission() -> str: return "view_raw_logs"
     
     @staticmethod 
-    def manage_push_permision() -> str: return "manage_push"
+    def manage_push_permission() -> str: return "manage_push"
     
     @staticmethod 
-    def edit_app_config_permision() -> str: return "edit_app_config"
+    def edit_app_config_permission() -> str: return "edit_app_config"
     
     @staticmethod 
-    def export_data_permision() -> str: return "export_data"
+    def export_data_permission() -> str: return "export_data"

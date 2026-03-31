@@ -26,6 +26,7 @@ from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplate
 from app.domain.secret_template.secret_template_repository_protocol import (
     CrmSecretTemplateRepositoryProtocol,
 )
+from app.domain.pagination import Pagination
 from app.infra.db.apps.models import AppPlatform
 from app.infra.db.config.models import (
     AppSecret,
@@ -35,6 +36,14 @@ from app.infra.db.config.models import (
     PostbackRule,
     SecretTemplate,
 )
+
+
+def _apply_pagination(stmt, pagination: Pagination | None):
+    if pagination is not None and pagination.offset is not None:
+        stmt = stmt.offset(pagination.offset)
+    if pagination is not None and pagination.limit is not None:
+        stmt = stmt.limit(pagination.limit)
+    return stmt
 
 
 class SqlAlchemyCrmMetricDefinitionRepository(CrmMetricDefinitionRepositoryProtocol):
@@ -87,12 +96,28 @@ class SqlAlchemyCrmMetricDefinitionRepository(CrmMetricDefinitionRepositoryProto
         row = self.session.get(MetricDefinition, metric_definition_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_app_id(self, app_id: int | None) -> list[CrmMetricDefinitionEntity]:
-        rows = self.session.scalars(
+    def delete(self, metric_definition_id: int) -> CrmMetricDefinitionEntity:
+        row = self.session.get(MetricDefinition, metric_definition_id)
+        if row is None:
+            raise RuntimeError()
+
+        metric_definition = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return metric_definition
+
+    def list_by_app_id(
+        self,
+        app_id: int | None,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmMetricDefinitionEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(MetricDefinition)
             .where(MetricDefinition.app_id == app_id)
-            .order_by(MetricDefinition.metric_definition_id.asc())
-        ).all()
+            .order_by(MetricDefinition.metric_definition_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -148,12 +173,28 @@ class SqlAlchemyCrmConversionDefinitionRepository(CrmConversionDefinitionReposit
         row = self.session.get(ConversionDefinition, conversion_definition_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_app_id(self, app_id: int | None) -> list[CrmConversionDefinitionEntity]:
-        rows = self.session.scalars(
+    def delete(self, conversion_definition_id: int) -> CrmConversionDefinitionEntity:
+        row = self.session.get(ConversionDefinition, conversion_definition_id)
+        if row is None:
+            raise RuntimeError()
+
+        conversion_definition = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return conversion_definition
+
+    def list_by_app_id(
+        self,
+        app_id: int | None,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmConversionDefinitionEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(ConversionDefinition)
             .where(ConversionDefinition.app_id == app_id)
-            .order_by(ConversionDefinition.conversion_definition_id.asc())
-        ).all()
+            .order_by(ConversionDefinition.conversion_definition_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -215,12 +256,28 @@ class SqlAlchemyCrmParamDefinitionRepository(CrmParamDefinitionRepositoryProtoco
         row = self.session.get(ParamDefinition, param_definition_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_app_id(self, app_id: int | None) -> list[CrmParamDefinitionEntity]:
-        rows = self.session.scalars(
+    def delete(self, param_definition_id: int) -> CrmParamDefinitionEntity:
+        row = self.session.get(ParamDefinition, param_definition_id)
+        if row is None:
+            raise RuntimeError()
+
+        param_definition = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return param_definition
+
+    def list_by_app_id(
+        self,
+        app_id: int | None,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmParamDefinitionEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(ParamDefinition)
             .where(ParamDefinition.app_id == app_id)
-            .order_by(ParamDefinition.param_definition_id.asc())
-        ).all()
+            .order_by(ParamDefinition.param_definition_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -272,16 +329,27 @@ class SqlAlchemyCrmSecretTemplateRepository(CrmSecretTemplateRepositoryProtocol)
         row = self.session.get(SecretTemplate, template_id)
         return self._to_domain(row) if row is not None else None
 
+    def delete(self, template_id: int) -> CrmSecretTemplateEntity:
+        row = self.session.get(SecretTemplate, template_id)
+        if row is None:
+            raise RuntimeError()
+
+        template = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return template
+
     def get_by_code(self, code: str) -> CrmSecretTemplateEntity | None:
         row = self.session.scalars(
             select(SecretTemplate).where(SecretTemplate.code == code)
         ).first()
         return self._to_domain(row) if row is not None else None
 
-    def list_all(self) -> list[CrmSecretTemplateEntity]:
-        rows = self.session.scalars(
-            select(SecretTemplate).order_by(SecretTemplate.template_id.asc())
-        ).all()
+    def list_all(self, *, pagination: Pagination | None = None) -> list[CrmSecretTemplateEntity]:
+        rows = self.session.scalars(_apply_pagination(
+            select(SecretTemplate).order_by(SecretTemplate.template_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -292,7 +360,7 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
     def _to_domain(self, row: PostbackRule) -> CrmPostbackRuleEntity:
         return CrmPostbackRuleEntity(
             rule_id=row.rule_id,
-            platfrom_app_id=row.platfrom_app_id,
+            platform_app_id=row.platfrom_app_id,
             name=row.name,
             endpoint_url=row.endpoint_url,
             http_method=row.http_method,
@@ -310,7 +378,7 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
 
     def _to_row(self, entity: CrmPostbackRuleEntity) -> PostbackRule:
         kwargs: dict[str, object] = {
-            "platfrom_app_id": entity.platfrom_app_id,
+            "platfrom_app_id": entity.platform_app_id,
             "name": entity.name,
             "endpoint_url": entity.endpoint_url,
             "http_method": entity.http_method,
@@ -345,6 +413,16 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
         row = self.session.get(PostbackRule, rule_id)
         return self._to_domain(row) if row is not None else None
 
+    def delete(self, rule_id: int) -> CrmPostbackRuleEntity:
+        row = self.session.get(PostbackRule, rule_id)
+        if row is None:
+            raise RuntimeError()
+
+        rule = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return rule
+
     def list_by_filters(
         self,
         *,
@@ -363,7 +441,7 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
         is_active: bool | None = None,
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
-        limit: int = 100,
+        pagination: Pagination | None = None,
     ) -> list[CrmPostbackRuleEntity]:
         filter_values = {
             "rule_id": rule_id,
@@ -388,29 +466,40 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
             if value is not None:
                 stmt = stmt.where(getattr(PostbackRule, field_name) == value)
 
-        rows = self.session.scalars(
-            stmt
-            .order_by(PostbackRule.rule_id.asc())
-            .limit(limit)
-        ).all()
+        rows = self.session.scalars(_apply_pagination(
+            stmt.order_by(PostbackRule.rule_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
-    def list_by_app_id(self, app_id: int) -> list[CrmPostbackRuleEntity]:
-        rows = self.session.scalars(
+    def list_by_app_id(
+        self,
+        app_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmPostbackRuleEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(PostbackRule)
             .join(AppPlatform, PostbackRule.platfrom_app_id == AppPlatform.platform_id)
             .where(AppPlatform.app_id == app_id)
-            .order_by(PostbackRule.rule_id.asc())
-        ).all()
+            .order_by(PostbackRule.rule_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
-    def list_active_by_app(self, app_id: int) -> list[CrmPostbackRuleEntity]:
-        rows = self.session.scalars(
+    def list_active_by_app(
+        self,
+        app_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmPostbackRuleEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(PostbackRule)
             .join(AppPlatform, PostbackRule.platfrom_app_id == AppPlatform.platform_id)
             .where(AppPlatform.app_id == app_id, PostbackRule.is_active.is_(True))
-            .order_by(PostbackRule.rule_id.asc())
-        ).all()
+            .order_by(PostbackRule.rule_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -460,7 +549,23 @@ class SqlAlchemyCrmAppSecretRepository(CrmAppSecretRepositoryProtocol):
         row = self.session.get(AppSecret, secret_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_app_id(self, app_id: int, *, platform_id: int | None = None) -> list[CrmAppSecretEntity]:
+    def delete(self, secret_id: int) -> CrmAppSecretEntity:
+        row = self.session.get(AppSecret, secret_id)
+        if row is None:
+            raise RuntimeError()
+
+        secret = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return secret
+
+    def list_by_app_id(
+        self,
+        app_id: int,
+        *,
+        platform_id: int | None = None,
+        pagination: Pagination | None = None,
+    ) -> list[CrmAppSecretEntity]:
         stmt = (
             select(AppSecret)
             .join(AppPlatform, AppSecret.platform_id == AppPlatform.platform_id)
@@ -471,11 +576,17 @@ class SqlAlchemyCrmAppSecretRepository(CrmAppSecretRepositoryProtocol):
         if platform_id is not None:
             stmt = stmt.where(AppSecret.platform_id == platform_id)
             
-        rows = self.session.scalars(stmt).all()
+        rows = self.session.scalars(_apply_pagination(stmt, pagination)).all()
         
         return [self._to_domain(row) for row in rows]
 
-    def list_active_by_app(self, app_id: int, *, platform_id: int | None = None) -> list[CrmAppSecretEntity]:
+    def list_active_by_app(
+        self,
+        app_id: int,
+        *,
+        platform_id: int | None = None,
+        pagination: Pagination | None = None,
+    ) -> list[CrmAppSecretEntity]:
         stmt = (
             select(AppSecret)
             .join(AppPlatform, AppSecret.platform_id == AppPlatform.platform_id)
@@ -484,5 +595,5 @@ class SqlAlchemyCrmAppSecretRepository(CrmAppSecretRepositoryProtocol):
         )
         if platform_id is not None:
             stmt = stmt.where(AppSecret.platform_id == platform_id)
-        rows = self.session.scalars(stmt).all()
+        rows = self.session.scalars(_apply_pagination(stmt, pagination)).all()
         return [self._to_domain(row) for row in rows]

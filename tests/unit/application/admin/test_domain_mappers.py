@@ -2,16 +2,12 @@ from __future__ import annotations
 
 import pytest
 
-from app.application.admin.entities import (
-    CreateConversionDefinitionCommand,
-    CreateMetricDefinitionCommand,
-    CreateParamDefinitionCommand,
+from app.application.admin.definitions.commands import CreateConversionDefinitionCommand, CreateParamDefinitionCommand, UpdateConversionDefinitionCommand, UpdateMetricDefinitionCommand, UpdateParamDefinitionCommand
+from app.application.admin.secrets.commands import (
     CreateSecretTemplateCommand,
-    UpdateConversionDefinitionCommand,
-    UpdateMetricDefinitionCommand,
-    UpdateParamDefinitionCommand,
 )
 from app.application.admin.mappers import AdminDomainMapper
+from app.application.admin.definitions.commands import CreateMetricDefinitionCommand
 from tests.unit.builders.entities import (
     build_conversion_definition_entity,
     build_metric_definition_entity,
@@ -96,10 +92,10 @@ def test_admin_domain_mapper_maps_secret_template_command(
         CreateSecretTemplateCommand(
             crm_user_id=1,
             app_id=1,
-            key="api_key",
-            name="API Key",
+            code="api_key",
+            display_name="API Key",
             secret_type="text",
-            visibility=visibility,
+            scope=visibility,
         )
     )
 
@@ -182,7 +178,7 @@ def test_admin_domain_mapper_updates_param_definition_fields() -> None:
             crm_user_id=1,
             app_id=1,
             param_definition_id=11,
-            label="Traffic Source",
+            name="Traffic Source",
             description=None,
             visible_in_stats=True,
             groupable=True,

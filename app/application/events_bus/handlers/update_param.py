@@ -19,13 +19,13 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
         
         new_params = []
         
-        for definiton in params_dictionary:
-            value = definiton.get_param_value(params)
+        for definition in params_dictionary:
+            value = definition.get_param_value(params)
 
             if value is None:
                 continue
             
-            current_param = uow.current_param_repo.get_by_click_and_key(click_id, definiton.machine_key)
+            current_param = uow.current_param_repo.get_by_click_and_key(click_id, definition.machine_key)
             
             if updated_at is None:
                 _updated_at = datetime.now(UTC)
@@ -35,11 +35,11 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
             if current_param is None:
                 current_param = CrmCurrentParamEntity(
                     click_id=click_id,
-                    param_key=definiton.machine_key,
+                    param_key=definition.machine_key,
                     updated_at=_updated_at,
                 )
 
-            current_param.update_param(definiton.overwrite_policy, value)
+            current_param.update_param(definition.overwrite_policy, value)
             new_params.append(current_param)
         
         if new_params == []:

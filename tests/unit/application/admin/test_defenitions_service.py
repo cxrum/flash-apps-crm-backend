@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import pytest
 
-from app.application.admin.defenitions.service import DefenitionsService
+from app.application.admin.definitions.service import DefinitionsService
 from app.application.exceptions import ApplicationError
 from tests.unit.builders.commands import (
     build_admin_create_conversion_definition_command,
@@ -67,7 +67,7 @@ def test_list_metrics_returns_response_entries_for_app() -> None:
     uow.metric_definition_repo.save(build_metric_definition_entity(app_id=1, metric_definition_id=2))
     uow.metric_definition_repo.save(build_metric_definition_entity(app_id=2, metric_definition_id=3))
     user_service = StubCrmUsersService()
-    service = DefenitionsService(StubUoWFactory(uow), user_service)
+    service = DefinitionsService(StubUoWFactory(uow), user_service)
 
     response = service.list_metrics(
         build_admin_list_metric_definitions_command(app_id=1, crm_user_id=77)
@@ -80,9 +80,9 @@ def test_list_metrics_returns_response_entries_for_app() -> None:
 def test_create_metric_definition_saves_and_maps_metric() -> None:
     uow = StubUnitOfWork()
     uow.app_repo.save(build_app_entity(app_id=1))
-    service = DefenitionsService(StubUoWFactory(uow), StubCrmUsersService())
+    service = DefinitionsService(StubUoWFactory(uow), StubCrmUsersService())
 
-    response = service.create_metric_defenition(
+    response = service.create_metric_definition(
         build_admin_create_metric_definition_command(
             app_id=1,
             crm_user_id=77,
@@ -112,9 +112,9 @@ def test_update_metric_definition_updates_existing_metric() -> None:
             enabled=True,
         )
     )
-    service = DefenitionsService(StubUoWFactory(uow), StubCrmUsersService())
+    service = DefinitionsService(StubUoWFactory(uow), StubCrmUsersService())
 
-    response = service.update_metric_defenition(
+    response = service.update_metric_definition(
         build_admin_update_metric_definition_command(
             app_id=1,
             crm_user_id=77,
@@ -137,7 +137,7 @@ def test_list_conversions_returns_response_entries_for_app() -> None:
     uow.conversion_definition_repo.save(build_conversion_definition_entity(app_id=1, conversion_definition_id=1))
     uow.conversion_definition_repo.save(build_conversion_definition_entity(app_id=2, conversion_definition_id=2))
     user_service = StubCrmUsersService()
-    service = DefenitionsService(StubUoWFactory(uow), user_service)
+    service = DefinitionsService(StubUoWFactory(uow), user_service)
 
     response = service.list_conversions(
         build_admin_list_conversion_definitions_command(app_id=1, crm_user_id=88)
@@ -150,9 +150,9 @@ def test_list_conversions_returns_response_entries_for_app() -> None:
 def test_create_conversion_definition_saves_explicit_revenue_flags() -> None:
     uow = StubUnitOfWork()
     uow.app_repo.save(build_app_entity(app_id=1))
-    service = DefenitionsService(StubUoWFactory(uow), StubCrmUsersService())
+    service = DefinitionsService(StubUoWFactory(uow), StubCrmUsersService())
 
-    response = service.create_conversion_defenition(
+    response = service.create_conversion_definition(
         build_admin_create_conversion_definition_command(
             app_id=1,
             crm_user_id=77,
@@ -188,9 +188,9 @@ def test_update_conversion_definition_updates_existing_conversion() -> None:
             dedup_mode="none",
         )
     )
-    service = DefenitionsService(StubUoWFactory(uow), StubCrmUsersService())
+    service = DefinitionsService(StubUoWFactory(uow), StubCrmUsersService())
 
-    response = service.update_conversion_defenition(
+    response = service.update_conversion_definition(
         build_admin_update_conversion_definition_command(
             app_id=1,
             crm_user_id=77,
@@ -220,7 +220,7 @@ def test_list_params_returns_response_entries_for_app() -> None:
     uow.param_definition_repo.save(build_param_definition_entity(app_id=1, param_definition_id=2))
     uow.param_definition_repo.save(build_param_definition_entity(app_id=3, param_definition_id=3))
     user_service = StubCrmUsersService()
-    service = DefenitionsService(StubUoWFactory(uow), user_service)
+    service = DefinitionsService(StubUoWFactory(uow), user_service)
 
     response = service.list_params(
         build_admin_list_param_definitions_command(app_id=1, crm_user_id=91)
@@ -233,9 +233,9 @@ def test_list_params_returns_response_entries_for_app() -> None:
 def test_create_param_definition_saves_param() -> None:
     uow = StubUnitOfWork()
     uow.app_repo.save(build_app_entity(app_id=1))
-    service = DefenitionsService(StubUoWFactory(uow), StubCrmUsersService())
+    service = DefinitionsService(StubUoWFactory(uow), StubCrmUsersService())
 
-    response = service.create_param_defenition(
+    response = service.create_param_definition(
         build_admin_create_param_definition_command(
             app_id=1,
             crm_user_id=77,
@@ -266,9 +266,9 @@ def test_update_param_definition_updates_existing_param() -> None:
             groupable=False,
         )
     )
-    service = DefenitionsService(StubUoWFactory(uow), StubCrmUsersService())
+    service = DefinitionsService(StubUoWFactory(uow), StubCrmUsersService())
 
-    response = service.update_param_defenition(
+    response = service.update_param_definition(
         build_admin_update_param_definition_command(
             app_id=1,
             crm_user_id=77,
@@ -289,14 +289,14 @@ def test_update_param_definition_updates_existing_param() -> None:
 
 
 def test_definition_service_rejects_missing_user_context() -> None:
-    service = DefenitionsService(StubUoWFactory(StubUnitOfWork()), StubCrmUsersService())
+    service = DefinitionsService(StubUoWFactory(StubUnitOfWork()), StubCrmUsersService())
 
     with pytest.raises(Exception):
         service.list_metrics(build_admin_list_metric_definitions_command(app_id=1, crm_user_id=None))
 
 
 def test_definition_service_rejects_user_without_access() -> None:
-    service = DefenitionsService(
+    service = DefinitionsService(
         StubUoWFactory(StubUnitOfWork()),
         StubCrmUsersService(has_access=False),
     )
@@ -308,10 +308,10 @@ def test_definition_service_rejects_user_without_access() -> None:
 
 
 def test_create_definition_methods_reject_unknown_app() -> None:
-    service = DefenitionsService(StubUoWFactory(StubUnitOfWork()), StubCrmUsersService(has_access=False))
+    service = DefinitionsService(StubUoWFactory(StubUnitOfWork()), StubCrmUsersService(has_access=False))
 
     with pytest.raises(ApplicationError):
-        service.create_metric_defenition(
+        service.create_metric_definition(
             build_admin_create_metric_definition_command(
                 app_id=999,
                 crm_user_id=77,
@@ -325,11 +325,7 @@ def test_create_definition_methods_reject_unknown_app() -> None:
     ("method_name", "command_builder", "expected_message"),
     [
         ("create_metric_defenition", build_admin_create_metric_definition_command, "Metric key is required"),
-        (
-            "create_conversion_defenition",
-            build_admin_create_conversion_definition_command,
-            "Conversion key is required",
-        ),
+        ("create_conversion_defenition", build_admin_create_conversion_definition_command, "Conversion key is required",),
         ("create_param_defenition", build_admin_create_param_definition_command, "Param key is required"),
     ],
 )
@@ -338,7 +334,7 @@ def test_create_definition_methods_validate_required_keys(
     command_builder,
     expected_message: str,
 ) -> None:
-    service = DefenitionsService(StubUoWFactory(StubUnitOfWork()), StubCrmUsersService())
+    service = DefinitionsService(StubUoWFactory(StubUnitOfWork()), StubCrmUsersService())
 
     with pytest.raises(ApplicationError, match=expected_message):
         getattr(service, method_name)(command_builder(app_id=1, crm_user_id=77, key=" "))

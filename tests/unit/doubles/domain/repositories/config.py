@@ -390,7 +390,7 @@ class InMemoryCrmPostbackRuleRepository(CallRecorderMixin, CrmPostbackRuleReposi
         items = [
             item
             for item in self._items.values()
-            if (platform := self._platform_lookup(item.platfrom_app_id)) is not None and platform.app_id == app_id
+            if (platform := self._platform_lookup(item.platform_app_id)) is not None and platform.app_id == app_id
         ]
         items.sort(key=lambda item: item.rule_id or 0)
         return [clone(item) for item in items]

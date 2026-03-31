@@ -1,34 +1,36 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
+
+from app.domain.hash_protocol import HashProtocol
 
 
-@dataclass()
+@dataclass
 class CrmAppPlatformEntity:
     app_id: int
     platform: str
     package_name: str
     install_key: str
+    sdk_secret_hash: str
     store_url: str | None = None
     sdk_public_key: str | None = None
-    sdk_secret_hash: str | None = None
     status: str = "active"
     platform_id: int | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
     
     @staticmethod
-    def __aviable_statuses() -> list[str]:
+    def __available_statuses() -> list[str]:
         return ['active', 'inactive'] 
     
     @staticmethod
-    def __aviable_platforms() -> list[str]:
+    def __available_platforms() -> list[str]:
         return ['android', 'ios']
     
     def is_valid_platform(self)->bool:
-        return self.platform in CrmAppPlatformEntity.__aviable_platforms()
+        return self.platform in CrmAppPlatformEntity.__available_platforms()
     
     def is_valid_status(self)->bool:
-        return self.status in CrmAppPlatformEntity.__aviable_statuses()
+        return self.status in CrmAppPlatformEntity.__available_statuses()
     
     def activate(self):
         self.status = "active"
@@ -37,3 +39,56 @@ class CrmAppPlatformEntity:
     def deactivate(self):
         self.status = "inactive"
         self.updated_at = datetime.now()
+    
+    def create_secret_hash(self, hasher: HashProtocol):
+        self.sdk_secret_hash = hasher.random_hash()
+    
+    @staticmethod
+    def create(*, 
+        hasher: HashProtocol,
+        app_id: int,
+        platform: str,
+        package_name: str,
+        install_key: str,
+        store_url: str | None = None,
+        sdk_public_key: str | None = None,
+        status: str = "active",
+    ) -> "CrmAppPlatformEntity":
+        secret_hash = hasher.random_hash()
+        return CrmAppPlatformEntity(
+            app_id=app_id,
+            platform=platform,
+            package_name=package_name,
+            install_key=install_key,
+            store_url=store_url,
+            sdk_public_key=sdk_public_key,
+            status=status,
+            sdk_secret_hash=secret_hash
+        )
+    
+    def update(
+        self,
+        *,
+        app_id: int | None = None,
+        platform: str | None = None,
+        package_name: str | None = None,
+        install_key: str | None = None,
+        sdk_secret_hash: str | None = None,
+        store_url: str | None = None,
+        sdk_public_key: str | None = None,
+        status: str | None = None,
+        is_active: bool | None = None,
+    ) -> None:
+        self.app_id = app_id if app_id is not None else self.app_id
+        self.platform = platform if platform is not None else self.platform
+        self.package_name = package_name if package_name is not None else self.package_name
+        self.install_key = install_key if install_key is not None else self.install_key
+        self.sdk_secret_hash = sdk_secret_hash if sdk_secret_hash is not None else self.sdk_secret_hash
+        self.store_url = store_url if store_url is not None else self.store_url
+        self.sdk_public_key = sdk_public_key if sdk_public_key is not None else self.sdk_public_key
+        self.status = status if status is not None else self.status
+        
+        if is_active is not None:
+            self.status = "active" if is_active else "inactive"
+        
+        self.updated_at = datetime.now(UTC) 

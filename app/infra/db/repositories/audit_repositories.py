@@ -1,16 +1,26 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
 from app.domain.audit_log.audit_log_repository_protocol import CrmAuditLogRepositoryProtocol
+from app.domain.pagination import Pagination
 from app.infra.db.audit.models import AuditLog
 
 
 class SqlAlchemyCrmAuditLogRepository(CrmAuditLogRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
+
+    @staticmethod
+    def _parse_datetime(value: str | None) -> datetime | None:
+        if value is None:
+            return None
+
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
 
     def _to_domain(self, row: AuditLog) -> CrmAuditLogEntity:
         return CrmAuditLogEntity(
@@ -55,20 +65,78 @@ class SqlAlchemyCrmAuditLogRepository(CrmAuditLogRepositoryProtocol):
         row = self.session.get(AuditLog, audit_log_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_app_id(self, app_id: int, *, limit: int = 100) -> list[CrmAuditLogEntity]:
-        rows = self.session.scalars(
-            select(AuditLog)
-            .where(AuditLog.app_id == app_id)
-            .order_by(desc(AuditLog.changed_at), desc(AuditLog.audit_log_id))
-            .limit(limit)
-        ).all()
+    def delete(self, audit_log_id: int) -> CrmAuditLogEntity:
+        row = self.session.get(AuditLog, audit_log_id)
+        if row is None:
+            raise RuntimeError()
+
+        audit_log = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return audit_log
+
+    def _list_audit_logs(
+        self,
+        stmt,
+        *,
+        actor_id: int | None = None,
+        entity_type: str | None = None,
+        entity_id: int | None = None,
+        pagination: Pagination | None = None,
+    ) -> list[CrmAuditLogEntity]:
+        start_at_value = self._parse_datetime(None if pagination is None else pagination.start_at)
+        end_at_value = self._parse_datetime(None if pagination is None else pagination.end_at)
+
+        if actor_id is not None:
+            stmt = stmt.where(AuditLog.user_id == actor_id)
+        if entity_type is not None:
+            stmt = stmt.where(AuditLog.entity_changed == entity_type)
+        if entity_id is not None:
+            stmt = stmt.where(AuditLog.entity_id == str(entity_id))
+        if start_at_value is not None:
+            stmt = stmt.where(AuditLog.changed_at >= start_at_value)
+        if end_at_value is not None:
+            stmt = stmt.where(AuditLog.changed_at <= end_at_value)
+
+        stmt = stmt.order_by(desc(AuditLog.changed_at), desc(AuditLog.audit_log_id))
+        if pagination is not None and pagination.offset is not None:
+            stmt = stmt.offset(pagination.offset)
+        if pagination is not None and pagination.limit is not None:
+            stmt = stmt.limit(pagination.limit)
+
+        rows = self.session.scalars(stmt).all()
         return [self._to_domain(row) for row in rows]
 
-    def list_by_user_id(self, user_id: int, *, limit: int = 100) -> list[CrmAuditLogEntity]:
-        rows = self.session.scalars(
-            select(AuditLog)
-            .where(AuditLog.user_id == user_id)
-            .order_by(desc(AuditLog.changed_at), desc(AuditLog.audit_log_id))
-            .limit(limit)
-        ).all()
-        return [self._to_domain(row) for row in rows]
+    def list_by_app_id(
+        self,
+        app_id: int,
+        *,
+        actor_id: int | None = None,
+        entity_type: str | None = None,
+        entity_id: int | None = None,
+        pagination: Pagination | None = None,
+    ) -> list[CrmAuditLogEntity]:
+        stmt = select(AuditLog).where(AuditLog.app_id == app_id)
+        return self._list_audit_logs(
+            stmt,
+            actor_id=actor_id,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            pagination=pagination,
+        )
+
+    def list_by_user_id(
+        self,
+        user_id: int,
+        *,
+        entity_type: str | None = None,
+        entity_id: int | None = None,
+        pagination: Pagination | None = None,
+    ) -> list[CrmAuditLogEntity]:
+        stmt = select(AuditLog).where(AuditLog.user_id == user_id)
+        return self._list_audit_logs(
+            stmt,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            pagination=pagination,
+        )

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from urllib.parse import urlencode
 
-from app.application.contracts.requester import S2SRequesterProtocol, S2SResopnse
+from app.application.contracts.requester import S2SRequesterProtocol, S2SResponse
 from tests.unit.doubles.base import CallRecorderMixin
 
 
 class StubS2SRequester(CallRecorderMixin, S2SRequesterProtocol):
     def __init__(self) -> None:
         super().__init__()
-        self.response = S2SResopnse(is_success=True)
+        self.response = S2SResponse(is_success=True)
         self.error: Exception | None = None
         self.final_urls: list[str] = []
 
@@ -35,7 +35,7 @@ class StubS2SRequester(CallRecorderMixin, S2SRequesterProtocol):
         retry_policy: str = "",
         max_retries: int = 5,
         sleep_time: int = 5,
-    ) -> S2SResopnse:
+    ) -> S2SResponse:
         self.final_urls.append(self._build_final_url(url, http_method, params))
         self._record(
             "postback",

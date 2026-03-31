@@ -6,7 +6,7 @@ from app.domain.role.CrmRoleEntity import CrmRoleEntity
 from app.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
 from app.domain.user.CrmUserEntity import CrmUserEntity
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
-from app.domain.user_permissions.CrmUserPermisionEntity import CrmUserPermisionEntity
+from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
 from app.domain.user_permissions.user_permissions_repository_protocol import CrmUserPermissionsRepositoryProtocol
 from tests.unit.doubles.base import CallRecorderMixin, IntegerSequence, clone, evolve, utcnow
 
@@ -147,21 +147,21 @@ class InMemoryCrmPermissionRepository(CallRecorderMixin, CrmPermissionRepository
 class InMemoryCrmUserPermissionsRepository(CallRecorderMixin, CrmUserPermissionsRepositoryProtocol):
     def __init__(self) -> None:
         super().__init__()
-        self._items: dict[tuple[int, int], CrmUserPermisionEntity] = {}
+        self._items: dict[tuple[int, int], CrmUserPermissionEntity] = {}
 
     def set_permissions(self, permisions_repo: CrmPermissionRepositoryProtocol):
         self._permisions_repo = permisions_repo
     
-    def save(self, entity: CrmUserPermisionEntity) -> CrmUserPermisionEntity:
+    def save(self, entity: CrmUserPermissionEntity) -> CrmUserPermissionEntity:
         self._record("save", clone(entity))
         self._items[(entity.user_id, entity.permission_id)] = clone(entity)
         return clone(entity)
 
-    def save_many(self, entities: list[CrmUserPermisionEntity]) -> list[CrmUserPermisionEntity]:
+    def save_many(self, entities: list[CrmUserPermissionEntity]) -> list[CrmUserPermissionEntity]:
         self._record("save_many", clone(entities))
         return [self.save(entity) for entity in entities]
 
-    def list_by_user_id(self, user_id: int) -> list[CrmUserPermisionEntity]:
+    def list_by_user_id(self, user_id: int) -> list[CrmUserPermissionEntity]:
         self._record("list_by_user_id", user_id)
         items = sorted(
             (item for item in self._items.values() if item.user_id == user_id),
@@ -169,7 +169,7 @@ class InMemoryCrmUserPermissionsRepository(CallRecorderMixin, CrmUserPermissions
         )
         return [clone(item) for item in items]
 
-    def list_by_permision_id(self, permission_id: int) -> list[CrmUserPermisionEntity]:
+    def list_by_permission_id(self, permission_id: int) -> list[CrmUserPermissionEntity]:
         self._record("list_by_permission_id", permission_id)
         items = sorted(
             (item for item in self._items.values() if item.permission_id == permission_id),

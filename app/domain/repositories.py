@@ -25,7 +25,7 @@ from app.domain.secret_template.secret_template_repository_protocol import CrmSe
 from app.domain.statistics_aggregate.statistics_aggregate_repository_protocol import StatisticsRepositoryProtocol
 from app.domain.user_app_access.user_app_access_repository_protocol import CrmUserAppAccessRepositoryProtocol
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
-from app.domain.user_permissions.CrmUserPermisionEntity import CrmUserPermisionEntity
+from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
 
 
 __all__ = [
@@ -34,7 +34,7 @@ __all__ = [
     "CrmUserRepositoryProtocol",
     "CrmRoleRepositoryProtocol",
     "CrmPermissionRepositoryProtocol",
-    "CrmUserPermisionEntity",
+    "CrmUserPermissionEntity",
     "CrmUserAppAccessRepositoryProtocol",
     "CrmClickRepositoryProtocol",
     "CrmAppUserRepositoryProtocol",

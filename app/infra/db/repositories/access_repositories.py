@@ -3,11 +3,20 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.domain.pagination import Pagination
 from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
 from app.domain.user_app_access.user_app_access_repository_protocol import (
     CrmUserAppAccessRepositoryProtocol,
 )
 from app.infra.db.access.models import CrmUserAppAccess
+
+
+def _apply_pagination(stmt, pagination: Pagination | None):
+    if pagination is not None and pagination.offset is not None:
+        stmt = stmt.offset(pagination.offset)
+    if pagination is not None and pagination.limit is not None:
+        stmt = stmt.limit(pagination.limit)
+    return stmt
 
 
 class SqlAlchemyCrmUserAppAccessRepository(CrmUserAppAccessRepositoryProtocol):
@@ -46,18 +55,30 @@ class SqlAlchemyCrmUserAppAccessRepository(CrmUserAppAccessRepositoryProtocol):
         row = self.session.get(CrmUserAppAccess, {"user_id": user_id, "app_id": app_id})
         return self._to_domain(row) if row is not None else None
 
-    def list_by_user_id(self, user_id: int) -> list[CrmUserAppAccessEntity]:
-        rows = self.session.scalars(
+    def list_by_user_id(
+        self,
+        user_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmUserAppAccessEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(CrmUserAppAccess)
             .where(CrmUserAppAccess.user_id == user_id)
-            .order_by(CrmUserAppAccess.app_id.asc())
-        ).all()
+            .order_by(CrmUserAppAccess.app_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
-    def list_by_app_id(self, app_id: int) -> list[CrmUserAppAccessEntity]:
-        rows = self.session.scalars(
+    def list_by_app_id(
+        self,
+        app_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmUserAppAccessEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(CrmUserAppAccess)
             .where(CrmUserAppAccess.app_id == app_id)
-            .order_by(CrmUserAppAccess.user_id.asc())
-        ).all()
+            .order_by(CrmUserAppAccess.user_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]

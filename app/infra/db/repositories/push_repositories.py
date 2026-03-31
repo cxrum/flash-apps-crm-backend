@@ -3,6 +3,7 @@ from __future__ import annotations
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
+from app.domain.pagination import Pagination
 from app.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
 from app.domain.push_campaign.push_campaign_repository_protocol import CrmPushCampaignRepositoryProtocol
 from app.domain.push_event.CrmPushEventEntity import CrmPushEventEntity
@@ -11,6 +12,14 @@ from app.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
 from app.domain.push_token.push_token_repository_protocol import CrmPushTokenRepositoryProtocol
 from app.infra.db.apps.models import Install
 from app.infra.db.push.models import PushCampaign, PushEvent, PushToken
+
+
+def _apply_pagination(stmt, pagination: Pagination | None):
+    if pagination is not None and pagination.offset is not None:
+        stmt = stmt.offset(pagination.offset)
+    if pagination is not None and pagination.limit is not None:
+        stmt = stmt.limit(pagination.limit)
+    return stmt
 
 
 class SqlAlchemyCrmPushCampaignRepository(CrmPushCampaignRepositoryProtocol):
@@ -67,12 +76,28 @@ class SqlAlchemyCrmPushCampaignRepository(CrmPushCampaignRepositoryProtocol):
         row = self.session.get(PushCampaign, campaign_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_app_id(self, app_id: int) -> list[CrmPushCampaignEntity]:
-        rows = self.session.scalars(
+    def delete(self, campaign_id: int) -> CrmPushCampaignEntity:
+        row = self.session.get(PushCampaign, campaign_id)
+        if row is None:
+            raise RuntimeError()
+
+        campaign = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return campaign
+
+    def list_by_app_id(
+        self,
+        app_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmPushCampaignEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(PushCampaign)
             .where(PushCampaign.app_id == app_id)
-            .order_by(PushCampaign.campaign_id.asc())
-        ).all()
+            .order_by(PushCampaign.campaign_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -119,19 +144,35 @@ class SqlAlchemyCrmPushTokenRepository(CrmPushTokenRepositoryProtocol):
         row = self.session.get(PushToken, token_id)
         return self._to_domain(row) if row is not None else None
 
+    def delete(self, token_id: int) -> CrmPushTokenEntity:
+        row = self.session.get(PushToken, token_id)
+        if row is None:
+            raise RuntimeError()
+
+        token = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return token
+
     def get_by_token(self, token: str) -> CrmPushTokenEntity | None:
         row = self.session.scalars(
             select(PushToken).where(PushToken.token == token)
         ).first()
         return self._to_domain(row) if row is not None else None
 
-    def list_by_app_user_id(self, app_user_id: int) -> list[CrmPushTokenEntity]:
-        rows = self.session.scalars(
+    def list_by_app_user_id(
+        self,
+        app_user_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmPushTokenEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(PushToken)
             .join(Install, PushToken.install_id == Install.install_id)
             .where(Install.app_user_id == app_user_id)
-            .order_by(PushToken.token_id.asc())
-        ).all()
+            .order_by(PushToken.token_id.asc()),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -180,10 +221,26 @@ class SqlAlchemyCrmPushEventRepository(CrmPushEventRepositoryProtocol):
         row = self.session.get(PushEvent, push_event_id)
         return self._to_domain(row) if row is not None else None
 
-    def list_by_campaign_id(self, campaign_id: int) -> list[CrmPushEventEntity]:
-        rows = self.session.scalars(
+    def delete(self, push_event_id: int) -> CrmPushEventEntity:
+        row = self.session.get(PushEvent, push_event_id)
+        if row is None:
+            raise RuntimeError()
+
+        push_event = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return push_event
+
+    def list_by_campaign_id(
+        self,
+        campaign_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[CrmPushEventEntity]:
+        rows = self.session.scalars(_apply_pagination(
             select(PushEvent)
             .where(PushEvent.campaign_id == campaign_id)
-            .order_by(desc(PushEvent.event_time_utc), desc(PushEvent.push_event_id))
-        ).all()
+            .order_by(desc(PushEvent.event_time_utc), desc(PushEvent.push_event_id)),
+            pagination,
+        )).all()
         return [self._to_domain(row) for row in rows]
