@@ -27,6 +27,8 @@ class Settings(BaseSettings):
 
     debug_mode: bool = Field(default=False, alias="DEBUG_MODE")
     
+    ip2location_bin_database_path: str = Field(alias="IP2LOCATION_BIN_DATABASE_PATH")
+    
     @property
     def sqlalchemy_database_uri(self) -> str:
         if self.database_url:

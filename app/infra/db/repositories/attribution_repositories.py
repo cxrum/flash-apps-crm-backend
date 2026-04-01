@@ -22,13 +22,6 @@ class SqlAlchemyCrmClickRepository(CrmClickRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    @staticmethod
-    def _parse_datetime(value: str | None) -> datetime | None:
-        if value is None:
-            return None
-
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
     def _to_domain(self, row: Click) -> CrmClickEntity:
         return CrmClickEntity(
             click_id=row.click_id,
@@ -37,7 +30,10 @@ class SqlAlchemyCrmClickRepository(CrmClickRepositoryProtocol):
             raw_query=dict(row.raw_query),
             ip_address=row.ip_address,
             user_agent=row.user_agent,
-            geo=dict(row.geo),
+            city=row.city,
+            country_code=row.country_code,
+            region=row.region,
+            language=row.language,
             referrer=row.referrer,
             source=row.source,
             redirect_target=row.redirect_target,
@@ -53,7 +49,10 @@ class SqlAlchemyCrmClickRepository(CrmClickRepositoryProtocol):
             "raw_query": dict(entity.raw_query),
             "ip_address": entity.ip_address,
             "user_agent": entity.user_agent,
-            "geo": dict(entity.geo),
+            "city": entity.city,
+            "country_code": entity.country_code,
+            "region": entity.region,
+            "language": entity.language,
             "referrer": entity.referrer,
             "source": entity.source,
             "redirect_target": entity.redirect_target,
@@ -96,8 +95,8 @@ class SqlAlchemyCrmClickRepository(CrmClickRepositoryProtocol):
         click_id: str | None = None,
         pagination: Pagination | None = None,
     ) -> list[CrmClickEntity]:
-        start_at_value = self._parse_datetime(None if pagination is None else pagination.start_at)
-        end_at_value = self._parse_datetime(None if pagination is None else pagination.end_at)
+        start_at_value = None if pagination is None else pagination.start_at
+        end_at_value = None if pagination is None else pagination.end_at
 
         if click_id is not None:
             stmt = stmt.where(Click.click_id == click_id)
@@ -244,13 +243,6 @@ class SqlAlchemyCrmEventRepository(CrmEventRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    @staticmethod
-    def _parse_datetime(value: str | None) -> datetime | None:
-        if value is None:
-            return None
-
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
     def _to_domain(self, row: Event) -> EventEntity:
         return EventEntity(
             event_id=row.event_id,
@@ -369,8 +361,8 @@ class SqlAlchemyCrmEventRepository(CrmEventRepositoryProtocol):
         event_key: str | None = None,
         pagination: Pagination | None = None,
     ) -> list[EventEntity]:
-        start_at_value = self._parse_datetime(None if pagination is None else pagination.start_at)
-        end_at_value = self._parse_datetime(None if pagination is None else pagination.end_at)
+        start_at_value = None if pagination is None else pagination.start_at
+        end_at_value = None if pagination is None else pagination.end_at
 
         if click_id is not None:
             stmt = stmt.where(Event.click_id == click_id)

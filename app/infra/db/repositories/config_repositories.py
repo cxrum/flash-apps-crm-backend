@@ -360,7 +360,7 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
     def _to_domain(self, row: PostbackRule) -> CrmPostbackRuleEntity:
         return CrmPostbackRuleEntity(
             rule_id=row.rule_id,
-            platform_app_id=row.platfrom_app_id,
+            platform_app_id=row.platform_app_id,
             name=row.name,
             endpoint_url=row.endpoint_url,
             http_method=row.http_method,
@@ -378,7 +378,7 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
 
     def _to_row(self, entity: CrmPostbackRuleEntity) -> PostbackRule:
         kwargs: dict[str, object] = {
-            "platfrom_app_id": entity.platform_app_id,
+            "platform_app_id": entity.platform_app_id,
             "name": entity.name,
             "endpoint_url": entity.endpoint_url,
             "http_method": entity.http_method,
@@ -427,7 +427,7 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
         self,
         *,
         rule_id: int | None = None,
-        platfrom_app_id: int | None = None,
+        platform_app_id: int | None = None,
         name: str | None = None,
         endpoint_url: str | None = None,
         trigger_type: str | None = None,
@@ -445,7 +445,7 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
     ) -> list[CrmPostbackRuleEntity]:
         filter_values = {
             "rule_id": rule_id,
-            "platfrom_app_id": platfrom_app_id,
+            "platform_app_id": platform_app_id,
             "name": name,
             "endpoint_url": endpoint_url,
             "trigger_type": trigger_type,
@@ -480,7 +480,7 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
     ) -> list[CrmPostbackRuleEntity]:
         rows = self.session.scalars(_apply_pagination(
             select(PostbackRule)
-            .join(AppPlatform, PostbackRule.platfrom_app_id == AppPlatform.platform_id)
+            .join(AppPlatform, PostbackRule.platform_app_id == AppPlatform.platform_id)
             .where(AppPlatform.app_id == app_id)
             .order_by(PostbackRule.rule_id.asc()),
             pagination,
@@ -495,7 +495,7 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
     ) -> list[CrmPostbackRuleEntity]:
         rows = self.session.scalars(_apply_pagination(
             select(PostbackRule)
-            .join(AppPlatform, PostbackRule.platfrom_app_id == AppPlatform.platform_id)
+            .join(AppPlatform, PostbackRule.platform_app_id == AppPlatform.platform_id)
             .where(AppPlatform.app_id == app_id, PostbackRule.is_active.is_(True))
             .order_by(PostbackRule.rule_id.asc()),
             pagination,

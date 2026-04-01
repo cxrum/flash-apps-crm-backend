@@ -16,3 +16,5 @@ __pycache__/
 *.xlsx
 settings.json
 .coverage
+.codex
+IP2LOCATION-LITE-DB3.BIN

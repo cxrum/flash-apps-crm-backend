@@ -1,19 +1,19 @@
+from app.application.admin.push.commands import PushDeviceRegisterCommand
 from app.application.sdk.ingestion.commands import (
-    SdkDeviceCommand,
+    SdkDeviceValueCommand,
     SdkEventCommand,
     SdkEventsCommand,
     SdkInstallCommand,
     SdkParamsUpdateCommand,
-    SdkPushRegisterCommand,
 )
 from app.application.sdk.ingestion.mappers import SdkIngestionCommandMapper
 
 __all__ = [
-    "SdkDeviceCommand",
+    "SdkDeviceValueCommand",
     "SdkEventCommand",
     "SdkEventsCommand",
     "SdkInstallCommand",
     "SdkParamsUpdateCommand",
-    "SdkPushRegisterCommand",
+    "PushDeviceRegisterCommand",
     "SdkIngestionCommandMapper",
 ]

@@ -76,8 +76,8 @@ class AppPlatform(Base):
     package_name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     store_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
     install_key: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
-    sdk_public_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    sdk_secret_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    sdk_public_key: Mapped[str] = mapped_column(String(255), nullable=False)
+    sdk_secret_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="active", index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

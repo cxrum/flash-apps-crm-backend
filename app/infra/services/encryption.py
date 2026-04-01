@@ -1,5 +1,3 @@
-
-
 from app.application.contracts.encryption import EncryptionServiceProtocol
 
 

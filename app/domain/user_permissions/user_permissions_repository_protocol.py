@@ -20,6 +20,7 @@ class CrmUserPermissionsRepositoryProtocol(Protocol):
         self,
         user_id: int,
         permission_id: int,
+        app_id: int
     ) ->CrmUserPermissionEntity: ...
     def list_by_permission_id(
         self,

@@ -10,7 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 
 
-# Dictaionary of metrics defifnitios (MetricDefinition.machine_key == Event.event_key, Event.event_type == "metric") 
+# Dictionary of metrics definition (MetricDefinition.machine_key == Event.event_key, Event.event_type == "metric") 
 class MetricDefinition(Base):
     __tablename__ = "crm_metric_definitions"
     __table_args__ = (
@@ -42,7 +42,7 @@ class MetricDefinition(Base):
         onupdate=func.now(),
     )
 
-# Dictaionary of conversion defifnitios (ConversionDefinition.machine_key == Event.event_key, Event.event_type == "conversion") 
+# Dictionary of conversion definition (ConversionDefinition.machine_key == Event.event_key, Event.event_type == "conversion") 
 class ConversionDefinition(Base):
     __tablename__ = "crm_conversion_definitions"
     __table_args__ = (
@@ -163,7 +163,7 @@ class PostbackRule(Base):
     )
 
     rule_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    platfrom_app_id: Mapped[int] = mapped_column(
+    platform_app_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("crm_app_platforms.platform_id", ondelete="CASCADE"),
         nullable=False,

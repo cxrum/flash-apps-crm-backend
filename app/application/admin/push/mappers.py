@@ -2,6 +2,7 @@ from typing import Mapping
 
 from app.application.admin.push.commands import CreatePushCampaignCommand, DeletePushCampaignCommand, GetPushCampaignCommand, ListPushCampaignsCommand, StartPushCampaignCommand, UpdatePushCampaignCommand
 from app.application.admin.push.responses import PushResponseEntry
+from app.application.admin.push.commands import PushDeviceRegisterCommand
 from app.core.utils.general_mapper import GeneralMapper
 from app.domain.push_campaign import CrmPushCampaignEntity
 
@@ -32,10 +33,23 @@ class PushResponseMapper:
     def start_push_campaign_from_transport(cls, payload: Mapping[str, object]) -> StartPushCampaignCommand:
         return GeneralMapper.command_payload_to_command(StartPushCampaignCommand, payload)
     
+    @classmethod
+    def push_register_from_transport(cls, payload: Mapping[str, object]) -> PushDeviceRegisterCommand:
+        return GeneralMapper.command_payload_to_command(PushDeviceRegisterCommand, payload)
     
 class PushCommandsMapper:
     
     @classmethod
     def push_campaign_domain_to_value(cls, domain: CrmPushCampaignEntity) -> PushResponseEntry:
-        return PushResponseEntry.model_validate(domain)
+        return PushResponseEntry(
+            campaign_id=domain.campaign_id or 0,
+            name=domain.title,
+            title=domain.title,
+            body=domain.body,
+            status=domain.status,
+            image_url=domain.image_url,
+            target_link=domain.target_link,
+            geo_filter=dict(domain.geo_filter),
+            scheduled_at=domain.scheduled_at,
+        )
     

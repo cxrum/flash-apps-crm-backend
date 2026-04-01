@@ -13,7 +13,7 @@ from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMess
 class UpdateParamValue:
     click_id: str
     params: JsonDict
-    occured_at: datetime
+    occurred_at: datetime
 
 class UpdateParamMessageFactory:
     DEFAULT_SOURCE = "sdk"
@@ -35,14 +35,14 @@ class UpdateParamMessageFactory:
         payload = {
             "click_id": value.click_id,
             "params": value.params,
-            "occured_at": value.occured_at
+            "occured_at": value.occurred_at
         }
         
         return UpdateCurrentParamMessage(
             name=name,
             payload=payload,
             metadata=message_metadata,
-            occurred_at=value.occured_at
+            occurred_at=value.occurred_at
         )
 
     @classmethod

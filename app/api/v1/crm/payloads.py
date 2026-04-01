@@ -205,8 +205,6 @@ class StatsQueryPayload(TransportPayload):
     app_id: int | None = None
     platform: str | None = None
     group_by: str | None = None
-    start_at: str | None = None
-    end_at: str | None = None
 
 
 class AuditLogQueryPayload(TransportPayload):
@@ -214,28 +212,18 @@ class AuditLogQueryPayload(TransportPayload):
     actor_id: int | None = None
     entity_type: str | None = None
     entity_id: int | None = None
-    start_at: str | None = None
-    end_at: str | None = None
 
 
 class ClickLogsQueryPayload(TransportPayload):
     app_id: int | None = None
     click_id: str | None = None
-    start_at: str | None = None
-    end_at: str | None = None
-
 
 class EventLogsQueryPayload(TransportPayload):
     app_id: int | None = None
     click_id: str | None = None
     event_key: str | None = None
-    start_at: str | None = None
-    end_at: str | None = None
 
 
 class RolesQueryPayload(TransportPayload):
     app_id: int | None = None
 
-
-class RawPayload(TransportPayload):
-    payload: dict[str, Any] = Field(default_factory=dict)

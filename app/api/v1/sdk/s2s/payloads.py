@@ -7,11 +7,11 @@ from pydantic import Field
 from app.api.v1.transport import TransportPayload
 
 
-class TrackingRedirectPayload(TransportPayload):
+class S2SClickPayload(TransportPayload):
     app_code: str
     platform: str
+    click_id: str | None = None
     redirect_url: str | None = None
-    idempotency_key: str | None = None
     ip: str | None = None
     user_agent: str | None = None
     params: dict[str, Any] = Field(default_factory=dict)

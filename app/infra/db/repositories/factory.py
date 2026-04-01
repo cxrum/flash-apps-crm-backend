@@ -31,7 +31,7 @@ from app.infra.db.repositories.crm_repositories import (
     SqlAlchemyCrmPermissionRepository,
     SqlAlchemyCrmRoleRepository,
     SqlAlchemyCrmUserRepository,
-    SqlAlchemyCrmUserPermisionRepository,
+    SqlAlchemyCrmUserPermissionRepository,
 )
 from app.infra.db.repositories.push_repositories import (
     SqlAlchemyCrmPushCampaignRepository,
@@ -56,8 +56,8 @@ class CrmSqlAlchemyRepositoryFactory:
     def permission_repo(self, session: Session) -> SqlAlchemyCrmPermissionRepository:
         return SqlAlchemyCrmPermissionRepository(session)
 
-    def user_permissions_repo(self, session: Session) -> SqlAlchemyCrmUserPermisionRepository:
-        return SqlAlchemyCrmUserPermisionRepository(session)
+    def user_permissions_repo(self, session: Session) -> SqlAlchemyCrmUserPermissionRepository:
+        return SqlAlchemyCrmUserPermissionRepository(session)
 
     def user_app_access_repo(self, session: Session) -> SqlAlchemyCrmUserAppAccessRepository:
         return SqlAlchemyCrmUserAppAccessRepository(session)

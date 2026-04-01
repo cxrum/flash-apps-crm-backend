@@ -61,7 +61,7 @@ class IngestionService:
             app_platform = self._resolve_platform(command.install_key, uow)
             
             if app_platform.platform_id is None:
-                raise ApplicationError(f"Unknown platfrom")
+                raise ApplicationError(f"Unknown platform")
             
             
             click = self._resolve_click(command, app_platform.platform_id, uow)
@@ -131,7 +131,7 @@ class IngestionService:
             click = uow.click_repo.get_by_id(command.click_id)       
             
             if app_platform.platform_id is None:
-                raise ApplicationError(f"Unknown platfrom")
+                raise ApplicationError(f"Unknown platform")
             
             if click is None:
                 raise ApplicationError("Click does not exist")
@@ -194,12 +194,12 @@ class IngestionService:
         await self._async_event_bus.publish_many(SdkEventMessageFactory.from_events(inserted))
         
     
-    async def udate_params(self, command: SdkParamsUpdateCommand):
+    async def update_params(self, command: SdkParamsUpdateCommand):
         with self._uow_factory.create()  as uow:
             click = uow.click_repo.get_by_id(command.click_id)
             
             if click is None:
-                raise ApplicationError(f"Unknown platfrom")
+                raise ApplicationError(f"Unknown platform")
             
             if click is None:
                 raise ApplicationError("Click does not exist")
@@ -207,7 +207,7 @@ class IngestionService:
         value = UpdateParamValue(
             click_id=command.click_id,
             params=command.params,
-            occured_at=command.event_time or datetime.now(UTC)
+            occurred_at=command.event_time or datetime.now(UTC)
         )
         
         await self._async_event_bus.publish(UpdateParamMessageFactory.from_raw_payload(value=value))

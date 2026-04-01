@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import Enum, unique
 import json
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
@@ -7,6 +8,13 @@ from typing import Any
 
 from app.domain.exceptions import DomainError
 
+@unique
+class DefaultParamKeys(Enum):
+    GEO = "geo"
+    LANG = "lang"
+    COUNTRY_CODE = "country_code"
+    
+    UTM_SOURCE = "utm_source"
 
 @dataclass
 class CrmParamDefinitionEntity:
@@ -61,8 +69,9 @@ class CrmParamDefinitionEntity:
     def _data_types() -> list[str]:
         return ["integer", "float", "boolean", "date", "datetime", "json", "list"]
     
+    
     @staticmethod
-    def get_params_for_aggeregation(*, params: dict[str, Any], params_dictionary: list[CrmParamDefinitionEntity]) ->dict[str, Any]:
+    def get_params_for_aggregation(*, params: dict[str, Any], params_dictionary: list[CrmParamDefinitionEntity]) ->dict[str, Any]:
         filtered_params = {}
         
         for definiton in params_dictionary:

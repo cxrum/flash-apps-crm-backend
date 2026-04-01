@@ -29,7 +29,7 @@ class SdkEventPayload(TransportPayload):
     idempotency_key: str
     type: Literal["metric", "conversion"]
     key: str
-    event_time: datetime | None = None
+    event_time: datetime | None = None # date time ISO 8601 Local with Offset
     amount: float | None = None
     currency: str | None = None
     params: dict[str, Any] = Field(default_factory=dict)
@@ -46,7 +46,7 @@ class SdkParamsUpdatePayload(TransportPayload):
     click_id: str
     idempotency_key: str
     params: dict[str, Any] = Field(default_factory=dict)
-    event_time: datetime | None = None
+    event_time: datetime | None = None # date time ISO 8601 Local with Offset
 
 
 class SdkPushRegisterPayload(TransportPayload):
@@ -55,7 +55,6 @@ class SdkPushRegisterPayload(TransportPayload):
     provider: str | None = None
     click_id: str | None = None
     crm_user_id: str | None = None
-    idempotency_key: str | None = None
     device: SdkDevicePayload | None = None
     params: dict[str, Any] = Field(default_factory=dict)
 
@@ -64,4 +63,3 @@ class SdkConfigQueryPayload(TransportPayload):
     install_key: str | None = None
     app_code: str | None = None
     platform: str | None = None
-    crm_user_id: str | None = None

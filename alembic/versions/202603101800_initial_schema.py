@@ -26,6 +26,7 @@ def upgrade() -> None:
         sa.Column("code_slug", sa.String(length=120), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("tech_description", sa.Text(), nullable=True),
+        sa.Column("category", sa.Text(), nullable=True),
         sa.Column("status", sa.String(length=32), nullable=False),
         sa.Column("logo_url", sa.String(length=1024), nullable=True),
         sa.Column("screenshots", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
@@ -42,6 +43,7 @@ def upgrade() -> None:
         sa.Column("user_id", sa.BigInteger(), autoincrement=True, nullable=False),
         sa.Column("full_name", sa.String(length=200), nullable=False),
         sa.Column("email", sa.String(length=255), nullable=False),
+        sa.Column("time_zone", sa.String(length=64), nullable=False),
         sa.Column("password_hash", sa.String(length=255), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
@@ -79,8 +81,8 @@ def upgrade() -> None:
         sa.Column("package_name", sa.String(length=255), nullable=False),
         sa.Column("store_url", sa.String(length=1024), nullable=True),
         sa.Column("install_key", sa.String(length=128), nullable=False),
-        sa.Column("sdk_public_key", sa.String(length=255), nullable=True),
-        sa.Column("sdk_secret_hash", sa.String(length=255), nullable=True),
+        sa.Column("sdk_public_key", sa.String(length=255), nullable=False),
+        sa.Column("sdk_secret_hash", sa.String(length=255), nullable=False),
         sa.Column("status", sa.String(length=16), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
@@ -97,35 +99,27 @@ def upgrade() -> None:
     op.create_index("ix_crm_app_platforms_install_key", "crm_app_platforms", ["install_key"], unique=True)
 
     op.create_table(
-        "crm_role_permissions",
-        sa.Column("role_id", sa.Integer(), nullable=False),
-        sa.Column("permission_id", sa.Integer(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.ForeignKeyConstraint(["permission_id"], ["crm_permissions.permission_id"], ondelete="CASCADE"),
-        sa.ForeignKeyConstraint(["role_id"], ["crm_roles.role_id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("role_id", "permission_id", name="pk_crm_role_permissions"),
-    )
-
-    op.create_table(
-        "crm_user_roles",
+        "crm_user_permisions",
         sa.Column("user_id", sa.BigInteger(), nullable=False),
-        sa.Column("role_id", sa.Integer(), nullable=False),
+        sa.Column("permission_id", sa.BigInteger(), nullable=False),
+        sa.Column("app_id", sa.BigInteger(), nullable=False),
         sa.Column("assigned_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.ForeignKeyConstraint(["role_id"], ["crm_roles.role_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["permission_id"], ["crm_permissions.permission_id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["user_id"], ["crm_users.user_id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("user_id", "role_id", name="pk_crm_user_roles"),
+        sa.ForeignKeyConstraint(["app_id"], ["crm_apps.app_id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("user_id", "permission_id", "app_id", name="pk_crm_user_permision"),
     )
 
     op.create_table(
         "crm_user_app_access",
         sa.Column("user_id", sa.BigInteger(), nullable=False),
         sa.Column("app_id", sa.BigInteger(), nullable=False),
-        sa.Column("access_level", sa.String(length=32), nullable=False),
+        sa.Column("role_id", sa.BigInteger(), nullable=False),
         sa.Column("assigned_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.CheckConstraint("access_level IN ('viewer', 'manager', 'owner')", name="ck_crm_user_app_access_level"),
         sa.ForeignKeyConstraint(["app_id"], ["crm_apps.app_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["role_id"], ["crm_roles.role_id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["user_id"], ["crm_users.user_id"], ondelete="CASCADE"),
-        sa.PrimaryKeyConstraint("user_id", "app_id", name="pk_crm_user_app_access"),
+        sa.PrimaryKeyConstraint("user_id", "app_id", "role_id", name="pk_crm_user_app_access"),
     )
 
     op.create_table(
@@ -147,7 +141,10 @@ def upgrade() -> None:
         sa.Column("raw_query", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
         sa.Column("ip_address", sa.String(length=64), nullable=True),
         sa.Column("user_agent", sa.Text(), nullable=True),
-        sa.Column("geo", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("city", sa.String(length=64), nullable=False),
+        sa.Column("region", sa.String(length=64), nullable=False),
+        sa.Column("language", sa.String(length=64), nullable=False),
+        sa.Column("country_code", sa.String(length=3), nullable=False),
         sa.Column("referrer", sa.String(length=1024), nullable=True),
         sa.Column("source", sa.String(length=256), nullable=True),
         sa.Column("redirect_target", sa.Text(), nullable=True),
@@ -282,7 +279,7 @@ def upgrade() -> None:
             name="ck_crm_secret_templates_scope",
         ),
         sa.CheckConstraint(
-            "value_type IN ('text', 'json', 'file')",
+            "value_type IN ('text', 'json','file')",
             name="ck_crm_secret_templates_value_type",
         ),
         sa.PrimaryKeyConstraint("template_id"),
@@ -347,7 +344,7 @@ def upgrade() -> None:
     op.create_table(
         "crm_postback_rules",
         sa.Column("rule_id", sa.BigInteger(), autoincrement=True, nullable=False),
-        sa.Column("platfrom_app_id", sa.BigInteger(), nullable=False),
+        sa.Column("platform_app_id", sa.BigInteger(), nullable=False),
         sa.Column("name", sa.String(length=120), nullable=False),
         sa.Column("endpoint_url", sa.String(length=1024), nullable=False),
         sa.Column("http_method", sa.String(length=8), nullable=False),
@@ -366,10 +363,10 @@ def upgrade() -> None:
             "trigger_type IN ('install', 'metric', 'conversion', 'param_update')",
             name="ck_crm_postback_rules_trigger_type",
         ),
-        sa.ForeignKeyConstraint(["platfrom_app_id"], ["crm_app_platforms.platform_id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["platform_app_id"], ["crm_app_platforms.platform_id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("rule_id"),
     )
-    op.create_index("ix_crm_postback_rules_platfrom_app_id", "crm_postback_rules", ["platfrom_app_id"])
+    op.create_index("ix_crm_postback_rules_platform_app_id", "crm_postback_rules", ["platform_app_id"])
     op.create_index("ix_crm_postback_rules_timeout", "crm_postback_rules", ["timeout"])
     op.create_index("ix_crm_postback_rules_event_key", "crm_postback_rules", ["event_key"])
     op.create_index("ix_crm_postback_rules_trigger_type", "crm_postback_rules", ["trigger_type"])
@@ -403,16 +400,23 @@ def upgrade() -> None:
         "crm_push_tokens",
         sa.Column("token_id", sa.BigInteger(), autoincrement=True, nullable=False),
         sa.Column("install_id", sa.BigInteger(), nullable=False),
-        sa.Column("token", sa.String(length=255), nullable=False),
-        sa.Column("geo", postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+        sa.Column("click_id", sa.String(length=64), nullable=False),
+        sa.Column("app_user_id", sa.BigInteger(), nullable=True),
+        sa.Column("push_token", sa.String(length=255), nullable=False),
+        sa.Column("geo", sa.String(length=64), nullable=True),
+        sa.Column("lang", sa.String(length=3), nullable=True),
+        sa.Column("country_code", sa.String(length=3), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=False),
         sa.Column("last_seen_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.ForeignKeyConstraint(["install_id"], ["crm_installs.install_id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["click_id"], ["crm_clicks.click_id"], ondelete="RESTRICT"),
+        sa.ForeignKeyConstraint(["app_user_id"], ["crm_app_users.app_user_id"], ondelete="RESTRICT"),
         sa.PrimaryKeyConstraint("token_id"),
     )
     op.create_index("ix_crm_push_tokens_install_id", "crm_push_tokens", ["install_id"])
-    op.create_index("ix_crm_push_tokens_token", "crm_push_tokens", ["token"], unique=True)
+    op.create_index("ix_crm_push_tokens_app_user_id", "crm_push_tokens", ["app_user_id"])
+    op.create_index("ix_crm_push_tokens_push_token", "crm_push_tokens", ["push_token"], unique=True)
     op.create_index("ix_crm_push_tokens_is_active", "crm_push_tokens", ["is_active"])
 
     op.create_table(
@@ -456,102 +460,84 @@ def upgrade() -> None:
     op.create_index("ix_crm_audit_logs_entity_changed", "crm_audit_logs", ["entity_changed"])
     op.create_index("ix_crm_audit_logs_changed_at", "crm_audit_logs", ["changed_at"])
 
+    op.create_table(
+        "crm_statistics_aggregate",
+        sa.Column("aggregate_id", sa.BigInteger(), autoincrement=True, nullable=False),
+        sa.Column("app_platform_id", sa.BigInteger(), nullable=False),
+        sa.Column("geo", sa.String(length=32), nullable=False),
+        sa.Column("date", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("event_type", sa.String(length=32), nullable=False),
+        sa.Column("event_key", sa.String(length=120), nullable=False),
+        sa.Column("count", sa.BigInteger(), nullable=False),
+        sa.Column("amount_usd", sa.Numeric(precision=14, scale=2), nullable=True),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.CheckConstraint(
+            "event_type IN ('metric', 'conversion')",
+            name="ck_crm_statistics_aggregate_event_type",
+        ),
+        sa.ForeignKeyConstraint(["app_platform_id"], ["crm_app_platforms.platform_id"], ondelete="RESTRICT"),
+        sa.PrimaryKeyConstraint("aggregate_id"),
+    )
+    op.create_index("ix_crm_statistics_aggregate_app_platform_id", "crm_statistics_aggregate", ["app_platform_id"])
+    op.create_index("ix_crm_statistics_aggregate_geo", "crm_statistics_aggregate", ["geo"])
+    op.create_index("ix_crm_statistics_aggregate_date", "crm_statistics_aggregate", ["date"])
+    op.create_index("ix_crm_statistics_aggregate_event_type", "crm_statistics_aggregate", ["event_type"])
+    op.create_index("ix_crm_statistics_aggregate_event_key", "crm_statistics_aggregate", ["event_key"])
+    op.create_index("ix_crm_statistics_aggregate_updated_at", "crm_statistics_aggregate", ["updated_at"])
+
+    op.create_table(
+        "crm_custom_params_statistics",
+        sa.Column("aggregate_id", sa.BigInteger(), autoincrement=True, nullable=False),
+        sa.Column("app_platform_id", sa.BigInteger(), nullable=False),
+        sa.Column("geo", sa.String(length=32), nullable=False),
+        sa.Column("date", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("event_type", sa.String(length=32), nullable=False),
+        sa.Column("event_key", sa.String(length=120), nullable=False),
+        sa.Column("param_key", sa.String(length=120), nullable=False),
+        sa.Column("param_value", sa.Text(), nullable=False),
+        sa.Column("count", sa.BigInteger(), nullable=False),
+        sa.Column("amount_usd", sa.Numeric(precision=14, scale=2), nullable=True),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.CheckConstraint(
+            "event_type IN ('metric', 'conversion')",
+            name="ck_crm_params_agg_event_type",
+        ),
+        sa.ForeignKeyConstraint(["app_platform_id"], ["crm_app_platforms.platform_id"], ondelete="RESTRICT"),
+        sa.PrimaryKeyConstraint("aggregate_id"),
+    )
+    op.create_index("ix_crm_custom_params_statistics_app_platform_id", "crm_custom_params_statistics", ["app_platform_id"])
+    op.create_index("ix_crm_custom_params_statistics_geo", "crm_custom_params_statistics", ["geo"])
+    op.create_index("ix_crm_custom_params_statistics_date", "crm_custom_params_statistics", ["date"])
+    op.create_index("ix_crm_custom_params_statistics_event_type", "crm_custom_params_statistics", ["event_type"])
+    op.create_index("ix_crm_custom_params_statistics_event_key", "crm_custom_params_statistics", ["event_key"])
+    op.create_index("ix_crm_custom_params_statistics_param_key", "crm_custom_params_statistics", ["param_key"])
+    op.create_index("ix_crm_custom_params_statistics_param_value", "crm_custom_params_statistics", ["param_value"])
+
 
 def downgrade() -> None:
-    op.drop_index("ix_crm_audit_logs_changed_at", table_name="crm_audit_logs")
-    op.drop_index("ix_crm_audit_logs_entity_changed", table_name="crm_audit_logs")
-    op.drop_index("ix_crm_audit_logs_app_id", table_name="crm_audit_logs")
-    op.drop_index("ix_crm_audit_logs_user_id", table_name="crm_audit_logs")
+    op.drop_table("crm_custom_params_statistics")
+    op.drop_table("crm_statistics_aggregate")
     op.drop_table("crm_audit_logs")
-
-    op.drop_index("ix_crm_push_events_event_time_utc", table_name="crm_push_events")
-    op.drop_index("ix_crm_push_events_event_type", table_name="crm_push_events")
-    op.drop_index("ix_crm_push_events_token_id", table_name="crm_push_events")
-    op.drop_index("ix_crm_push_events_campaign_id", table_name="crm_push_events")
     op.drop_table("crm_push_events")
-
-    op.drop_index("ix_crm_push_tokens_is_active", table_name="crm_push_tokens")
-    op.drop_index("ix_crm_push_tokens_token", table_name="crm_push_tokens")
-    op.drop_index("ix_crm_push_tokens_install_id", table_name="crm_push_tokens")
     op.drop_table("crm_push_tokens")
-
-    op.drop_index("ix_crm_push_campaigns_created_by_user_id", table_name="crm_push_campaigns")
-    op.drop_index("ix_crm_push_campaigns_status", table_name="crm_push_campaigns")
-    op.drop_index("ix_crm_push_campaigns_scheduled_at", table_name="crm_push_campaigns")
-    op.drop_index("ix_crm_push_campaigns_app_id", table_name="crm_push_campaigns")
     op.drop_table("crm_push_campaigns")
-
-    op.drop_index("ix_crm_postback_rules_is_active", table_name="crm_postback_rules")
-    op.drop_index("ix_crm_postback_rules_trigger_type", table_name="crm_postback_rules")
-    op.drop_index("ix_crm_postback_rules_event_key", table_name="crm_postback_rules")
-    op.drop_index("ix_crm_postback_rules_timeout", table_name="crm_postback_rules")
-    op.drop_index("ix_crm_postback_rules_platfrom_app_id", table_name="crm_postback_rules")
     op.drop_table("crm_postback_rules")
-
-    op.drop_index("ix_crm_param_definitions_machine_key", table_name="crm_param_definitions")
-    op.drop_index("ix_crm_param_definitions_app_id", table_name="crm_param_definitions")
     op.drop_table("crm_param_definitions")
-
-    op.drop_index("ix_crm_app_secrets_active_flag", table_name="crm_app_secrets")
-    op.drop_index("ix_crm_app_secrets_template_id", table_name="crm_app_secrets")
-    op.drop_index("ix_crm_app_secrets_platform_id", table_name="crm_app_secrets")
     op.drop_table("crm_app_secrets")
-
-    op.drop_index("ix_crm_secret_templates_code", table_name="crm_secret_templates")
     op.drop_table("crm_secret_templates")
-
-    op.drop_index("ix_crm_conversion_definitions_machine_key", table_name="crm_conversion_definitions")
-    op.drop_index("ix_crm_conversion_definitions_app_id", table_name="crm_conversion_definitions")
     op.drop_table("crm_conversion_definitions")
-
-    op.drop_index("ix_crm_metric_definitions_machine_key", table_name="crm_metric_definitions")
-    op.drop_index("ix_crm_metric_definitions_app_id", table_name="crm_metric_definitions")
     op.drop_table("crm_metric_definitions")
-
     op.drop_table("crm_current_params")
-
-    op.drop_index("ix_crm_events_event_time_utc", table_name="crm_events")
-    op.drop_index("ix_crm_events_event_key", table_name="crm_events")
-    op.drop_index("ix_crm_events_event_type", table_name="crm_events")
-    op.drop_index("ix_crm_events_app_user_id", table_name="crm_events")
     op.drop_table("crm_events")
-
-    op.drop_index("ix_crm_installs_installed_at", table_name="crm_installs")
-    op.drop_index("ix_crm_installs_app_platform_id", table_name="crm_installs")
-    op.drop_index("ix_crm_installs_app_user_id", table_name="crm_installs")
-    op.drop_index("ix_crm_installs_click_id", table_name="crm_installs")
     op.drop_table("crm_installs")
-
-    op.drop_index("ix_crm_clicks_created_at", table_name="crm_clicks")
-    op.drop_index("ix_crm_clicks_status", table_name="crm_clicks")
-    op.drop_index("ix_crm_clicks_app_platform_id", table_name="crm_clicks")
     op.drop_table("crm_clicks")
-
-    op.drop_index("ix_crm_app_users_created_at", table_name="crm_app_users")
-    op.drop_index("ix_crm_app_users_app_id", table_name="crm_app_users")
     op.drop_table("crm_app_users")
-
     op.drop_table("crm_user_app_access")
-    op.drop_table("crm_user_roles")
-    op.drop_table("crm_role_permissions")
-
-    op.drop_index("ix_crm_app_platforms_install_key", table_name="crm_app_platforms")
-    op.drop_index("ix_crm_app_platforms_status", table_name="crm_app_platforms")
-    op.drop_index("ix_crm_app_platforms_package_name", table_name="crm_app_platforms")
-    op.drop_index("ix_crm_app_platforms_platform", table_name="crm_app_platforms")
-    op.drop_index("ix_crm_app_platforms_app_id", table_name="crm_app_platforms")
+    op.drop_table("crm_user_permisions")
     op.drop_table("crm_app_platforms")
-
-    op.drop_index("ix_crm_permissions_code", table_name="crm_permissions")
     op.drop_table("crm_permissions")
-
-    op.drop_index("ix_crm_roles_code", table_name="crm_roles")
     op.drop_table("crm_roles")
-
-    op.drop_index("ix_crm_users_is_active", table_name="crm_users")
-    op.drop_index("ix_crm_users_email", table_name="crm_users")
     op.drop_table("crm_users")
-
-    op.drop_index("ix_crm_apps_status", table_name="crm_apps")
-    op.drop_index("ix_crm_apps_code_slug", table_name="crm_apps")
     op.drop_table("crm_apps")

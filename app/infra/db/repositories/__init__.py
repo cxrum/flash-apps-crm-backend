@@ -29,7 +29,7 @@ from app.infra.db.repositories.crm_repositories import (
     SqlAlchemyCrmPermissionRepository,
     SqlAlchemyCrmRoleRepository,
     SqlAlchemyCrmUserRepository,
-    SqlAlchemyCrmUserPermisionRepository,
+    SqlAlchemyCrmUserPermissionRepository,
 )
 from app.infra.db.repositories.factory import CrmSqlAlchemyRepositoryFactory
 from app.infra.db.repositories.push_repositories import (
@@ -62,6 +62,6 @@ __all__ = [
     "SqlAlchemyCrmSecretTemplateRepository",
     "SqlAlchemyCrmUserAppAccessRepository",
     "SqlAlchemyCrmUserRepository",
-    "SqlAlchemyCrmUserPermisionRepository",
+    "SqlAlchemyCrmUserPermissionRepository",
     "SqlAlchemyStatisticsRepository",
 ]

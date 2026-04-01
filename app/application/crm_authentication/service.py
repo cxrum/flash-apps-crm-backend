@@ -9,6 +9,7 @@ class StubCrmAuthentication(CrmAuthenticationProtocol):
         
         return ResolvedCrmUser(
             crm_user_id=int(token),
+            time_zone="UTC"
         )
         
     def verify_token(self, token: str) -> str: 
@@ -21,5 +22,6 @@ class StubCrmAuthentication(CrmAuthenticationProtocol):
             raise Exception("Incorrect username or password")
         
         return ResolvedCrmUser(
-            crm_user_id=int(user_name)
+            crm_user_id=int(user_name),
+            time_zone="UTC"
         )

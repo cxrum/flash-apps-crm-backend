@@ -54,7 +54,21 @@ class SqlAlchemyCrmUserAppAccessRepository(CrmUserAppAccessRepositoryProtocol):
     def get_by_user_and_app(self, user_id: int, app_id: int) -> CrmUserAppAccessEntity | None:
         row = self.session.get(CrmUserAppAccess, {"user_id": user_id, "app_id": app_id})
         return self._to_domain(row) if row is not None else None
-
+    
+    def delete(
+        self,
+        user_id: int,
+        app_id: int
+    ) -> CrmUserAppAccessEntity:
+        row = self.session.get(CrmUserAppAccess, {"user_id": user_id, "app_id": app_id})
+        
+        if row is None:
+            raise RuntimeError
+        
+        self.session.delete(row)
+        self.session.flush()
+        return self._to_domain(row)
+    
     def list_by_user_id(
         self,
         user_id: int,

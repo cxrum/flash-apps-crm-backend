@@ -5,3 +5,4 @@ class CrmUserTokenResponse(BaseResponse):
 
 class ResolvedCrmUser(BaseResponse):
     crm_user_id: int
+    time_zone: str

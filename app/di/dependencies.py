@@ -7,6 +7,8 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordBearer
 
+from app.application.admin.push.service import PushService
+from app.application.contracts.ip2location import IP2LocationGatewayProtocol
 from app.application.crm_authentication.protocol import CrmAuthenticationProtocol
 from app.application.crm_authentication.entities import ResolvedCrmUser
 from app.application.crm_authentication.service import StubCrmAuthentication
@@ -21,9 +23,9 @@ from app.application.exception_bus.handlers.stub import AsyncStubExceptionHandle
 from app.application.events_bus.handlers.conversion import AsyncConversionHandler
 from app.application.events_bus.handlers.metric import AsyncMetricHandler
 from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
-from app.application.s2s.service import S2SService
 from app.application.sdk.apps.service import AppService
 from app.application.sdk.ingestion.service import IngestionService
+from app.application.sdk.s2s.service import ClickService
 from app.core.config import settings
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
@@ -35,6 +37,7 @@ from app.domain.event_bus.service_protocol import (
     IAsyncExceptionBus,
 )
 from app.domain.hash_protocol import HashProtocol
+from app.domain.signature_protocol import SignatureProtocol
 from app.domain.uow import UnitOfWorkFactoryProtocol
 from app.infra.db.puow import SqlAlchemyUnitOfWorkFactory
 from app.infra.db.session import SessionFactory
@@ -43,7 +46,9 @@ from app.infra.exception_bus.exception_bus import AsyncExceptionBusAdapter
 from app.infra.services.currency import CurrencyConvertorClient
 from app.infra.services.encryption import EncryptionService
 from app.infra.services.hashing import ServerHash
+from app.infra.services.ip2location import IP2LocationGateway
 from app.infra.services.s2s.request_builder import S2SRequester
+from app.infra.services.signature import SignatureSHA256
 
 
 AsyncHandlerSubscription = tuple[str, AsyncEventMessageHandler]
@@ -57,12 +62,17 @@ logger = logging.getLogger(__name__)
 def get_uow_factory() -> UnitOfWorkFactoryProtocol:
     return SqlAlchemyUnitOfWorkFactory(SessionFactory)
 
+def get_ip2location_gateway() ->IP2LocationGatewayProtocol:
+    return  IP2LocationGateway()
 
 def get_app_secrets_encryption_service() -> EncryptionServiceProtocol:
     return EncryptionService()
 
 def get_hash_service() -> HashProtocol:
     return ServerHash()
+
+def get_signature_sha256_service() -> SignatureProtocol:
+    return SignatureSHA256()
 
 def get_currency_client() -> CurrencyConvertorClientProtocol:
     return CurrencyConvertorClient()
@@ -331,8 +341,22 @@ def get_admin_logs_service(
         authorization_service
     )
 
+def get_push_service(
+    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
+    authorization_service: CrmAuthorizationService = Depends(get_crm_authorization_service),
+) -> PushService:
+    return PushService(
+        uow_factory=uow_factory,
+        authorization_service=authorization_service
+    )
 
 def get_s2s_service(
     uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
-) -> S2SService:
-    return S2SService(uow_factory)
+    signature_service: SignatureProtocol = Depends(get_signature_sha256_service),
+    ip2location_gateway: IP2LocationGatewayProtocol = Depends(get_ip2location_gateway)
+) -> ClickService:
+    return ClickService(
+        uow_factory,
+        signature_service,
+        ip2location_gateway
+    )

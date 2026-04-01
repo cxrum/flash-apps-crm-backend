@@ -7,20 +7,19 @@ from app.application.admin.definitions.commands import CreateConversionDefinitio
 
 from app.application.admin.logs.commands import ListAuditLogCommand, ListClickLogsCommand, ListEventLogsCommand
 from app.application.admin.postback.commands import CreatePostbackRuleCommand, EvaluatePostbackRuleCommand, ExecutePostbackRuleCommand, ListPostbackRulesCommand
-from app.application.admin.push.commands import CreatePushCampaignCommand, ListPushCampaignsCommand
+from app.application.admin.push.commands import CreatePushCampaignCommand, ListPushCampaignsCommand, PushDeviceRegisterCommand
 from app.application.admin.secrets.commands import AppSecretValueCommand, CreateSecretTemplateCommand, ListAppSecretsCommand, ListSecretTemplatesCommand, UpsertAppSecretsCommand
 from app.application.base import FlexibleCommand
 from app.application.s2s.commands import S2SClickCommand
 from app.application.sdk.apps.commands import CreateAppCommand, CreateAppPlatformCommand, ListAppPlatformsCommand, ListAppsCommand, AppConfigurationCommand
 from app.application.sdk.ingestion.commands import (
-    SdkDeviceCommand,
+    SdkDeviceValueCommand,
     SdkEventCommand,
     SdkEventsCommand,
     SdkInstallCommand,
     SdkParamsUpdateCommand,
-    SdkPushRegisterCommand,
 )
-from app.application.tracking.entities import TrackingRedirectCommand
+from app.application.tracking.commands import TrackingRedirectCommand
 
 CommandT = TypeVar("CommandT", bound=FlexibleCommand)
 
@@ -50,9 +49,9 @@ def _pagination_defaults() -> dict[str, Any]:
     }
 
 
-def build_sdk_device_command(**overrides: Any) -> SdkDeviceCommand:
+def build_sdk_device_command(**overrides: Any) -> SdkDeviceValueCommand:
     return _build(
-        SdkDeviceCommand,
+        SdkDeviceValueCommand,
         {
             "os_name": "iOS",
             "os_version": "17.4",
@@ -65,7 +64,7 @@ def build_sdk_device_command(**overrides: Any) -> SdkDeviceCommand:
     )
 
 
-def build_sdk_device(**overrides: Any) -> SdkDeviceCommand:
+def build_sdk_device(**overrides: Any) -> SdkDeviceValueCommand:
     return build_sdk_device_command(**overrides)
 
 
@@ -125,9 +124,9 @@ def build_sdk_params_update_command(**overrides: Any) -> SdkParamsUpdateCommand:
     )
 
 
-def build_sdk_push_register_command(**overrides: Any) -> SdkPushRegisterCommand:
+def build_sdk_push_register_command(**overrides: Any) -> PushDeviceRegisterCommand:
     return _build(
-        SdkPushRegisterCommand,
+        PushDeviceRegisterCommand,
         {
             "install_key": "install-key-ios",
             "token": "push-token-1",

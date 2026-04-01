@@ -3,6 +3,7 @@ from __future__ import annotations
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
+from app.domain.hash_protocol import HashedValue
 from app.domain.pagination import Pagination
 from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
@@ -109,7 +110,7 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
             store_url=row.store_url,
             install_key=row.install_key,
             sdk_public_key=row.sdk_public_key,
-            sdk_secret_hash=row.sdk_secret_hash,
+            sdk_secret_hash=HashedValue.from_hex(row.sdk_secret_hash),
             status=row.status,
             created_at=row.created_at,
             updated_at=row.updated_at,
@@ -123,7 +124,7 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
             "store_url": entity.store_url,
             "install_key": entity.install_key,
             "sdk_public_key": entity.sdk_public_key,
-            "sdk_secret_hash": entity.sdk_secret_hash,
+            "sdk_secret_hash": entity.sdk_secret_hash.to_hex(),
             "status": entity.status,
         }
         if entity.platform_id is not None:

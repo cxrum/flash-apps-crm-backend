@@ -72,8 +72,6 @@ class CreateAppPlatformCommand(FlexibleCommand):
     package_name: str
     install_key: str
     store_url: str | None = None
-    sdk_public_key: str | None = None
-    sdk_secret_hash: str | None = None
     status: str = "active"
 
 

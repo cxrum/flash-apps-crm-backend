@@ -15,13 +15,6 @@ class SqlAlchemyCrmAuditLogRepository(CrmAuditLogRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    @staticmethod
-    def _parse_datetime(value: str | None) -> datetime | None:
-        if value is None:
-            return None
-
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-
     def _to_domain(self, row: AuditLog) -> CrmAuditLogEntity:
         return CrmAuditLogEntity(
             audit_log_id=row.audit_log_id,
@@ -84,8 +77,8 @@ class SqlAlchemyCrmAuditLogRepository(CrmAuditLogRepositoryProtocol):
         entity_id: int | None = None,
         pagination: Pagination | None = None,
     ) -> list[CrmAuditLogEntity]:
-        start_at_value = self._parse_datetime(None if pagination is None else pagination.start_at)
-        end_at_value = self._parse_datetime(None if pagination is None else pagination.end_at)
+        start_at_value = None if pagination is None else pagination.start_at
+        end_at_value = None if pagination is None else pagination.end_at
 
         if actor_id is not None:
             stmt = stmt.where(AuditLog.user_id == actor_id)

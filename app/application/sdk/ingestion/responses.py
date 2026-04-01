@@ -1,20 +1,19 @@
 
 from dataclasses import dataclass
 
+from app.application.base import BaseResponse
 
-@dataclass(frozen=True)
-class SdkInstallResponse:
+
+class SdkInstallResponse(BaseResponse):
     click_id: str
     app_user_id: int | None = None
 
 
-@dataclass(frozen=True)
-class SdkEventResponse:
+class SdkEventResponse(BaseResponse):
     received: int
     inserted: int
     
-@dataclass(frozen=True)
-class SdkUpdateParamsResponse:
+class SdkUpdateParamsResponse(BaseResponse):
     received: int
     inserted: int
     

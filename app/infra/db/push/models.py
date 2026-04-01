@@ -91,9 +91,22 @@ class PushToken(Base):
         ForeignKey("crm_installs.install_id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
+    )    
+    click_id: Mapped[str] = mapped_column(
+        String(64),
+        ForeignKey("crm_clicks.click_id", ondelete="RESTRICT"),
+        nullable=False,
     )
-    token: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
-    geo: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    app_user_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("crm_app_users.app_user_id", ondelete="RESTRICT"),
+        nullable=True,
+        index=True,
+    )
+    push_token: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    geo: Mapped[str | None] = mapped_column(String(64), nullable=True, default=None)
+    lang: Mapped[str | None] = mapped_column(String(3), nullable=True, default=None)
+    country_code: Mapped[str | None] = mapped_column(String(3), nullable=True, default=None)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
     last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(

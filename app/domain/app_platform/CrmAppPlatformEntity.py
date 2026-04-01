@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from app.domain.hash_protocol import HashProtocol
+from app.domain.hash_protocol import HashProtocol, HashedValue
 
 
 @dataclass
@@ -10,9 +10,9 @@ class CrmAppPlatformEntity:
     platform: str
     package_name: str
     install_key: str
-    sdk_secret_hash: str
+    sdk_secret_hash: HashedValue
+    sdk_public_key: str
     store_url: str | None = None
-    sdk_public_key: str | None = None
     status: str = "active"
     platform_id: int | None = None
     created_at: datetime | None = None
@@ -51,10 +51,10 @@ class CrmAppPlatformEntity:
         package_name: str,
         install_key: str,
         store_url: str | None = None,
-        sdk_public_key: str | None = None,
         status: str = "active",
     ) -> "CrmAppPlatformEntity":
         secret_hash = hasher.random_hash()
+        sdk_public_key = hasher.random_hash(8).to_hex()
         return CrmAppPlatformEntity(
             app_id=app_id,
             platform=platform,
@@ -73,7 +73,7 @@ class CrmAppPlatformEntity:
         platform: str | None = None,
         package_name: str | None = None,
         install_key: str | None = None,
-        sdk_secret_hash: str | None = None,
+        sdk_secret_hash: HashedValue | None = None,
         store_url: str | None = None,
         sdk_public_key: str | None = None,
         status: str | None = None,

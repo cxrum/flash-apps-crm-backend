@@ -14,6 +14,7 @@ class CrmUser(Base):
     user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     full_name: Mapped[str] = mapped_column(String(200), nullable=False)
     email: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    time_zone: Mapped[str] = mapped_column(String(64), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, index=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -55,7 +56,7 @@ class CrmPermission(Base):
     )
 
 
-class CrmUserPermisions(Base):
+class CrmUserPermissions(Base):
     __tablename__ = "crm_user_permisions"
     __table_args__ = (
         PrimaryKeyConstraint("user_id", "permission_id", "app_id", name="pk_crm_user_permision"),

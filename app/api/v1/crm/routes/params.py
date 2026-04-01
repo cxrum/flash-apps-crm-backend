@@ -7,12 +7,12 @@ from app.api.v1.crm.payloads import (
     CreateParamDefinitionPayload,
     UpdateParamDefinitionPayload,
 )
-from app.api.v1.stubs import build_stub_response
 from app.api.v1.transport import PaginationQueryPayload
 from app.application.admin.definitions.mappers import DefinitionsCommandsMapper
+from app.application.admin.definitions.service import DefinitionsService
 from app.application.crm_authentication.entities import ResolvedCrmUser
 from app.core.utils.general_mapper import GeneralMapper
-from app.di.dependencies import resolve_user
+from app.di.dependencies import get_admin_definitions_service, resolve_user
 
 router = APIRouter()
 
@@ -22,11 +22,13 @@ async def list_params(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     crm_user: ResolvedCrmUser = Depends(resolve_user),
-) -> dict[str, Any]:
+    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+) -> str:
     command = DefinitionsCommandsMapper.list_params_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, pagination_queries)
     )
-    return build_stub_response(command)
+    response = definition_service.list_params(command)
+    return response.model_dump_json()
 
 
 @router.get("/{param_definition_id}", tags=["admin", "params"])
@@ -34,7 +36,8 @@ async def get_param(
     param_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     crm_user: ResolvedCrmUser = Depends(resolve_user),
-) -> dict[str, Any]:
+    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+) -> str:
     command = DefinitionsCommandsMapper.get_param_from_transport(
         GeneralMapper.transport_to_command_payload(
             crm_user,
@@ -42,7 +45,8 @@ async def get_param(
             param_definition_id=param_definition_id,
         )
     )
-    return build_stub_response(command)
+    response = definition_service.get_param_definition(command)
+    return response.model_dump_json()
 
 
 @router.patch("/{param_definition_id}", tags=["admin", "params"])
@@ -51,7 +55,8 @@ async def update_param(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     payload: Annotated[UpdateParamDefinitionPayload, Body()],
     crm_user: ResolvedCrmUser = Depends(resolve_user),
-) -> dict[str, Any]:
+    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+) -> str:
     command = DefinitionsCommandsMapper.update_param_from_transport(
         GeneralMapper.transport_to_command_payload(
             crm_user,
@@ -60,18 +65,21 @@ async def update_param(
             param_definition_id=param_definition_id,
         )
     )
-    return build_stub_response(command)
+    response = definition_service.update_param_definition(command)
+    return response.model_dump_json()
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "params"])
 async def create_param(
     payload: Annotated[CreateParamDefinitionPayload, Body()],
     crm_user: ResolvedCrmUser = Depends(resolve_user),
-) -> dict[str, Any]:
+    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+) -> str:
     command = DefinitionsCommandsMapper.create_param_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
     )
-    return build_stub_response(command)
+    response = definition_service.create_param_definition(command)
+    return response.model_dump_json()
 
 
 @router.delete("/{param_definition_id}", tags=["admin", "params"])
@@ -79,7 +87,8 @@ async def delete_param(
     param_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     crm_user: ResolvedCrmUser = Depends(resolve_user),
-) -> dict[str, Any]:
+    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+) -> str:
     command = DefinitionsCommandsMapper.delete_param_from_transport(
         GeneralMapper.transport_to_command_payload(
             crm_user,
@@ -87,4 +96,5 @@ async def delete_param(
             param_definition_id=param_definition_id,
         )
     )
-    return build_stub_response(command)
+    response = definition_service.delete_param_definition(command)
+    return response.model_dump_json()

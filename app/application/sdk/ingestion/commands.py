@@ -8,7 +8,7 @@ from pydantic import Field
 from app.application.base import FlexibleCommand, JsonDict
 
 
-class SdkDeviceCommand(FlexibleCommand):
+class SdkDeviceValueCommand(FlexibleCommand):
     os_name: str | None = None
     os_version: str | None = None
     device_brand: str | None = None
@@ -22,7 +22,7 @@ class SdkInstallCommand(FlexibleCommand):
     idempotency_key: str
     click_id: str | None = None
     params: JsonDict = Field(default_factory=dict)
-    device: SdkDeviceCommand
+    device: SdkDeviceValueCommand
 
 
 class SdkEventCommand(FlexibleCommand):
@@ -47,17 +47,6 @@ class SdkParamsUpdateCommand(FlexibleCommand):
     idempotency_key: str
     params: JsonDict = Field(default_factory=dict)
     event_time: datetime | None = None
-
-
-class SdkPushRegisterCommand(FlexibleCommand):
-    install_key: str
-    token: str
-    provider: str | None = None
-    click_id: str | None = None
-    crm_user_id: str | None = None
-    idempotency_key: str | None = None
-    device: SdkDeviceCommand | None = None
-    params: JsonDict = Field(default_factory=dict)
 
 
 class SdkPushStartCommand(FlexibleCommand):

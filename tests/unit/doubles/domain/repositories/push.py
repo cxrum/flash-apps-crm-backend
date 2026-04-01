@@ -79,7 +79,7 @@ class InMemoryCrmPushTokenRepository(CallRecorderMixin, CrmPushTokenRepositoryPr
         self._record("save", clone(entity))
         existing = self._items.get(entity.token_id) if entity.token_id is not None else None
         if existing is None:
-            existing = next((item for item in self._items.values() if item.token == entity.token), None)
+            existing = next((item for item in self._items.values() if item.push_token == entity.push_token), None)
         now = utcnow()
         changes: dict[str, object] = {}
         if existing is not None and entity.token_id is None:
@@ -109,7 +109,7 @@ class InMemoryCrmPushTokenRepository(CallRecorderMixin, CrmPushTokenRepositoryPr
 
     def get_by_token(self, token: str) -> CrmPushTokenEntity | None:
         self._record("get_by_token", token)
-        item = next((entity for entity in self._items.values() if entity.token == token), None)
+        item = next((entity for entity in self._items.values() if entity.push_token == token), None)
         return clone(item) if item is not None else None
 
     def list_by_app_user_id(self, app_user_id: int) -> list[CrmPushTokenEntity]:

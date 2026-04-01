@@ -164,7 +164,11 @@ class CrmAuthorizationService:
             removed_permission = None
             for permission in user_permissions:
                 if command.permission_id == permission.permission_id:
-                    removed = uow.user_permissions_repo.delete(command.crm_user_id, command.permission_id)
+                    removed = uow.user_permissions_repo.delete(
+                        user_id=command.crm_user_id, 
+                        permission_id=command.permission_id,
+                        app_id=command.app_id
+                    )
                     removed_permission = uow.permission_repo.get_by_id(removed.permission_id)
                     break
             

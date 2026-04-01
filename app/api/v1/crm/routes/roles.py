@@ -18,7 +18,7 @@ async def list_roles(
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     role_queries: Annotated[RolesQueryPayload, Query()],
     crm_user: ResolvedCrmUser = Depends(resolve_user),
-) -> dict[str, Any]:
+) -> str:
     command = AdminCommandMapper.list_roles_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, role_queries, pagination_queries)
     )
@@ -26,10 +26,10 @@ async def list_roles(
 
 
 @router.post("/share", tags=["admin", "roles"])
-async def add_user_access(
+async def grant_user_app_access(
     payload: Annotated[ShareAppPayload, Body()],
     crm_user: ResolvedCrmUser = Depends(resolve_user),
-) -> dict[str, Any]:
+) -> str:
     command = AdminCommandMapper.share_app_access_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
     )
@@ -37,11 +37,11 @@ async def add_user_access(
 
 
 @router.delete("/share/{manager_id}", tags=["admin", "roles"])
-async def delete_user_access(
+async def remove_user_app_access(
     manager_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
     crm_user: ResolvedCrmUser = Depends(resolve_user),
-) -> dict[str, Any]:
+) -> str:
     command = AdminCommandMapper.delete_app_access_from_transport(
         GeneralMapper.transport_to_command_payload(
             crm_user,
@@ -53,12 +53,12 @@ async def delete_user_access(
 
 
 @router.get("/share/{role_code}", tags=["admin", "roles"])
-async def list_users_with_access(
+async def list_users_with_app_access(
     role_code: str,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     crm_user: ResolvedCrmUser = Depends(resolve_user),
-) -> dict[str, Any]:
+) -> str:
     command = AdminCommandMapper.list_users_with_access_from_transport(
         GeneralMapper.transport_to_command_payload(
             crm_user,

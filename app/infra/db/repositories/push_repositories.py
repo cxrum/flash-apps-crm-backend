@@ -109,18 +109,24 @@ class SqlAlchemyCrmPushTokenRepository(CrmPushTokenRepositoryProtocol):
         return CrmPushTokenEntity(
             token_id=row.token_id,
             install_id=row.install_id,
-            token=row.token,
-            geo=dict(row.geo),
+            push_token=row.push_token,
+            country_code = row.country_code,
+            lang = row.lang,
+            geo = row.geo,
             is_active=row.is_active,
             last_seen_at=row.last_seen_at,
             created_at=row.created_at,
+            app_user_id=row.app_user_id,
+            click_id=row.click_id
         )
 
     def _to_row(self, entity: CrmPushTokenEntity) -> PushToken:
         kwargs: dict[str, object] = {
             "install_id": entity.install_id,
-            "token": entity.token,
-            "geo": dict(entity.geo),
+            "token": entity.push_token,
+            "geo": entity.geo,
+            "country_code": entity.country_code,
+            "lang": entity.lang,
             "is_active": entity.is_active,
             "last_seen_at": entity.last_seen_at,
         }
@@ -156,7 +162,7 @@ class SqlAlchemyCrmPushTokenRepository(CrmPushTokenRepositoryProtocol):
 
     def get_by_token(self, token: str) -> CrmPushTokenEntity | None:
         row = self.session.scalars(
-            select(PushToken).where(PushToken.token == token)
+            select(PushToken).where(PushToken.push_token == token)
         ).first()
         return self._to_domain(row) if row is not None else None
 

@@ -5,7 +5,7 @@ from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
 from app.domain.event_bus.service_protocol import AsyncEventMessageHandler
-from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
+from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity, DefaultParamKeys
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
@@ -48,8 +48,8 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
                 f"from payload keys={sorted(params.keys())}"
             )
         
-        updatet_params = uow.current_param_repo.create_or_update_many(new_params)
-        return updatet_params
+        updated_params = uow.current_param_repo.create_or_update_many(new_params)
+        return updated_params
     
     
     async def handle(self, message: DomainEventMessage) -> None:
@@ -84,7 +84,7 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
                     f"for app_id='{app_platform.app_id}' and click_id='{message.click_id}'"
                 )
             
-            self._update_params(
+            params = self._update_params(
                 uow,
                 click_id=message.click_id,
                 params=message.params,

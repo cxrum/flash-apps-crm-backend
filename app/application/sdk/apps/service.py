@@ -133,7 +133,6 @@ class AppService:
             package_name = command.package_name,
             install_key = command.install_key,
             store_url = command.store_url,
-            sdk_public_key = command.sdk_public_key,
         )
         
         if not platform_app.is_valid_platform():
@@ -151,7 +150,7 @@ class AppService:
         
         return CreatePlatformResponse(
             app_platform=SdkAppResponsesMapper.app_platform_domain_to_value(saved_platform_app),
-            sdk_secret_hash=platform_app.sdk_secret_hash
+            sdk_secret_hash=platform_app.sdk_secret_hash.to_hex()
         )
 
     def _get_app_platform(self, uow: UnitOfWorkProtocol, *, app_platform_id: int) -> CrmAppPlatformEntity:

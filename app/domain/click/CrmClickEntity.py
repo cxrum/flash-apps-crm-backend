@@ -15,7 +15,10 @@ class CrmClickEntity:
     raw_query: dict[str, Any] = field(default_factory=dict)
     ip_address: str | None = None
     user_agent: str | None = None
-    geo: dict[str, Any] = field(default_factory=dict)
+    country_code: str | None = None
+    region: str | None = None
+    city: str | None = None
+    language: str | None = None
     referrer: str | None = None
     source: str | None = None
     redirect_target: str | None = None
@@ -38,9 +41,9 @@ class CrmClickEntity:
     def normalize_params(self, defenitions: list[CrmParamDefinitionEntity]) -> None:
         self.normalized_params = {}
         
-        for defenition in defenitions:
-            value = defenition.get_param_value(self.raw_query)
-            self.normalized_params[defenition.machine_key] = value
+        for definition in defenitions:
+            value = definition.get_param_value(self.raw_query)
+            self.normalized_params[definition.machine_key] = value
         
 
     @staticmethod
