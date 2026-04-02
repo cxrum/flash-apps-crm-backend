@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from app.application.exceptions import ApplicationError
+from app.domain.hash_protocol import HashableValue
 from tests.unit.builders import (
     build_app_entity,
     build_app_platform_entity,
@@ -19,37 +20,47 @@ def test_create_app_drafts_and_saves_app(unit_test_context: UnitTestContext) -> 
     service = unit_test_context.build_app_service()
 
     response = service.create_app(build_sdk_create_app_command())
-    saved_app = unit_test_context.uow.app_repo.get_by_id(response.app_id)
+    assert response.app.app_id is not None
+
+    saved_app = unit_test_context.uow.app_repo.get_by_id(response.app.app_id)
 
     assert saved_app is not None
     assert saved_app.status == "active"
     assert saved_app.code_slug == "test-app"
+    assert saved_app.tech_description == "Technical description"
 
 
-def test_create_platform_rejects_invalid_platform(unit_test_context: UnitTestContext) -> None:
+def test_create_app_platform_rejects_invalid_platform(unit_test_context: UnitTestContext) -> None:
     service = unit_test_context.build_app_service()
 
     with pytest.raises(ApplicationError, match="App platform does not valid"):
-        service.create_platform(build_sdk_create_app_platform_command(platform="web"))
+        service.create_app_platform(build_sdk_create_app_platform_command(platform="web"))
 
 
-def test_create_platform_rejects_missing_app(unit_test_context: UnitTestContext) -> None:
+def test_create_app_platform_rejects_missing_app(unit_test_context: UnitTestContext) -> None:
     service = unit_test_context.build_app_service()
 
-    with pytest.raises(ApplicationError, match="App with id 1 doesnt exist"):
-        service.create_platform(build_sdk_create_app_platform_command())
+    with pytest.raises(ApplicationError, match="App with id 1 doesn't exist"):
+        service.create_app_platform(build_sdk_create_app_platform_command())
 
 
-def test_create_platform_saves_valid_platform(unit_test_context: UnitTestContext) -> None:
+def test_create_app_platform_saves_valid_platform(unit_test_context: UnitTestContext) -> None:
     service = unit_test_context.build_app_service()
     unit_test_context.uow.app_repo.save(build_app_entity(app_id=1))
 
-    response = service.create_platform(build_sdk_create_app_platform_command())
-    saved_platform = unit_test_context.uow.app_platform_repo.get_by_id(response.platform_id)
+    response = service.create_app_platform(build_sdk_create_app_platform_command())
+
+    assert response.app_platform.platform_id is not None
+    saved_platform = unit_test_context.uow.app_platform_repo.get_by_id(response.app_platform.platform_id)
 
     assert saved_platform is not None
     assert saved_platform.platform == "ios"
     assert saved_platform.package_name == "com.example.test"
+    assert saved_platform.sdk_secret_hash == HashableValue.from_str("random-hash-32-1")
+    assert saved_platform.sdk_public_key == HashableValue.from_str("random-hash-8-2").to_hex()
+    assert response.sdk_secret_hash == HashableValue.from_str("random-hash-32-1").to_hex()
+    assert [call.method for call in unit_test_context.hash_service.calls] == ["random_hash", "random_hash"]
+    assert [call.args for call in unit_test_context.hash_service.calls] == [(32,), (8,)]
 
 
 def test_get_app_config_secrets_merges_templates_with_platform_values(
@@ -136,18 +147,12 @@ def test_get_app_config_secrets_merges_templates_with_platform_values(
     )
 
     response = service.get_app_config_secrets(
-        build_sdk_application_configuration_command(app_id=1, platform="ios")
+        build_sdk_application_configuration_command(install_key=saved_platform.install_key)
     )
 
     by_code = {
-        item.template.code: item
+        item.code: item.value
         for item in response.platform_configurations
     }
-    assert set(by_code) == {"api_key", "something_key"}
-    assert "feature_flag" not in set(by_code)
-    assert by_code["api_key"].value == "real-secret"
-    assert by_code["api_key"].template.version == 2.0
-    assert by_code["api_key"].template.is_active is True
-    assert by_code["something_key"].value is None
-    assert by_code["something_key"].template.is_active is False
+    assert by_code == {"api_key": "real-secret"}
     assert [call.method for call in unit_test_context.encryption_service.calls] == ["decrypt"]

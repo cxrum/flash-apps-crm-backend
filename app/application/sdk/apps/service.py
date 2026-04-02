@@ -67,7 +67,7 @@ class AppService:
             name = command.name,
             code_slug = command.code_slug ,
             description = command.description,
-            tech_description = command.description,
+            tech_description = command.tech_description,
             logo_url = command.logo_url,
             screenshots = command.screenshots,
         )
@@ -81,7 +81,7 @@ class AppService:
                 raise ApplicationError("App repository returned entity without app_id")
             
         return CreateAppResponse(
-            app=SdkAppResponsesMapper.app_domain_to_value(app)
+            app=SdkAppResponsesMapper.app_domain_to_value(saved_app)
         )
 
     def update_app(self, command: UpdateAppCommand) -> UpdateAppResponse: 

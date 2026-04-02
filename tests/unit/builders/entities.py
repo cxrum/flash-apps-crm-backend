@@ -18,6 +18,7 @@ from app.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggrega
     CustomParamsStatisticsAggregateEntity,
 )
 from app.domain.events.CrmEventEntity import EventEntity
+from app.domain.hash_protocol import HashableValue
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
@@ -56,6 +57,8 @@ def build_app_platform_entity(**overrides: Any) -> CrmAppPlatformEntity:
                 "platform": "ios",
                 "package_name": "com.example.test",
                 "install_key": "install-key-ios",
+                "sdk_secret_hash": HashableValue.from_str("sdk-secret"),
+                "sdk_public_key": "sdk-public-key",
             },
             overrides,
         )
@@ -219,7 +222,7 @@ def build_postback_rule_entity(**overrides: Any) -> CrmPostbackRuleEntity:
     return CrmPostbackRuleEntity(
         **_merge(
             {
-                "platfrom_app_id": 1,
+                "platform_app_id": 1,
                 "name": "Install postback",
                 "endpoint_url": "https://example.com/postback",
                 "trigger_type": "install",

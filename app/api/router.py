@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.tracking.tracking import router as tracking_router
+from app.api.v1.sdk.tracking.service import router as tracking_router
 from app.api.v1.router import router as v1_router
 from app.api.authentication.authentication import router as authentication_router
 from app.api.health.health import router as health_router

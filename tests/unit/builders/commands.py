@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, TypeVar
 
+from app.application.admin.crm_authorization.commands import CreateRoleCommand, ListRolesCommand
 from app.application.admin.definitions.commands import CreateConversionDefinitionCommand, CreateMetricDefinitionCommand, CreateParamDefinitionCommand, ListConversionDefinitionsCommand, ListMetricDefinitionsCommand, ListParamDefinitionsCommand, UpdateConversionDefinitionCommand, UpdateMetricDefinitionCommand, UpdateParamDefinitionCommand
 
 from app.application.admin.logs.commands import ListAuditLogCommand, ListClickLogsCommand, ListEventLogsCommand
@@ -10,7 +11,7 @@ from app.application.admin.postback.commands import CreatePostbackRuleCommand, E
 from app.application.admin.push.commands import CreatePushCampaignCommand, ListPushCampaignsCommand, PushDeviceRegisterCommand
 from app.application.admin.secrets.commands import AppSecretValueCommand, CreateSecretTemplateCommand, ListAppSecretsCommand, ListSecretTemplatesCommand, UpsertAppSecretsCommand
 from app.application.base import FlexibleCommand
-from app.application.s2s.commands import S2SClickCommand
+from app.application.sdk.s2s.commands import S2SClickCommand
 from app.application.sdk.apps.commands import CreateAppCommand, CreateAppPlatformCommand, ListAppPlatformsCommand, ListAppsCommand, AppConfigurationCommand
 from app.application.sdk.ingestion.commands import (
     SdkDeviceValueCommand,
@@ -19,7 +20,7 @@ from app.application.sdk.ingestion.commands import (
     SdkInstallCommand,
     SdkParamsUpdateCommand,
 )
-from app.application.tracking.commands import TrackingRedirectCommand
+from app.application.tracking.entities import TrackingRedirectCommand
 
 CommandT = TypeVar("CommandT", bound=FlexibleCommand)
 
@@ -141,28 +142,25 @@ def build_sdk_push_register_command(**overrides: Any) -> PushDeviceRegisterComma
     )
 
 
-def build_get_sdk_config_command(**overrides: Any) -> GetSdkConfigCommand:
+def build_get_sdk_config_command(**overrides: Any) -> AppConfigurationCommand:
     return _build(
-        GetSdkConfigCommand,
+        AppConfigurationCommand,
         {
             "install_key": "install-key-ios",
-            "app_code": "test-app",
-            "platform": "ios",
-            "crm_user_id": "crm-user-1",
         },
         overrides,
     )
 
 
-def build_sdk_create_app_command(**overrides: Any) -> SdkCreateAppCommand:
+def build_sdk_create_app_command(**overrides: Any) -> CreateAppCommand:
     return _build(
-        SdkCreateAppCommand,
+        CreateAppCommand,
         {
-            "id": 1,
+            "crm_user_id": 1,
             "name": "Test App",
             "code_slug": "test-app",
-            "screanshots": {"0": "https://cdn.example.com/shot-1.png"},
-            "logo_ur": "https://cdn.example.com/logo.png",
+            "screenshots": ["https://cdn.example.com/shot-1.png"],
+            "logo_url": "https://cdn.example.com/logo.png",
             "tech_description": "Technical description",
             "description": "Public description",
         },
@@ -170,21 +168,17 @@ def build_sdk_create_app_command(**overrides: Any) -> SdkCreateAppCommand:
     )
 
 
-def build_sdk_create_app_platform_command(**overrides: Any) -> SdkCreateAppPlatformCommand:
+def build_sdk_create_app_platform_command(**overrides: Any) -> CreateAppPlatformCommand:
     return _build(
-        SdkCreateAppPlatformCommand,
+        CreateAppPlatformCommand,
         {
+            "crm_user_id": 1,
             "app_id": 1,
             "platform": "ios",
             "package_name": "com.example.test",
             "install_key": "install-key-ios",
             "store_url": "https://apps.example.com/test",
-            "sdk_public_key": "sdk-public",
-            "sdk_secret_hash": "sdk-secret-hash",
             "status": "active",
-            "platform_id": 1,
-            "created_at": _FIXED_NOW,
-            "updated_at": _FIXED_NOW,
         },
         overrides,
     )
@@ -196,8 +190,7 @@ def build_sdk_application_configuration_command(
     return _build(
         AppConfigurationCommand,
         {
-            "app_id": 1,
-            "platform": "ios",
+            "install_key": "install-key-ios",
         },
         overrides,
     )
@@ -219,10 +212,12 @@ def build_admin_create_app_command(**overrides: Any) -> CreateAppCommand:
         CreateAppCommand,
         {
             "crm_user_id": 1,
-            "code": "test-app",
             "name": "Test App",
+            "code_slug": "test-app",
             "description": "Admin managed application",
-            "is_active": True,
+            "tech_description": "Admin managed application",
+            "logo_url": "https://cdn.example.com/logo.png",
+            "screenshots": ["https://cdn.example.com/admin-shot-1.png"],
         },
         overrides,
     )
@@ -247,8 +242,10 @@ def build_admin_create_app_platform_command(**overrides: Any) -> CreateAppPlatfo
             "crm_user_id": 1,
             "app_id": 1,
             "platform": "ios",
+            "package_name": "com.example.admin",
             "install_key": "install-key-ios",
-            "is_active": True,
+            "store_url": "https://apps.example.com/admin-test",
+            "status": "active",
         },
         overrides,
     )
@@ -485,6 +482,9 @@ def build_admin_list_postback_rules_command(
 def build_admin_create_postback_rule_command(
     **overrides: Any,
 ) -> CreatePostbackRuleCommand:
+    if "template" in overrides and "template" not in overrides:
+        overrides["template"] = overrides.pop("template")
+
     return _build(
         CreatePostbackRuleCommand,
         {
@@ -501,7 +501,7 @@ def build_admin_create_postback_rule_command(
             "timeout": 30,
             "retry_policy": {},
             "is_active": True,
-            "tempalte": {},
+            "template": {},
         },
         overrides,
     )
@@ -529,7 +529,7 @@ def build_admin_execute_postback_rule_command(
         {
             "postback_rule_id": 1,
             "event_id": "evt-1",
-            "istall_id": None,
+            "install_id": None,
         },
         overrides,
     )
@@ -561,22 +561,6 @@ def build_admin_create_push_campaign_command(
             "title": "Hello",
             "body": "Welcome aboard",
             "scheduled_at": _FIXED_NOW_TEXT,
-        },
-        overrides,
-    )
-
-
-def build_admin_get_stats_command(**overrides: Any) -> GetAuditLogsCommand:
-    return _build(
-        GetAuditLogsCommand,
-        {
-            **_pagination_defaults(),
-            "crm_user_id": 1,
-            "app_id": 1,
-            "platform": "ios",
-            "group_by": "day",
-            "start_at": "2026-03-01T00:00:00Z",
-            "end_at": "2026-03-12T00:00:00Z",
         },
         overrides,
     )
@@ -655,29 +639,20 @@ def build_admin_get_audit_log_command(**overrides: Any) -> ListAuditLogCommand:
     )
 
 
-def build_admin_command_preview(**overrides: Any) -> CommandPreview:
-    return _build(
-        CommandPreview,
-        {
-            "resource": "apps.create",
-            "payload": {"name": "Test App"},
-        },
-        overrides,
-    )
-
-
 def build_s2s_click_command(**overrides: Any) -> S2SClickCommand:
     return _build(
         S2SClickCommand,
         {
             "app_code": "test-app",
             "platform": "ios",
+            "signature": "746573742d7369676e6174757265",
             "idempotency_key": "s2s-click-1",
             "click_id": "click-1",
             "redirect_url": "https://example.com/landing",
             "ip": "203.0.113.10",
             "user_agent": "Mozilla/5.0",
             "params": {"campaign": "spring"},
+            "raw_params": "campaign=spring",
         },
         overrides,
     )

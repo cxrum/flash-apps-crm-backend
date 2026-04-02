@@ -1,4 +1,5 @@
 from app.application.contracts.encryption import EncryptionServiceProtocol
+from app.application.contracts.ip2location import IP2LocationGatewayProtocol
 from app.application.contracts.requester import S2SRequesterProtocol
 from app.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
 from app.domain.app_platform.app_platform_repository_protocol import CrmAppPlatformRepositoryProtocol
@@ -16,6 +17,7 @@ from app.domain.custom_params_statistics_aggregate.statistics_aggregate_reposito
 )
 from app.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
 from app.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
+from app.domain.hash_protocol import HashProtocol
 from app.domain.metric_definition.metric_definition_repository_protocol import (
     CrmMetricDefinitionRepositoryProtocol,
 )
@@ -29,6 +31,7 @@ from app.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
 from app.domain.secret_template.secret_template_repository_protocol import (
     CrmSecretTemplateRepositoryProtocol,
 )
+from app.domain.signature_protocol import SignatureProtocol
 from app.domain.statistics_aggregate.statistics_aggregate_repository_protocol import StatisticsRepositoryProtocol
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
@@ -36,9 +39,12 @@ from app.domain.user_app_access.user_app_access_repository_protocol import (
     CrmUserAppAccessRepositoryProtocol,
 )
 from app.domain.user_permissions.user_permissions_repository_protocol import CrmUserPermissionsRepositoryProtocol
-from app.infra.services.currency import CurrencyConvertorClient
+from tests.unit.doubles.application.currency import StubCurrencyConvertorClient
 from tests.unit.doubles.application.encryption import StubEncryptionService
+from tests.unit.doubles.application.hash import StubHashService
+from tests.unit.doubles.application.ip2location import StubIP2LocationGateway
 from tests.unit.doubles.application.requester import StubS2SRequester
+from tests.unit.doubles.application.signature import StubSignatureService
 from tests.unit.doubles.domain.repositories import (
     InMemoryCustomParamsStatisticsRepository,
     InMemoryStatisticsRepository,
@@ -69,8 +75,10 @@ from tests.unit.doubles.domain.uow import StubUnitOfWork, StubUoWFactory
 
 PROTOCOL_DOUBLE_REGISTRY = {
     EncryptionServiceProtocol: StubEncryptionService,
+    IP2LocationGatewayProtocol: StubIP2LocationGateway,
     UnitOfWorkProtocol: StubUnitOfWork,
     UnitOfWorkFactoryProtocol: StubUoWFactory,  
+    HashProtocol: StubHashService,
     CrmAppRepositoryProtocol: InMemoryCrmAppRepository,
     CrmAppPlatformRepositoryProtocol: InMemoryCrmAppPlatformRepository,
     CrmAppSecretRepositoryProtocol: InMemoryCrmAppSecretRepository,
@@ -91,10 +99,11 @@ PROTOCOL_DOUBLE_REGISTRY = {
     CrmPushTokenRepositoryProtocol: InMemoryCrmPushTokenRepository,
     CrmRoleRepositoryProtocol: InMemoryCrmRoleRepository,
     CrmSecretTemplateRepositoryProtocol: InMemoryCrmSecretTemplateRepository,
+    SignatureProtocol: StubSignatureService,
     StatisticsRepositoryProtocol: InMemoryStatisticsRepository,
     CrmUserAppAccessRepositoryProtocol: InMemoryCrmUserAppAccessRepository,
     CrmUserRepositoryProtocol: InMemoryCrmUserRepository,
     CrmUserPermissionsRepositoryProtocol: InMemoryCrmUserPermissionsRepository,
-    CurrencyConvertorClientProtocol: CurrencyConvertorClient,
+    CurrencyConvertorClientProtocol: StubCurrencyConvertorClient,
     S2SRequesterProtocol: StubS2SRequester
 }

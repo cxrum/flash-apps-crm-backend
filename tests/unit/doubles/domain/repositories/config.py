@@ -285,6 +285,7 @@ class InMemoryCrmPostbackRuleRepository(CallRecorderMixin, CrmPostbackRuleReposi
         *,
         rule_id: int | None = None,
         platfrom_app_id: int | None = None,
+        platform_app_id: int | None = None,
         name: str | None = None,
         endpoint_url: str | None = None,
         trigger_type: str | None = None,
@@ -299,9 +300,12 @@ class InMemoryCrmPostbackRuleRepository(CallRecorderMixin, CrmPostbackRuleReposi
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
     ) -> list[CrmPostbackRuleEntity]:
+        effective_platform_app_id = (
+            platform_app_id if platform_app_id is not None else platfrom_app_id
+        )
         filters = {
             "rule_id": rule_id,
-            "platfrom_app_id": platfrom_app_id,
+            "platform_app_id": effective_platform_app_id,
             "name": name,
             "endpoint_url": endpoint_url,
             "trigger_type": trigger_type,
@@ -331,6 +335,7 @@ class InMemoryCrmPostbackRuleRepository(CallRecorderMixin, CrmPostbackRuleReposi
         *,
         rule_id: int | None = None,
         platfrom_app_id: int | None = None,
+        platform_app_id: int | None = None,
         name: str | None = None,
         endpoint_url: str | None = None,
         trigger_type: str | None = None,
@@ -346,10 +351,13 @@ class InMemoryCrmPostbackRuleRepository(CallRecorderMixin, CrmPostbackRuleReposi
         created_at: datetime | None = None,
         limit: int = 100,
     ) -> list[CrmPostbackRuleEntity]:
+        effective_platform_app_id = (
+            platform_app_id if platform_app_id is not None else platfrom_app_id
+        )
         self._record(
             "list_by_filters",
             rule_id=rule_id,
-            platfrom_app_id=platfrom_app_id,
+            platform_app_id=effective_platform_app_id,
             name=name,
             endpoint_url=endpoint_url,
             trigger_type=trigger_type,
@@ -367,7 +375,7 @@ class InMemoryCrmPostbackRuleRepository(CallRecorderMixin, CrmPostbackRuleReposi
         )
         items = self._filter_items(
             rule_id=rule_id,
-            platfrom_app_id=platfrom_app_id,
+            platform_app_id=effective_platform_app_id,
             name=name,
             endpoint_url=endpoint_url,
             trigger_type=trigger_type,

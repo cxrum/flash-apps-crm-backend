@@ -245,7 +245,7 @@ def test_create_rule_creates_rules_for_all_app_platforms(
             timeout=45,
             retry_policy={"attempts": 3},
             is_active=False,
-            tempalte={
+            template={
                 "click_id": "{click_id}",
                 "campaign": "{current.utm_source}",
             },
@@ -313,7 +313,7 @@ def test_create_rule_raises_when_selected_platform_does_not_exist(
     uow = StubUnitOfWork()
     service, _ = _build_service(uow, async_event_bus)
 
-    with pytest.raises(ApplicationError, match="Platfrom doesnt exsit"):
+    with pytest.raises(ApplicationError, match="Platform doesn't exist"):
         service.create_postback(
             build_admin_create_postback_rule_command(
                 app_id=1,
@@ -353,7 +353,7 @@ def test_create_rule_raises_for_invalid_template_placeholder(
     with pytest.raises(DomainError):
         service.create_postback(
             build_admin_create_postback_rule_command(
-                tempalte={"campaign": "current.utm_source"},
+                template={"campaign": "current.utm_source"},
             )
         )
 
@@ -398,28 +398,28 @@ def test_evaluate_returns_only_rules_matching_platform_and_trigger(
 
     expected = uow.postback_rule_repo.save(
         build_postback_rule_entity(
-            platfrom_app_id=platform.platform_id or 0,
+            platform_app_id=platform.platform_id or 0,
             trigger_type="conversion",
             event_key="purchase",
         )
     )
     uow.postback_rule_repo.save(
         build_postback_rule_entity(
-            platfrom_app_id=platform.platform_id or 0,
+            platform_app_id=platform.platform_id or 0,
             trigger_type="metric",
             event_key="purchase",
         )
     )
     uow.postback_rule_repo.save(
         build_postback_rule_entity(
-            platfrom_app_id=platform.platform_id or 0,
+            platform_app_id=platform.platform_id or 0,
             trigger_type="conversion",
             event_key="signup",
         )
     )
     uow.postback_rule_repo.save(
         build_postback_rule_entity(
-            platfrom_app_id=other_platform.platform_id or 0,
+            platform_app_id=other_platform.platform_id or 0,
             trigger_type="conversion",
             event_key="purchase",
         )
@@ -732,7 +732,7 @@ def test_execute_builds_request_and_calls_requester(
         )
         rule = uow.postback_rule_repo.save(
             build_postback_rule_entity(
-                platfrom_app_id=platform.platform_id or 0,
+                platform_app_id=platform.platform_id or 0,
                 endpoint_url="https://example.com/postback/conversion",
                 trigger_type="conversion",
                 http_method="POST",
@@ -814,7 +814,7 @@ def test_execute_builds_get_request_and_calls_requester(
         )
         rule = uow.postback_rule_repo.save(
             build_postback_rule_entity(
-                platfrom_app_id=platform.platform_id or 0,
+                platform_app_id=platform.platform_id or 0,
                 endpoint_url="https://example.com/postback/install",
                 trigger_type="conversion",
                 http_method="GET",
@@ -878,7 +878,7 @@ def test_execute_propagates_requester_failures_and_rolls_back(
         )
         rule = uow.postback_rule_repo.save(
             build_postback_rule_entity(
-                platfrom_app_id=platform.platform_id or 0,
+                platform_app_id=platform.platform_id or 0,
                 auth_params={"Authorization": "api_key"},
                 template=PostbackTemplateEntity.from_dict({"click_id": "{click_id}"}),
             )

@@ -1,14 +1,14 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from app.domain.hash_protocol import HashedValue
+from app.domain.hash_protocol import HashableValue
 
 
 @dataclass
 class CrmUserEntity:
     full_name: str
     email: str
-    password_hash: HashedValue
+    password_hash: HashableValue
     time_zone: str
     is_active: bool = True
     user_id: int | None = None
@@ -20,7 +20,7 @@ class CrmUserEntity:
         *,
         full_name: str | None = None,
         email: str | None = None,
-        password_hash: HashedValue | None = None,
+        password_hash: HashableValue | None = None,
         is_active: bool | None = None,
     ) -> None:
         self.full_name = full_name if full_name is not None else self.full_name

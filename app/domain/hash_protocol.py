@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 @dataclass(frozen=True)
-class HashedValue:
+class HashableValue:
     bvalue: bytes
 
     def to_hex(self) -> str:
@@ -12,25 +12,25 @@ class HashedValue:
         return self.bvalue.decode()
     
     @staticmethod
-    def from_str(value: str) -> "HashedValue":
-        return HashedValue(
+    def from_str(value: str) -> "HashableValue":
+        return HashableValue(
             bvalue=value.encode()
         )
         
     @staticmethod
-    def from_hex(hex_value: str) -> "HashedValue":
-        return HashedValue(
-            bvalue=int(hex_value, base=16).to_bytes()
+    def from_hex(hex_value: str) -> "HashableValue":
+        return HashableValue(
+            bvalue=bytes.fromhex(hex_value)
         )
     
 class HashProtocol(Protocol):
     
     @staticmethod
-    def random_hash(lenb: int = 32) -> HashedValue: ... 
+    def random_hash(lenb: int = 32) -> HashableValue: ... 
         
     @staticmethod
-    def hash_value(value: HashedValue) -> HashedValue: ...
+    def hash_value(value: HashableValue) -> HashableValue: ...
         
     @staticmethod
-    def compare_hash(raw_value: HashedValue, hash: HashedValue) -> bool: ...
+    def compare_hash(raw_value: HashableValue, hash: HashableValue) -> bool: ...
      

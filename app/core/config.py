@@ -17,8 +17,6 @@ class Settings(BaseSettings):
     batch_rate_limit_per_window: int = Field(default=120, alias="BATCH_RATE_LIMIT_PER_MINUTE")
     rate_limit_window_seconds: int = Field(default=60, alias="RATE_LIMIT_WINDOW_SECONDS")
 
-    database_url: str | None = Field(default=None, alias="DATABASE_URL")
-
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -31,8 +29,6 @@ class Settings(BaseSettings):
     
     @property
     def sqlalchemy_database_uri(self) -> str:
-        if self.database_url:
-            return self.database_url
         return (
             "postgresql+psycopg2://"
             f"{self.postgres_user}:{self.postgres_password}"

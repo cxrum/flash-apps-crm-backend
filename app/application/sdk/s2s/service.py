@@ -8,7 +8,7 @@ from app.application.tracking.entities import TrackingRedirectCommand
 from app.application.tracking.responses import TrackingRedirectResponse
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.click.CrmClickEntity import CrmClickEntity
-from app.domain.hash_protocol import HashedValue
+from app.domain.hash_protocol import HashableValue
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 from app.domain.signature_protocol import SignatureProtocol
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
@@ -42,7 +42,14 @@ class ClickService:
 
         return None
 
-    def _process_click(self, uow: UnitOfWorkProtocol, *, click: CrmClickEntity, platform: CrmAppPlatformEntity) -> CrmClickEntity:
+    def _process_click(
+        self,
+        uow: UnitOfWorkProtocol,
+        *,
+        click: CrmClickEntity,
+        platform: CrmAppPlatformEntity,
+        source_click_id: str | None = None,
+    ) -> CrmClickEntity:
         
         param_definitions = uow.param_definition_repo.list_by_app_id(platform.app_id)
                     
@@ -52,14 +59,14 @@ class ClickService:
         click.validate_platform_match(platform.platform_id)
         click.normalize_params(param_definitions)
         
-        if click.click_id is None:
+        if source_click_id is None:
             click.accepted()
         else:
-            existed_click = uow.click_repo.get_by_id(click.click_id)
+            existed_click = uow.click_repo.get_by_id(source_click_id)
             if existed_click is None:
-                raise ApplicationError("Click doesn't exist")
-            
-            click.duplicate()
+                click.accepted()
+            else:
+                click.duplicate()
         
         click.validate_click_status()
         
@@ -81,8 +88,8 @@ class ClickService:
                 raise ApplicationError("Platform repository returned entity without platform_id")
             
             is_signature_correct = self._signature_service.compare(
-                value=HashedValue.from_str(command.raw_params),
-                signature=HashedValue.from_hex(command.signature),
+                value=HashableValue.from_str(command.raw_params),
+                signature=HashableValue.from_hex(command.signature),
                 key=platform.sdk_secret_hash
             )
             
@@ -111,7 +118,8 @@ class ClickService:
             click = self._process_click(
                 uow,
                 click=click,
-                platform=platform
+                platform=platform,
+                source_click_id=command.click_id,
             )
 
             return S2SClickResponse(click_id=click.click_id)
@@ -149,7 +157,7 @@ class ClickService:
             click = self._process_click(
                 uow,
                 click=click,
-                platform=platform
+                platform=platform,
             )
 
             return TrackingRedirectResponse(click_id=click.click_id)

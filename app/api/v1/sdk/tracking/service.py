@@ -17,11 +17,11 @@ router = APIRouter()
 
 @router.get("/r/{app_code}/{platform}", tags=["tracking"])
 async def tracking_redirect(
+    request: Request,
     app_code: str,
     platform: str,
     redirect_url: Annotated[str, Query()],
-    idempotency_key: Annotated[str | None, Query(default=None)],
-    request: Request,
+    idempotency_key: Annotated[str | None, Query()] = None,
     s2s_service: ClickService = Depends(get_s2s_service),
 ) -> RedirectResponse:
     

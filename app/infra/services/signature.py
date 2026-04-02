@@ -1,32 +1,27 @@
-import copy
 from hashlib import sha256
 import hmac
 
-from app.domain.hash_protocol import HashedValue
+from app.domain.hash_protocol import HashableValue
 from app.domain.signature_protocol import SignatureProtocol
 from app.domain.signature_protocol import SignatureValue
 
 class SignatureSHA256(SignatureProtocol):
     
-    def sign(self, *, value: HashedValue, key: HashedValue) -> SignatureValue:
+    def sign(self, *, value: HashableValue, key: HashableValue) -> SignatureValue:
         signature = hmac.new(
-            key=value.bvalue,
-            msg=key.bvalue,
-            digestmod=sha256
-        ).hexdigest()
-        
-        return SignatureValue(
-            signature=HashedValue.from_hex(signature)
-        )
-    
-    def compare(self, *, value: HashedValue, signature: HashedValue, key: HashedValue) -> bool:
-        _signature = hmac.new(
-            key=value.bvalue,
-            msg=key.bvalue,
-            digestmod=sha256
+            key=key.bvalue,
+            msg=value.bvalue,
+            digestmod=sha256,
         ).digest()
         
+        return SignatureValue(
+            signature=HashableValue(signature)
+        )
+    
+    def compare(self, *, value: HashableValue, signature: HashableValue, key: HashableValue) -> bool:
+        expected_signature = self.sign(value=value, key=key).signature.bvalue
+        
         return hmac.compare_digest(
-            _signature,
-            signature.bvalue
+            expected_signature,
+            signature.bvalue,
         )

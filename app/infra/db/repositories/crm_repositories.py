@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.domain.hash_protocol import HashedValue
+from app.domain.hash_protocol import HashableValue
 from app.domain.pagination import Pagination
 from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.permission.permission_repository_protocol import CrmPermissionRepositoryProtocol
@@ -39,7 +39,7 @@ class SqlAlchemyCrmUserRepository(CrmUserRepositoryProtocol):
             full_name=row.full_name,
             email=row.email,
             time_zone=row.time_zone,
-            password_hash=HashedValue.from_hex(row.password_hash),
+            password_hash=HashableValue.from_hex(row.password_hash),
             is_active=row.is_active,
             created_at=row.created_at,
             updated_at=row.updated_at,

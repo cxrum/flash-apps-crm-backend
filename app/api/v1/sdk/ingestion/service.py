@@ -24,10 +24,10 @@ router = APIRouter()
 async def create_or_link_install(
     payload: Annotated[SdkInstallPayload, Body()] ,
     ingestion_service: IngestionService = Depends(get_sdk_ingestion_service),
-) -> dict[str, Any]:
+) -> str:
     command = SdkIngestionCommandMapper.install_from_transport(GeneralMapper.to_dict(payload))
     response = await ingestion_service.process_install(command)
-    return response.model_dump()
+    return response.model_dump_json()
 
 
 @router.post("/events", status_code=status.HTTP_202_ACCEPTED, tags=["sdk"])
@@ -52,9 +52,9 @@ async def update_sdk_params(
 
 @router.get("/config", tags=["sdk"])
 async def get_public_config(
-    install_key: Annotated[str | None, Query(default=None)],
+    install_key: Annotated[str | None, Query()]=None,
     app_service: AppService = Depends(get_sdk_app_service),
-) -> dict[str, Any]:
+) -> str:
     command = SdkIngestionCommandMapper.config_from_transport(GeneralMapper.to_dict(install_key=install_key))
     response = app_service.get_app_config_secrets(command)
-    return response.model_dump()
+    return response.model_dump_json()

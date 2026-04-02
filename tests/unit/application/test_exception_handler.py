@@ -9,6 +9,7 @@ from fastapi import FastAPI, Request
 
 from app.application.exception_bus.handlers.stub import AsyncStubExceptionHandler
 from app.application.exceptions import ApplicationError
+from app.core.config import settings
 from app.di.dependencies import (
     build_fastapi_exception_handler,
     get_exception_event_subscribers,
@@ -109,23 +110,28 @@ def test_get_exception_event_subscribers_includes_stub_handler() -> None:
 def test_build_fastapi_exception_handler_publishes_exception_event_and_returns_500() -> None:
     async def scenario() -> None:
         bus = RecordingExceptionBus()
+        original_debug_mode = settings.debug_mode
+        settings.debug_mode = False
         handler = build_fastapi_exception_handler(bus)
 
-        response = await handler(build_request(), RuntimeError("boom"))
+        try:
+            response = await handler(build_request(), RuntimeError("boom"))
 
-        assert response.status_code == 500
-        assert json.loads(response.body) == {"detail": "Internal Server Error"}
-        assert len(bus.published_messages) == 1
+            assert response.status_code == 500
+            assert json.loads(response.body) == {"detail": "Internal Server Error"}
+            assert len(bus.published_messages) == 1
 
-        message = bus.published_messages[0]
-        assert message.exception_type == "RuntimeError"
-        assert message.exception_message == "boom"
-        assert message.context == {
-            "method": "GET",
-            "path": "/api/v1/test",
-            "query_params": {"event_id": "evt-1"},
-            "client_host": "127.0.0.1",
-        }
+            message = bus.published_messages[0]
+            assert message.exception_type == "RuntimeError"
+            assert message.exception_message == "boom"
+            assert message.context == {
+                "method": "GET",
+                "path": "/api/v1/test",
+                "query_params": {"event_id": "evt-1"},
+                "client_host": "127.0.0.1",
+            }
+        finally:
+            settings.debug_mode = original_debug_mode
 
     asyncio.run(scenario())
 

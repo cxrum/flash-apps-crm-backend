@@ -14,7 +14,8 @@ from tests.unit.doubles.domain.uow import StubUnitOfWork
 
 def _discover_protocol_types() -> set[type]:
     repo_root = Path(__file__).resolve().parents[2]
-    module_paths = list((repo_root / "app" / "domain").glob("*/*_protocol.py"))
+    module_paths = list((repo_root / "app" / "domain").glob("*_protocol.py"))
+    module_paths.extend((repo_root / "app" / "domain").glob("*/*_protocol.py"))
     module_paths.append(repo_root / "app" / "domain" / "uow.py")
     module_paths.extend((repo_root / "app" / "application" / "contracts").glob("*.py"))
 

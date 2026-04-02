@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import pytest
 
 from app.application.exceptions import ApplicationError
-from app.application.sdk.usecases.ingestion.event_builder import (
+from app.application.sdk.ingestion.event_builder import (
     ConversionEventBuilder,
     MetricsEventBuilder,
     RevenueEventBuilder,
