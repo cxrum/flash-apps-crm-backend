@@ -2,6 +2,7 @@ import logging
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
 from contextlib import asynccontextmanager
 from functools import lru_cache
+from typing import Any
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -10,8 +11,8 @@ from fastapi.security import OAuth2PasswordBearer
 from app.application.admin.push.service import PushService
 from app.application.contracts.ip2location import IP2LocationGatewayProtocol
 from app.application.crm_authentication.protocol import CrmAuthenticationProtocol
-from app.application.crm_authentication.entities import ResolvedCrmUser
-from app.application.crm_authentication.service import StubCrmAuthentication
+from app.application.crm_authentication.responses import ResolvedCrmUserResponse
+from app.application.crm_authentication.service import CrmAuthentication
 from app.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.application.admin.definitions.service import DefinitionsService
 from app.application.admin.logs.service import LogsService
@@ -23,6 +24,7 @@ from app.application.exception_bus.handlers.stub import AsyncStubExceptionHandle
 from app.application.events_bus.handlers.conversion import AsyncConversionHandler
 from app.application.events_bus.handlers.metric import AsyncMetricHandler
 from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
+from app.application.exceptions import ApplicationError
 from app.application.sdk.apps.service import AppService
 from app.application.sdk.ingestion.service import IngestionService
 from app.application.sdk.s2s.service import ClickService
@@ -52,7 +54,7 @@ from app.infra.services.signature import SignatureSHA256
 
 
 AsyncHandlerSubscription = tuple[str, AsyncEventMessageHandler]
-FastAPIExceptionHandler = Callable[[Request, Exception], Awaitable[JSONResponse]]
+FastAPIExceptionHandler = Callable[[Request, Any], Awaitable[JSONResponse]]
 
 SHARED_ASYNC_MEMORY_BUS = InMemoryAsyncEventBus()
 SHARED_ASYNC_MEMORY_EXCEPTION_BUS = AsyncExceptionBusAdapter(InMemoryAsyncEventBus())
@@ -63,7 +65,7 @@ def get_uow_factory() -> UnitOfWorkFactoryProtocol:
     return SqlAlchemyUnitOfWorkFactory(SessionFactory)
 
 def get_ip2location_gateway() ->IP2LocationGatewayProtocol:
-    return  IP2LocationGateway()
+    return  IP2LocationGateway(settings.ip2location_bin_database_path)
 
 def get_app_secrets_encryption_service() -> EncryptionServiceProtocol:
     return EncryptionService()
@@ -243,10 +245,7 @@ def register_fastapi_exception_handlers(
     app: FastAPI,
     exception_bus: IAsyncExceptionBus | None = None,
 ) -> FastAPI:
-    app.add_exception_handler(
-        Exception,
-        build_fastapi_exception_handler(exception_bus),
-    )
+    app.add_exception_handler(ApplicationError, build_fastapi_exception_handler(exception_bus))
     return app
 
 
@@ -256,10 +255,6 @@ async def application_lifespan(app: FastAPI) -> AsyncIterator[None]:
         event_bus=get_in_memory_event_bus(),
         exception_bus=get_in_memory_exception_event_bus(),
     )
-    register_fastapi_exception_handlers(app, exception_bus)
-
-    app.state.event_bus = event_bus
-    app.state.exception_bus = exception_bus
 
     await exception_bus.start()
     await event_bus.start()
@@ -273,13 +268,19 @@ async def application_lifespan(app: FastAPI) -> AsyncIterator[None]:
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 @lru_cache
-def stub_user_resolver() -> CrmAuthenticationProtocol:
-    return StubCrmAuthentication()
+def stub_user_resolver(
+    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
+    hash_service: HashProtocol = Depends(get_hash_service)
+) -> CrmAuthenticationProtocol:
+    return CrmAuthentication(
+        uow_factory,
+        hash_service
+    )
 
 def verify_token(token: str = Depends(oauth2_scheme), user_resolver: CrmAuthenticationProtocol = Depends(stub_user_resolver)) -> str:
     return user_resolver.verify_token(token)
 
-def resolve_user(token: str = Depends(oauth2_scheme), user_resolver: CrmAuthenticationProtocol = Depends(stub_user_resolver)) -> ResolvedCrmUser:
+def resolve_user(token: str = Depends(oauth2_scheme), user_resolver: CrmAuthenticationProtocol = Depends(stub_user_resolver)) -> ResolvedCrmUserResponse:
     return user_resolver.resolve_user(token)
 
 def get_sdk_app_service(

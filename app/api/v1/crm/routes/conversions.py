@@ -6,7 +6,7 @@ from app.api.v1.crm.payloads import AppScopeQueryPayload, CreateConversionDefini
 from app.api.v1.transport import PaginationQueryPayload
 from app.application.admin.definitions.mappers import DefinitionsCommandsMapper
 from app.application.admin.definitions.service import DefinitionsService
-from app.application.crm_authentication.entities import ResolvedCrmUser
+from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.core.utils.general_mapper import GeneralMapper
 from app.di.dependencies import get_admin_definitions_service, resolve_user
 
@@ -17,7 +17,7 @@ router = APIRouter()
 async def list_conversions(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     definition_service: DefinitionsService = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.list_conversions_from_transport(
@@ -32,7 +32,7 @@ async def list_conversions(
 async def get_conversion(
     conversion_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     definition_service: DefinitionsService = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.get_conversion_from_transport(
@@ -49,7 +49,7 @@ async def get_conversion(
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "conversion"])
 async def create_conversion(
     payload: Annotated[CreateConversionDefinitionPayload, Body()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     definition_service: DefinitionsService = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.create_conversion_from_transport(
@@ -63,7 +63,7 @@ async def create_conversion(
 async def delete_conversion(
     conversion_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     definition_service: DefinitionsService = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.delete_conversion_from_transport(
@@ -81,7 +81,7 @@ async def update_conversion(
     conversion_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     payload: Annotated[UpdateConversionDefinitionPayload, Body()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     definition_service: DefinitionsService = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.update_conversion_from_transport(

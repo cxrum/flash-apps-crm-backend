@@ -11,7 +11,7 @@ from app.api.v1.crm.payloads import (
 )
 from app.api.v1.stubs import build_stub_response
 from app.api.v1.transport import PaginationQueryPayload
-from app.application.crm_authentication.entities import ResolvedCrmUser
+from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.application.sdk.apps.mappers import SdkAppCommandsMapper
 from app.application.sdk.apps.service import AppService
 from app.core.utils.general_mapper import GeneralMapper
@@ -23,7 +23,7 @@ router = APIRouter()
 @router.get("/{app_id}", tags=["admin", "app"])
 async def get_app(
     app_id: int,
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
 ) -> str:
@@ -38,7 +38,7 @@ async def get_app(
 @router.get("/", tags=["admin", "app"])
 async def list_apps(
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
 ) -> str:
@@ -53,7 +53,7 @@ async def list_apps(
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
 async def create_app(
     payload: Annotated[CreateAppPayload, Body()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
 ) -> str:
@@ -67,7 +67,7 @@ async def create_app(
 @router.patch("/", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
 async def update_app(
     payload: Annotated[UpdateAppPayload, Body()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
 ) -> str:
@@ -83,7 +83,7 @@ async def update_app(
 @router.delete("/", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
 async def delete_app(
     payload: Annotated[DeleteAppPayload, Body()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
 ) -> str:
@@ -101,7 +101,7 @@ async def delete_app(
 async def get_app_platform(
     app_id: int,
     platform_id: int,
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
 ) -> str:
@@ -117,7 +117,7 @@ async def get_app_platform(
 async def list_app_platforms(
     app_id: int,
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
 ) -> str:
@@ -135,7 +135,7 @@ async def update_app_platform(
     app_id: int,
     platform_id: int,
     payload: Annotated[UpdateAppPlatformPayload, Body()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
 ) -> str:
@@ -155,7 +155,7 @@ async def update_app_platform(
 @router.post("/platform", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
 async def create_app_platform(
     payload: Annotated[CreateAppPlatformPayload, Body()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
 ) -> str:
@@ -172,7 +172,7 @@ async def create_app_platform(
 async def delete_app_platform(
     app_id: int,
     platform_id: int,
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
 ) -> str:

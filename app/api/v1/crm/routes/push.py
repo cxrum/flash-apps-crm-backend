@@ -13,7 +13,7 @@ from app.api.v1.crm.payloads import (
 from app.api.v1.stubs import build_stub_response
 from app.api.v1.transport import PaginationQueryPayload
 from app.application.admin.push.mappers import PushResponseMapper as AdminCommandMapper
-from app.application.crm_authentication.entities import ResolvedCrmUser
+from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.di.dependencies import get_push_service, resolve_user
 
 router = APIRouter()
@@ -23,7 +23,7 @@ router = APIRouter()
 async def list_push_campaigns(
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     push_service: PushService = Depends(get_push_service) 
 ) -> str:
     command = AdminCommandMapper.list_push_campaigns_from_transport(
@@ -39,7 +39,7 @@ async def list_push_campaigns(
 async def get_push_campaign(
     push_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     push_service: PushService = Depends(get_push_service) 
 ) -> str:
     command = AdminCommandMapper.get_push_campaign_from_transport(
@@ -53,7 +53,7 @@ async def get_push_campaign(
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "push"])
 async def create_push_campaign(
     payload: Annotated[CreatePushCampaignPayload, Body()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     push_service: PushService = Depends(get_push_service) 
 ) -> str:
     command = AdminCommandMapper.create_push_campaign_from_transport(
@@ -69,7 +69,7 @@ async def update_push_campaign(
     push_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
     payload: Annotated[UpdatePushCampaignPayload, Body()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     push_service: PushService = Depends(get_push_service) 
 ) -> str:
     command = AdminCommandMapper.update_push_campaign_from_transport(
@@ -89,7 +89,7 @@ async def update_push_campaign(
 async def delete_push_campaign(
     push_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     push_service: PushService = Depends(get_push_service) 
 ) -> str:
     command = AdminCommandMapper.delete_push_campaign_from_transport(
@@ -104,7 +104,7 @@ async def delete_push_campaign(
 async def start_push_campaign(
     push_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
-    crm_user: ResolvedCrmUser = Depends(resolve_user),
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     push_service: PushService = Depends(get_push_service) 
 ) -> str:
     command = AdminCommandMapper.start_push_campaign_from_transport(

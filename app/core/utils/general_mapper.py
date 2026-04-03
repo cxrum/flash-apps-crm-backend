@@ -5,7 +5,7 @@ from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
-from app.application.crm_authentication.entities import ResolvedCrmUser
+from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.domain.pagination import Pagination
 
 TCommand = TypeVar("TCommand", bound=BaseModel)
@@ -24,7 +24,7 @@ class GeneralMapper:
     
     @staticmethod
     def transport_to_command_payload(
-        crm_user: ResolvedCrmUser,
+        crm_user: ResolvedCrmUserResponse,
         *payloads: BaseModel,
         **extra: object,
     ) -> dict[str, Any]:

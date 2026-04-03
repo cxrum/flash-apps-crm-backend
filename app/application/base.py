@@ -8,7 +8,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class FlexibleCommand(BaseModel):
     model_config = ConfigDict(extra="allow", populate_by_name=True)
-    success: bool = True
 
 
 class PaginationCommand(FlexibleCommand):
