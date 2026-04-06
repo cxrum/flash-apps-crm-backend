@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from app.application.admin.crm_authorization.service import CrmAuthorizationService
+from app.application.admin.exception import ClickNotFound, InstallNotFound
+from app.application.admin.push.exception import InvalidScheduledAt, PushAppUserNotFound, PushCampaignAppMismatch, PushCampaignNotFound, PushPlatformNotFound
 from app.application.admin.push.commands import (
     CreatePushCampaignCommand,
     DeletePushCampaignCommand,
@@ -20,7 +22,6 @@ from app.application.admin.push.responses import (
     RegisterDeviceResponse,
     UpdatePushCampaignResponse,
 )
-from app.application.exceptions import ApplicationError
 from app.application.mapper import PaginationMapper
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity, DefaultParamKeys
 from app.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
@@ -44,7 +45,7 @@ class PushService:
         try:
             return datetime.fromisoformat(value).astimezone(UTC)
         except ValueError as exc:
-            raise ApplicationError(f"Invalid scheduled_at value: {value}") from exc
+            raise InvalidScheduledAt(value) from exc
 
     @staticmethod
     def _get_push_campaign(
@@ -56,15 +57,15 @@ class PushService:
         campaign = uow.push_campaign_repo.get_by_id(push_id)
 
         if campaign is None:
-            raise ApplicationError(f"Push campaign with id {push_id} doesn't exist")
+            raise PushCampaignNotFound(push_id)
 
         if app_id is not None and campaign.app_id != app_id:
-            raise ApplicationError(f"App {app_id} doesn't exist")
+            raise PushCampaignAppMismatch(push_id, app_id)
 
         return campaign
 
     def create(self, command: CreatePushCampaignCommand) -> CreatePushCampaignResponse:
-        self._authorization_service.check_user_app_access(
+        self._authorization_service.has_user_app_access(
             crm_user_id=command.crm_user_id,
             app_id=command.app_id,
         )
@@ -89,7 +90,7 @@ class PushService:
         )
 
     def update(self, command: UpdatePushCampaignCommand) -> UpdatePushCampaignResponse:
-        self._authorization_service.check_user_app_access(
+        self._authorization_service.has_user_app_access(
             crm_user_id=command.crm_user_id,
             app_id=command.app_id,
         )
@@ -124,7 +125,7 @@ class PushService:
                 push_id=command.push_id,
             )
 
-            self._authorization_service.check_user_app_access(
+            self._authorization_service.has_user_app_access(
                 crm_user_id=command.crm_user_id,
                 app_id=campaign.app_id,
             )
@@ -136,7 +137,7 @@ class PushService:
         )
     
     def list(self, command: ListPushCampaignsCommand) -> ListPushCampaignResponse:
-        self._authorization_service.check_user_app_access(
+        self._authorization_service.has_user_app_access(
             crm_user_id=command.crm_user_id,
             app_id=command.app_id,
         )
@@ -152,7 +153,7 @@ class PushService:
         )
     
     def get(self, command: GetPushCampaignCommand) -> GetPushCampaignResponse:
-        self._authorization_service.check_user_app_access(
+        self._authorization_service.has_user_app_access(
             crm_user_id=command.crm_user_id,
             app_id=command.app_id,
         )
@@ -173,23 +174,23 @@ class PushService:
             click = uow.click_repo.get_by_id(command.click_id)
             
             if click is None or click.click_id is None:
-                raise ApplicationError()
+                raise ClickNotFound(command.click_id)
             
             platform = uow.app_platform_repo.get_by_install_key(command.install_key)
             
             if platform is None or platform.platform_id is None:
-                raise ApplicationError()
+                raise PushPlatformNotFound()
             
             install = uow.install_repo.get_by_click_id(command.click_id)
             if install is None or install.install_id is None:
-                raise ApplicationError() 
+                raise InstallNotFound(command.click_id)
             
             app_user = None
             if command.app_user_id is not None:
                 app_user = uow.app_user_repo.get_by_id(command.app_user_id)
                 
                 if app_user is None:
-                    raise ApplicationError
+                    raise PushAppUserNotFound(command.app_user_id)
                 
             definitions = uow.param_definition_repo.list_by_app_id(platform.app_id)
     

@@ -1,8 +1,7 @@
 from datetime import datetime
-from typing import Any
 
 from app.domain.event_bus.entity import DomainEventMessage
-from app.domain.exceptions import DomainError
+from app.domain.event_bus.events.exception import InvalidUpdateCurrentParamUpdatedAt
 
 
 class UpdateCurrentParamMessage(DomainEventMessage):
@@ -20,5 +19,5 @@ class UpdateCurrentParamMessage(DomainEventMessage):
     def updated_at(self) -> datetime:
         value = self.payload["updated_at"]
         if not isinstance(value, datetime):
-            raise DomainError("UpdateCurrentParamMessage.updated_at must be datetime")
+            raise InvalidUpdateCurrentParamUpdatedAt()
         return value

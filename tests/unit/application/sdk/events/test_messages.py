@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import pytest
 
 from app.application.events_bus.factories.raw_event import RawEventMessageFactory, RawEventMessage
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from tests.unit.builders import build_event_entity
 
 
@@ -55,5 +55,5 @@ def test_raw_event_message_factory_builds_many_messages() -> None:
 def test_raw_event_message_factory_requires_event_id() -> None:
     event = build_event_entity(event_id="")
 
-    with pytest.raises(ApplicationError, match="Event id is required"):
+    with pytest.raises(GeneralException, match="Event id is required"):
         RawEventMessageFactory.from_event(event)

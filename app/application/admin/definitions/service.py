@@ -17,6 +17,7 @@ from app.application.admin.definitions.commands import (
     UpdateMetricDefinitionCommand, 
     UpdateParamDefinitionCommand
 )
+from app.application.admin.definitions.exceptions import ConversionDefinitionNotFound, DefinitionAppMismatch, MetricDefinitionNotFound, ParamDefinitionNotFound
 from app.application.admin.definitions.mappers import DefinitionsResponseMapper
 from app.application.admin.definitions.responses import (
     DeleteConversionDefinitionResponse,
@@ -35,7 +36,6 @@ from app.application.admin.definitions.responses import (
     UpdateMetricDefinitionResponse, 
     UpdateParamDefinitionResponse
 )
-from app.application.exceptions import ApplicationError
 from app.application.mapper import PaginationMapper
 from app.application.sdk.apps.service import AppService
 from app.application.admin.definitions.commands import CreateMetricDefinitionCommand
@@ -60,7 +60,7 @@ class DefinitionsService:
         self,
         command: ListMetricDefinitionsCommand,
     ) -> ListMetricDefinitionsResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             def_list = uow.metric_definition_repo.list_by_app_id(
@@ -81,18 +81,17 @@ class DefinitionsService:
     ) -> CrmMetricDefinitionEntity:
         definition = uow.metric_definition_repo.get_by_id(metric_definition_id)
         if definition is None:
-            raise ApplicationError(f"Metric definition with id {metric_definition_id} doesn't exist")
+            raise MetricDefinitionNotFound(metric_definition_id)
         if definition.app_id != app_id:
-            raise ApplicationError(
-                f"App {app_id} doesn't exist",
-            )
+            raise DefinitionAppMismatch("Metric", app_id)
+        
         return definition
 
     def get_metric_definition(
         self,
         command: GetMetricDefinitionCommand,
     ) -> GetMetricDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             metric = self._get_metric_definition(uow, app_id=command.app_id, metric_definition_id=command.metric_definition_id)
@@ -105,7 +104,7 @@ class DefinitionsService:
         self,
         command: UpdateMetricDefinitionCommand,
     ) -> UpdateMetricDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             definition = self._get_metric_definition(
@@ -128,7 +127,7 @@ class DefinitionsService:
         )
     
     def delete_metric_definition(self, command: DeleteMetricDefinitionCommand) -> DeleteMetricDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         
         with self._uow_factory.create() as uow:
             definition = uow.metric_definition_repo.delete(command.metric_definition_id)
@@ -141,7 +140,7 @@ class DefinitionsService:
         self,
         command: CreateMetricDefinitionCommand,
     ) -> CreateMetricDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         entity = CrmMetricDefinitionEntity(
             machine_key=command.key, 
             display_name=command.name,
@@ -161,7 +160,7 @@ class DefinitionsService:
         self,
         command: ListConversionDefinitionsCommand,
     ) -> ListConversionDefinitionsResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             def_list = uow.conversion_definition_repo.list_by_app_id(
@@ -182,20 +181,18 @@ class DefinitionsService:
     ) -> CrmConversionDefinitionEntity:
         definition = uow.conversion_definition_repo.get_by_id(conversion_definition_id)
         if definition is None:
-            raise ApplicationError(
-                f"Conversion definition with id {conversion_definition_id} doesn't exist",
-            )
+            raise ConversionDefinitionNotFound(conversion_definition_id)
+        
         if definition.app_id != app_id:
-            raise ApplicationError(
-                f"App {app_id} doesn't exist",
-            )
+            raise DefinitionAppMismatch("Conversion", app_id)
+        
         return definition
     
     def get_conversion_definition(
         self,
         command:GetConversionDefinitionCommand,
     ) -> GetConversionDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             saved_definition = self._get_conversion_definition(uow, app_id=command.app_id, conversion_definition_id=command.conversion_definition_id)
@@ -208,7 +205,7 @@ class DefinitionsService:
         self,
         command: UpdateConversionDefinitionCommand,
     ) -> UpdateConversionDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             definition = self._get_conversion_definition(
@@ -237,7 +234,7 @@ class DefinitionsService:
         self,
         command: CreateConversionDefinitionCommand,
     ) -> CreateConversionDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         entity = CrmConversionDefinitionEntity(
             machine_key=command.key,
             display_name=command.name,
@@ -260,7 +257,7 @@ class DefinitionsService:
         self, 
         command: DeleteConversionDefinitionCommand
     ) -> DeleteConversionDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         
         with self._uow_factory.create() as uow:
             definition = uow.conversion_definition_repo.delete(command.conversion_definition_id)
@@ -273,7 +270,7 @@ class DefinitionsService:
         self,
         command: ListParamDefinitionsCommand,
     ) -> ListParamDefinitionsResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             def_list = uow.param_definition_repo.list_by_app_id(
@@ -294,18 +291,17 @@ class DefinitionsService:
     ) -> CrmParamDefinitionEntity:
         definition = uow.param_definition_repo.get_by_id(param_definition_id)
         if definition is None:
-            raise ApplicationError(f"Param definition with id {param_definition_id} doesn't exist")
+            raise ParamDefinitionNotFound(param_definition_id)
         if definition.app_id != app_id:
-            raise ApplicationError(
-                f"App {app_id} doesn't exist",
-            )
+            raise DefinitionAppMismatch("Param", app_id)
+        
         return definition
 
     def get_param_definition(
         self, 
         command: GetParamDefinitionCommand
     ) -> GetParamDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         
         with self._uow_factory.create() as uow:
             saved_definition = self._get_param_definition(uow, app_id=command.app_id, param_definition_id=command.param_definition_id)
@@ -318,7 +314,7 @@ class DefinitionsService:
         self,
         command: UpdateParamDefinitionCommand,
     ) -> UpdateParamDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             definition = self._get_param_definition(
@@ -349,7 +345,7 @@ class DefinitionsService:
         self,
         command: CreateParamDefinitionCommand,
     ) -> CreateParamDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         entity = CrmParamDefinitionEntity(
             display_name=command.label,
             machine_key=command.key,
@@ -375,7 +371,7 @@ class DefinitionsService:
         self, 
         command: DeleteParamDefinitionCommand
     ) -> DeleteParamDefinitionResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         
         with self._uow_factory.create() as uow:
             definition = uow.param_definition_repo.delete(command.param_definition_id)

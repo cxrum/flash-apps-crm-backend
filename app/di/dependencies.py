@@ -20,18 +20,20 @@ from app.application.admin.postback.service import PostbackService
 from app.application.admin.secrets.service import SecretsService
 from app.application.contracts.encryption import EncryptionServiceProtocol
 from app.application.contracts.requester import S2SRequesterProtocol
-from app.application.exception_bus.handlers.stub import AsyncStubExceptionHandler
+from app.infra.exception_bus.handlers.stub import AsyncStubExceptionHandler
 from app.application.events_bus.handlers.conversion import AsyncConversionHandler
 from app.application.events_bus.handlers.metric import AsyncMetricHandler
 from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.application.sdk.apps.service import AppService
 from app.application.sdk.ingestion.service import IngestionService
 from app.application.sdk.s2s.service import ClickService
 from app.core.config import settings
+from app.core.exception import BaseBoundaryException
+from app.core.exception_resolver import MessageResolver
 from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
-from app.domain.event_bus.events.exception_event import ExceptionEvent
+from app.domain.event_bus.events.exception_event import ExceptionEvent, ExceptionEventFactory
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
 from app.domain.event_bus.service_protocol import (
     AsyncEventMessageHandler,
@@ -189,10 +191,11 @@ def wire_application_buses(
     wired_event_bus = register_event_handlers(
         async_memory_bus=event_bus,
     )
+    
     return wired_event_bus, wired_exception_bus
 
 
-def build_fastapi_exception_handler(
+def build_exception_handler(
     exception_bus: IAsyncExceptionBus | None = None,
 ) -> FastAPIExceptionHandler:
     bus = (
@@ -200,19 +203,17 @@ def build_fastapi_exception_handler(
         if exception_bus is None
         else exception_bus
     )
+    
+    resolver = MessageResolver()
 
     async def handler(request: Request, exc: Exception) -> JSONResponse:
-        event = ExceptionEvent(
-            name=ExceptionEvent.EVENT_NAME,
-            payload={
-                "exception_type": type(exc).__name__,
-                "exception_message": str(exc),
-                "context": {
-                    "method": request.method,
-                    "path": request.url.path,
-                    "query_params": dict(request.query_params),
-                    "client_host": None if request.client is None else request.client.host,
-                },
+        event = ExceptionEventFactory.from_raw_exception(
+            exc=exc,
+            context={
+                "method": request.method,
+                "path": request.url.path,
+                "query_params": dict(request.query_params),
+                "client_host": None if request.client is None else request.client.host,
             },
         )
 
@@ -226,18 +227,25 @@ def build_fastapi_exception_handler(
                     "exception_type": type(exc).__name__,
                 },
             )
-
+        
+        if (isinstance(exc, BaseBoundaryException)):
+            msg = resolver.resolve(exc.message_key, exc.context)     
+            code = exc.code
+        else:
+            msg = resolver.resolve("internal", {})
+            code = 500 
+                
         if settings.debug_mode:
             return JSONResponse(
-                status_code=500,
+                status_code=code,
                 content=event.payload,
             )
         else:
             return JSONResponse(
-                status_code=500,
-                content={"detail": "Internal Server Error"},
+                status_code=code,
+                content={"detail": msg},
             )
-
+    
     return handler
 
 
@@ -245,9 +253,18 @@ def register_fastapi_exception_handlers(
     app: FastAPI,
     exception_bus: IAsyncExceptionBus | None = None,
 ) -> FastAPI:
-    app.add_exception_handler(ApplicationError, build_fastapi_exception_handler(exception_bus))
+    app.add_exception_handler(BaseBoundaryException, build_exception_handler(exception_bus))
     return app
 
+def register_exception_handlers(
+    exception_bus: IAsyncExceptionBus | None = None,
+) -> None:
+    bus = (
+        get_in_memory_exception_event_bus()
+        if exception_bus is None
+        else exception_bus
+    )
+    pass
 
 @asynccontextmanager
 async def application_lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -258,6 +275,9 @@ async def application_lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     await exception_bus.start()
     await event_bus.start()
+    
+    register_exception_handlers(exception_bus)
+    
     try:
         yield
     finally:

@@ -4,7 +4,7 @@ from typing import Any
 
 from app.application.events_bus.factories.param_update_event import UpdateParamMessageFactory, UpdateParamValue
 from app.application.sdk.ingestion.update_statistic import StatisticAggregates
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import CustomParamsStatisticsAggregateEntity
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_events import MetricEventMessage
@@ -29,7 +29,7 @@ class AsyncMetricHandler(AsyncEventMessageHandler):
         definitions = uow.metric_definition_repo.list_by_app_id(app_id)
 
         if not definitions:
-            raise ApplicationError(
+            raise GeneralException(
                 "AsyncMetricHandler could not find metric definitions "
                 f"for app_id='{app_id}' and click_id='{click_id}'"
             )
@@ -41,7 +41,7 @@ class AsyncMetricHandler(AsyncEventMessageHandler):
 
     async def handle(self, message: DomainEventMessage) -> None:
         if not isinstance(message, MetricEventMessage):
-            raise ApplicationError(
+            raise GeneralException(
                 "AsyncMetricHandler expected MetricEventMessage, "
                 f"got {type(message).__name__}"
             )
@@ -50,14 +50,14 @@ class AsyncMetricHandler(AsyncEventMessageHandler):
             click = uow.click_repo.get_by_id(message.click_id)
 
             if click is None:
-                raise ApplicationError(
+                raise GeneralException(
                     f"AsyncMetricHandler could not find click with id='{message.click_id}'"
                 )
 
             app_platform = uow.app_platform_repo.get_by_id(click.app_platform_id)
 
             if app_platform is None or app_platform.platform_id is None:
-                raise ApplicationError(
+                raise GeneralException(
                     "AsyncMetricHandler could not find app platform "
                     f"with id='{click.app_platform_id}' for click_id='{message.click_id}'"
                 )
@@ -70,14 +70,14 @@ class AsyncMetricHandler(AsyncEventMessageHandler):
             definition = definition_lookup.get(message.event_key)
 
             if definition is None:
-                raise ApplicationError(
+                raise GeneralException(
                     "AsyncMetricHandler could not find metric definition "
                     f"for event_key='{message.event_key}' app_id='{app_platform.app_id}' "
                     f"and click_id='{message.click_id}'"
                 )
 
             if not definition.enabled:
-                raise ApplicationError(
+                raise GeneralException(
                     "AsyncMetricHandler metric definition "
                     f"for event_key='{message.event_key}' is disabled "
                     f"for app_id='{app_platform.app_id}' and click_id='{message.click_id}'"
@@ -88,7 +88,7 @@ class AsyncMetricHandler(AsyncEventMessageHandler):
                 or message.currency is not None
                 or message.amount_usd is not None
             ):
-                raise ApplicationError(
+                raise GeneralException(
                     "AsyncMetricHandler metric events do not support revenue fields "
                     f"for event_id='{message.event_id}' and click_id='{message.click_id}'"
                 )

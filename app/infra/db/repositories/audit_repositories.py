@@ -9,6 +9,7 @@ from app.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
 from app.domain.audit_log.audit_log_repository_protocol import CrmAuditLogRepositoryProtocol
 from app.domain.pagination import Pagination
 from app.infra.db.audit.models import AuditLog
+from app.infra.exception import InfraGeneralException
 
 
 class SqlAlchemyCrmAuditLogRepository(CrmAuditLogRepositoryProtocol):
@@ -61,7 +62,7 @@ class SqlAlchemyCrmAuditLogRepository(CrmAuditLogRepositoryProtocol):
     def delete(self, audit_log_id: int) -> CrmAuditLogEntity:
         row = self.session.get(AuditLog, audit_log_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         audit_log = self._to_domain(row)
         self.session.delete(row)

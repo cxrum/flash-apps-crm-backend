@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 
 from app.application.admin.crm_authorization.commands import GrantUserAppAccess, GrantUserAppPermission, ListPermissionCommand, ListAppUsersCommand, ListUserPermissionCommand, RemoveUserAppAccess, RemoveUserAppPermission
+from app.application.admin.crm_authorization.exceptions import AdminAccessRequired, AuthorizationException, PermissionNotFound, RoleNotFound
 from app.application.admin.crm_authorization.mappers import AuthenticationCommandsMapper
 from app.application.admin.crm_authorization.responses import GrantUserAppAccessResponse, GrantUserPermissionResponse, ListAppUsersResponse, ListPermissionsResponse, ListUserPermissionResponse, RemoveUserAppAccessResponse, RemoveUserPermissionResponse
-from app.application.exceptions import ApplicationError
+from app.application.exception import AppNotFound, GeneralException, UserNotFound
 from app.application.mapper import PaginationMapper
 from app.core.utils.general_mapper import GeneralMapper
 from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
-from app.domain.role.CrmRoleEntity import CrmRoleEntity
+from app.domain.role.CrmRoleEntity import CrmRoleEntity, Roles
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 from app.domain.user import CrmUserEntity
 from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
@@ -26,18 +27,45 @@ class CrmAuthorizationService:
         access = uow.user_app_access_repo.get_by_user_and_app(user_id=crm_user_id, app_id=app_id)
         return access
     
-    def _get_user_role(self, uow: UnitOfWorkProtocol, *, crm_user_id: int, app_id: int) -> CrmRoleEntity:
+    def get_user_role(self, uow: UnitOfWorkProtocol, *, crm_user_id: int, app_id: int) -> CrmRoleEntity:
         access = self._get_user_access(uow, crm_user_id = crm_user_id, app_id = app_id)
         
         if access is None:
-            raise ApplicationError()
+            raise AuthorizationException()
         
         role = uow.role_repo.get_by_id(access.role_id)
         
         if role is None:
-            raise ApplicationError()
+            raise AuthorizationException()
         
         return role
+            
+    def required_user_role(self, uow: UnitOfWorkProtocol, *, crm_user_id: int, app_id: int, level: Roles = Roles.MANAGER) -> CrmRoleEntity:
+        role = self.get_user_role(uow=uow, crm_user_id=crm_user_id, app_id=app_id)
+        role.required(level)        
+        return role
+    
+    def has_user_role(self, uow: UnitOfWorkProtocol, *, crm_user_id: int, app_id: int, level: Roles = Roles.MANAGER) -> bool:
+        role = self.get_user_role(uow=uow, crm_user_id=crm_user_id, app_id=app_id)
+        return role.compare(level) 
+
+    def is_user_admin_permission_access(self, *, crm_user_id: int, app_id: int) -> bool:
+        with self._uow_factory.create() as uow:
+            return self.has_user_role(
+                uow,
+                crm_user_id=crm_user_id,
+                app_id=app_id,
+                level=Roles.ADMIN,
+            )
+
+    def is_user_manager_permission_access(self, *, crm_user_id: int, app_id: int) -> bool:
+        with self._uow_factory.create() as uow:
+            return self.has_user_role(
+                uow,
+                crm_user_id=crm_user_id,
+                app_id=app_id,
+                level=Roles.MANAGER,
+            )
             
     def list_user_permissions(self, command: ListUserPermissionCommand) -> ListUserPermissionResponse:
 
@@ -54,21 +82,13 @@ class CrmAuthorizationService:
             permissions=[AuthenticationCommandsMapper.permission_domain_to_value(it) for it in permissions]
         )
     
-    def check_user_app_access(self, *,  crm_user_id: int, app_id: int) -> None:
+    def has_user_app_access(self, *,  crm_user_id: int, app_id: int) -> None:
         with self._uow_factory.create() as uow:
             access = self._get_user_access(uow, crm_user_id = crm_user_id, app_id = app_id)
         
-        if  access is not None:
-            raise ApplicationError(f"App doesn't exist")
+        if  access is None:
+            raise AuthorizationException()
 
-    def is_user_admin_permission_access(self, *, crm_user_id: int, app_id: int) -> bool:
-        with self._uow_factory.create() as uow:
-            return self._get_user_role(uow, crm_user_id=crm_user_id, app_id=app_id).is_admin_role()
-            
-    def is_user_manager_permission_access(self, *, crm_user_id: int, app_id: int) -> bool:
-        with self._uow_factory.create() as uow:
-            return self._get_user_role(uow, crm_user_id=crm_user_id, app_id=app_id).is_manager_role()
-    
     def list_permissions(self, command: ListPermissionCommand) -> ListPermissionsResponse:
         
         with self._uow_factory.create() as uow:
@@ -84,9 +104,15 @@ class CrmAuthorizationService:
         self,
         command: ListAppUsersCommand
     ) -> ListAppUsersResponse:
-        self.is_user_admin_permission_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         
         with self._uow_factory.create() as uow:
+            self.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.ADMIN
+            )
+            
             user_access = uow.user_app_access_repo.list_by_app_id(command.app_id)
             users: list[tuple[CrmUserEntity, CrmRoleEntity]] = []
             
@@ -95,10 +121,10 @@ class CrmAuthorizationService:
                 role = uow.role_repo.get_by_id(access.role_id)
                 
                 if user is None:
-                    raise ApplicationError
+                    raise UserNotFound()
                 
                 if role is None:
-                    raise ApplicationError
+                    raise RoleNotFound()
                 
                 users.append((user, role))
         
@@ -111,26 +137,28 @@ class CrmAuthorizationService:
         command: GrantUserAppPermission
     ) -> GrantUserPermissionResponse:
         
-        self.is_user_admin_permission_access(
-            crm_user_id=command.crm_user_id,
-            app_id=command.app_id
-        )
-
         with self._uow_factory.create() as uow:
+            self.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.ADMIN
+            )
+            
             manager = uow.user_repo.get_by_id(command.manager_id)
             
             if manager is None or manager.user_id is None:
-                raise ApplicationError
+                raise UserNotFound()
             
             app = uow.app_repo.get_by_id(command.app_id)
             
             if app is None or app.app_id is None:
-                raise ApplicationError
+                raise AppNotFound()
             
             permission = uow.permission_repo.get_by_id(command.permission_id)
             
             if permission is None or permission.permission_id is None:
-                raise ApplicationError
+                raise PermissionNotFound()
             
             new_permission = uow.user_permissions_repo.save(
                 CrmUserPermissionEntity(
@@ -145,18 +173,19 @@ class CrmAuthorizationService:
             crm_user_id=manager.user_id,
             permission=AuthenticationCommandsMapper.permission_domain_to_value(permission)
         )
-    
-    
+      
     def remove_permission(
         self,
         command: RemoveUserAppPermission
     ) -> RemoveUserPermissionResponse:
-        self.is_user_admin_permission_access(
-            crm_user_id=command.crm_user_id,
-            app_id=command.app_id
-        )
-        
         with self._uow_factory.create() as uow:
+            self.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.ADMIN
+            )
+            
             user_permissions = uow.user_permissions_repo.list_by_user_id_per_app(
                 user_id=command.crm_user_id,
                 app_id=command.app_id,
@@ -173,7 +202,7 @@ class CrmAuthorizationService:
                     break
             
             if removed_permission is None:
-                raise ApplicationError()
+                raise GeneralException()
             
         return RemoveUserPermissionResponse(
             app_id=command.app_id,
@@ -185,26 +214,28 @@ class CrmAuthorizationService:
         self,
         command: GrantUserAppAccess
     ) -> GrantUserAppAccessResponse:
-        
-        self.is_user_admin_permission_access(
-            crm_user_id=command.crm_user_id,
-            app_id=command.app_id
-        )
              
         with self._uow_factory.create() as uow:
+            self.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.ADMIN
+            )
+            
             manager = uow.user_repo.get_by_email(command.manager_email)
             if manager is None or manager.user_id is None:
-                raise ApplicationError
+                raise GeneralException
             
             app = uow.app_repo.get_by_id(command.app_id)
             
             if app is None or app.app_id is None:
-                raise ApplicationError
+                raise GeneralException
             
             role = uow.role_repo.get_by_id(command.role_id)
             
             if role is None or role.role_id is None:
-                raise ApplicationError
+                raise GeneralException
             
             app_access = uow.user_app_access_repo.save(
                 CrmUserAppAccessEntity(
@@ -225,21 +256,23 @@ class CrmAuthorizationService:
         command: RemoveUserAppAccess
     ) -> RemoveUserAppAccessResponse:
         
-        self.is_user_admin_permission_access(
-            crm_user_id=command.crm_user_id,
-            app_id=command.app_id
-        )
-
         with self._uow_factory.create() as uow:
+            self.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.ADMIN
+            )
+            
             manager = uow.user_repo.get_by_id(command.manager_id)
             
             if manager is None or manager.user_id is None:
-                raise ApplicationError
+                raise GeneralException
             
             app = uow.app_repo.get_by_id(command.app_id)
             
             if app is None or app.app_id is None:
-                raise ApplicationError
+                raise GeneralException
             
             app_access = uow.user_app_access_repo.delete(
                 user_id=manager.user_id,

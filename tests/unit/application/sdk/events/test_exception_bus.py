@@ -4,8 +4,9 @@ import asyncio
 
 import pytest
 
+from app.infra.exception import InfraGeneralException
 from app.infra.exception_bus.exception_bus import AsyncExceptionBusAdapter
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.exception_event import ExceptionEvent
 
@@ -94,7 +95,7 @@ def test_async_exception_bus_adapter_rejects_non_exception_message() -> None:
         message = DomainEventMessage(name="crm.events.saved", payload={"event_id": "evt-1"})
 
         with pytest.raises(
-            ApplicationError,
+            InfraGeneralException,
             match="AsyncExceptionBusAdapter expected ExceptionEvent message",
         ):
             await adapter.publish(message)
@@ -116,7 +117,7 @@ def test_async_exception_bus_adapter_rejects_mixed_batches_before_forwarding() -
         )
 
         with pytest.raises(
-            ApplicationError,
+            InfraGeneralException,
             match="AsyncExceptionBusAdapter expected ExceptionEvent message",
         ):
             await adapter.publish_many([valid_message, invalid_message])

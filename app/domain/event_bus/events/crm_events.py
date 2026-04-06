@@ -1,11 +1,8 @@
-from app.application.exceptions import ApplicationError
-from app.domain.event_bus.entity import DomainEventMessage
-
-
 from datetime import datetime
 from typing import Any
 
-from app.domain.exceptions import DomainError
+from app.domain.event_bus.entity import DomainEventMessage
+from app.domain.event_bus.events.exception import InvalidRawEventPayload, InvalidRawEventTime
 
 
 class RawEventMessage(DomainEventMessage):
@@ -51,14 +48,14 @@ class RawEventMessage(DomainEventMessage):
     def event_time_utc(self) -> datetime:
         value = self.payload["event_time_utc"]
         if not isinstance(value, datetime):
-            raise DomainError("RawEventMessage.event_time_utc must be datetime")
+            raise InvalidRawEventTime()
         return value
 
     @property
     def raw_payload(self) -> dict[str, Any]:
         value = self.payload.get("payload", {})
         if not isinstance(value, dict):
-            raise DomainError("RawEventMessage.payload['payload'] must be dict")
+            raise InvalidRawEventPayload()
         return dict(value)
 
 

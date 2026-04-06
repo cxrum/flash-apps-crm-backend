@@ -1,4 +1,4 @@
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.event_bus.events.crm_events import RawEventMessage
 from app.domain.events.CrmEventEntity import EventEntity
 
@@ -21,9 +21,9 @@ class RawEventMessageFactory:
         message_cls: type[TRawEventMessage] = RawEventMessage,
     ) -> TRawEventMessage:
         if not event.event_id:
-            raise ApplicationError("Event id is required for RawEventMessage")
+            raise GeneralException("Event id is required for RawEventMessage")
         if not event.click_id:
-            raise ApplicationError("Click id is required for RawEventMessage")
+            raise GeneralException("Click id is required for RawEventMessage")
 
         message_metadata = {
             "source": cls.DEFAULT_SOURCE,

@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import pytest
 
 from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.currency.entity import Money
 from app.domain.event_bus.entity import DomainEventMessage
@@ -52,7 +52,7 @@ def test_resolve_platform(
     resolved_ios_platfrom = service._resolve_platform(ios_platfrom.install_key, uow=unit_test_context.uow)
     resolved_android_platfrom = service._resolve_platform(android_platfrom.install_key, uow=unit_test_context.uow)
     
-    with pytest.raises(ApplicationError):
+    with pytest.raises(GeneralException):
         service._resolve_platform("uknown-platform-key", uow=unit_test_context.uow)
     
     assert resolved_android_platfrom.app_id == android_platfrom.app_id    
@@ -409,7 +409,7 @@ def test_async_update_param_handler_rejects_wrong_message_type_with_detailed_tex
         handler = AsyncUpdateParamHandler(StubUoWFactory(StubUnitOfWork()))
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match="expected UpdateCurrentParamMessage, got DomainEventMessage",
         ):
             await handler.handle(DomainEventMessage(name="crm.events.metric.saved"))
@@ -431,7 +431,7 @@ def test_async_update_param_handler_rejects_missing_click_with_detailed_text() -
         )
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match="could not find click with id='missing-click'",
         ):
             await handler.handle(message)
@@ -460,7 +460,7 @@ def test_async_update_param_handler_rejects_missing_param_definitions_with_detai
         )
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match=f"could not find param definitions for app_id='{app.app_id}' and click_id='{click.click_id}'",
         ):
             await handler.handle(message)

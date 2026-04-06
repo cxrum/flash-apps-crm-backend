@@ -14,6 +14,7 @@ from app.domain.app_user.app_user_repository_protocol import CrmAppUserRepositor
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
 from app.infra.db.apps.models import App, AppPlatform, AppUser, Install
+from app.infra.exception import InfraGeneralException
 
 
 def _apply_pagination(stmt, pagination: Pagination | None):
@@ -68,7 +69,7 @@ class SqlAlchemyCrmAppRepository(CrmAppRepositoryProtocol):
     def delete(self, app_id: int) -> CrmAppEntity:
         row = self.session.get(App, app_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         app = self._to_domain(row)
         self.session.delete(row)
@@ -143,7 +144,7 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
     def delete(self, platform_id: int) -> CrmAppPlatformEntity:
         row = self.session.get(AppPlatform, platform_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         platform = self._to_domain(row)
         self.session.delete(row)
@@ -234,7 +235,7 @@ class SqlAlchemyCrmAppUserRepository(CrmAppUserRepositoryProtocol):
     def delete(self, app_user_id: int) -> CrmAppUserEntity:
         row = self.session.get(AppUser, app_user_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         app_user = self._to_domain(row)
         self.session.delete(row)
@@ -300,7 +301,7 @@ class SqlAlchemyCrmInstallRepository(CrmInstallRepositoryProtocol):
     def delete(self, install_id: int) -> CrmInstallEntity:
         row = self.session.get(Install, install_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         install = self._to_domain(row)
         self.session.delete(row)

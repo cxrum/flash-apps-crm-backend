@@ -4,10 +4,12 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 
 from app.application.events_bus.factories.param_update_event import UpdateParamMessageFactory, UpdateParamValue
-from app.application.exceptions import ApplicationError
+from app.application.exception import PlatformNotFound
+from app.application.sdk.exception import ClickNotFound
 from app.application.sdk.ingestion.commands import SdkEventCommand, SdkEventsCommand, SdkInstallCommand, SdkParamsUpdateCommand
 from app.application.sdk.ingestion.event_builder import ConversionEventBuilder, MetricsEventBuilder, RevenueEventBuilder
 from app.application.events_bus.factories.sdk_event import SdkEventMessageFactory
+from app.application.sdk.ingestion.exception import InvalidInstallKey, RevenueDataRequired, UnsupportedEventType
 from app.application.sdk.ingestion.responses import SdkEventResponse, SdkInstallResponse, SdkUpdateParamsResponse
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.click.CrmClickEntity import CrmClickEntity
@@ -36,7 +38,7 @@ class IngestionService:
         platform = uow.app_platform_repo.get_by_install_key(install_key)
         
         if platform is None or platform.platform_id is None:
-            raise ApplicationError(f"Unknown install_key: {install_key}")
+            raise InvalidInstallKey(install_key)
         
         return platform
 
@@ -60,11 +62,13 @@ class IngestionService:
         with self._uow_factory.create() as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
             
-            if app_platform.platform_id is None:
-                raise ApplicationError(f"Unknown platform")
-            
+            if app_platform is None or app_platform.platform_id is None:
+                raise PlatformNotFound()
             
             click = self._resolve_click(command, app_platform.platform_id, uow)
+            
+            if click is None or click.click_id is None:
+                raise ClickNotFound("")
             
             saved_install = uow.install_repo.save(
                 CrmInstallEntity(
@@ -122,19 +126,19 @@ class IngestionService:
         if event.type == "conversion":
             return ConversionEventBuilder(**builder_kwargs)
 
-        raise ApplicationError(f"Unsupported event type: {event.type}")
+        raise UnsupportedEventType(event.type)
     
     # TODO Move event processing logic to an async background process. 
     async def process_batch_events(self, command: SdkEventsCommand):
         with self._uow_factory.create() as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
             click = uow.click_repo.get_by_id(command.click_id)       
-            
-            if app_platform.platform_id is None:
-                raise ApplicationError(f"Unknown platform")
-            
+
             if click is None:
-                raise ApplicationError("Click does not exist")
+                raise ClickNotFound(command.click_id)
+            
+            if app_platform is None or app_platform.platform_id is None:
+                raise PlatformNotFound()
             
             click.validate_platform_match(app_platform.platform_id)
 
@@ -166,7 +170,7 @@ class IngestionService:
                 if isinstance(builder, RevenueEventBuilder):
                     
                     if event.currency is None or event.amount is None:
-                        raise ApplicationError("Revenue error")
+                        raise RevenueDataRequired()
                     
                     amount_in_usd = self._currency_service.convert(
                         Money(
@@ -199,10 +203,7 @@ class IngestionService:
             click = uow.click_repo.get_by_id(command.click_id)
             
             if click is None:
-                raise ApplicationError(f"Unknown platform")
-            
-            if click is None:
-                raise ApplicationError("Click does not exist")
+                raise ClickNotFound(command.click_id)
             
         value = UpdateParamValue(
             click_id=command.click_id,

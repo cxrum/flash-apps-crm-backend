@@ -16,6 +16,7 @@ from app.domain.events.event_repository_protocol import CrmEventRepositoryProtoc
 from app.domain.pagination import Pagination
 from app.infra.db.apps.models import AppPlatform
 from app.infra.db.attribution.models import Click, CurrentParam, Event
+from app.infra.exception import InfraGeneralException
 
 
 class SqlAlchemyCrmClickRepository(CrmClickRepositoryProtocol):
@@ -81,7 +82,7 @@ class SqlAlchemyCrmClickRepository(CrmClickRepositoryProtocol):
     def delete(self, click_id: str) -> CrmClickEntity:
         row = self.session.get(Click, click_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         click = self._to_domain(row)
         self.session.delete(row)
@@ -346,7 +347,7 @@ class SqlAlchemyCrmEventRepository(CrmEventRepositoryProtocol):
     def delete(self, event_id: str) -> EventEntity:
         row = self.session.get(Event, event_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         event = self._to_domain(row)
         self.session.delete(row)

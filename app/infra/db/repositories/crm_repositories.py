@@ -19,6 +19,7 @@ from app.infra.db.crm.models import (
     CrmUserPermissions,
     CrmUser,
 )
+from app.infra.exception import InfraGeneralException
 
 
 def _apply_pagination(stmt, pagination: Pagination | None):
@@ -80,7 +81,7 @@ class SqlAlchemyCrmUserRepository(CrmUserRepositoryProtocol):
     def delete(self, user_id: int) -> CrmUserEntity:
         row = self.session.get(CrmUser, user_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         user = self._to_domain(row)
         self.session.delete(row)
@@ -140,7 +141,7 @@ class SqlAlchemyCrmRoleRepository(CrmRoleRepositoryProtocol):
     def delete(self, role_id: int) -> CrmRoleEntity:
         row = self.session.get(CrmRole, role_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         role = self._to_domain(row)
         self.session.delete(row)
@@ -199,7 +200,7 @@ class SqlAlchemyCrmPermissionRepository(CrmPermissionRepositoryProtocol):
     def delete(self, permission_id: int) -> CrmPermissionEntity:
         row = self.session.get(CrmPermission, permission_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         permission = self._to_domain(row)
         self.session.delete(row)

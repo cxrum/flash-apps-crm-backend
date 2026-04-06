@@ -6,7 +6,11 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any, ClassVar, Protocol
 
-from app.domain.exceptions import DomainError
+from app.domain.current_param.exception import (
+    AppendPolicyNotSupported,
+    MergePolicyNotSupported,
+    UnsupportedCurrentParamUpdatePolicy,
+)
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 
 
@@ -44,7 +48,7 @@ class _AppendCurrentParamStrategy:
         if isinstance(current_value, int | float) and isinstance(incoming_value, int | float):
             return current_value + incoming_value
 
-        raise DomainError("Append policy supports only string and list values")
+        raise AppendPolicyNotSupported()
 
 
 class _MergeCurrentParamStrategy:
@@ -66,7 +70,7 @@ class _MergeCurrentParamStrategy:
                     merged.append(item)
             return merged
 
-        raise DomainError("Merge policy supports only dict and list values")
+        raise MergePolicyNotSupported()
 
 
 @dataclass
@@ -97,7 +101,7 @@ class CrmCurrentParamEntity:
     def update_param(self, update_policy: str, value: Any) -> None:
         strategy = self._UPDATE_STRATEGIES.get(update_policy)
         if strategy is None:
-            raise DomainError(f"Unsupported param update_policy: {update_policy}")
+            raise UnsupportedCurrentParamUpdatePolicy(update_policy)
 
         normalized_value = self._normalize_value(value)
         new_value = strategy.apply(self.current_value(), normalized_value)

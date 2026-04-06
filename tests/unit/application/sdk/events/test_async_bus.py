@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.exception_event import ExceptionEvent
 from app.infra.event_bus.async_bus.in_memory import (
@@ -138,11 +138,11 @@ def test_async_event_bus_rejects_blank_event_names() -> None:
     bus = InMemoryAsyncEventBus()
     handler = RecordingHandler()
 
-    with pytest.raises(ApplicationError, match="Event name is required"):
+    with pytest.raises(GeneralException, match="Event name is required"):
         bus.subscribe("   ", handler)
 
     async def scenario() -> None:
-        with pytest.raises(ApplicationError, match="Event name is required"):
+        with pytest.raises(GeneralException, match="Event name is required"):
             await bus.publish(DomainEventMessage(name="   "))
 
     asyncio.run(scenario())
@@ -151,7 +151,7 @@ def test_async_event_bus_rejects_blank_event_names() -> None:
 def test_async_event_bus_unsubscribe_validates_registered_handler() -> None:
     bus = InMemoryAsyncEventBus()
 
-    with pytest.raises(ApplicationError, match="Handler is not registered"):
+    with pytest.raises(GeneralException, match="Handler is not registered"):
         bus.unsubscribe("crm.events.saved", RecordingHandler())
 
 

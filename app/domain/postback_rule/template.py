@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import re
 from typing import Any
 
-from app.domain.exceptions import DomainError
+from app.domain.postback_rule.exception import InvalidPostbackTemplateValue
 
 
 @dataclass
@@ -19,7 +19,7 @@ class PostbackTemplateEntity:
     def validate_payload(self):
         for _, value in self._template.items():
             if not self.validate_value_key(value):
-                raise DomainError()
+                raise InvalidPostbackTemplateValue(value)
 
     def set_payload(self, new: dict[str, str]):
         candidate_template: dict[str, str] = {}
@@ -28,7 +28,7 @@ class PostbackTemplateEntity:
             if self.validate_value_key(value):
                 candidate_template[key] = value
             else:
-                raise DomainError()
+                raise InvalidPostbackTemplateValue(value)
 
         self._template = candidate_template
 
@@ -71,7 +71,7 @@ class PostbackTemplateEntity:
     
     def set_value(self, key: str, value_key: str):
         if not self.validate_value_key(value_key):
-            raise DomainError()
+            raise InvalidPostbackTemplateValue(value_key)
 
         self._template[key] = value_key
 

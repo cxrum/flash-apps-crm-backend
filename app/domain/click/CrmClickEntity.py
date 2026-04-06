@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 import uuid
 
-from app.domain.exceptions import DomainError
+from app.domain.click.exception import IncorrectClickPlatform, IncorrectClickStatus
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 
 
@@ -38,10 +38,10 @@ class CrmClickEntity:
             source="sdk_install",
         )
     
-    def normalize_params(self, defenitions: list[CrmParamDefinitionEntity]) -> None:
+    def normalize_params(self, definitions: list[CrmParamDefinitionEntity]) -> None:
         self.normalized_params = {}
         
-        for definition in defenitions:
+        for definition in definitions:
             value = definition.get_param_value(self.raw_query)
             self.normalized_params[definition.machine_key] = value
         
@@ -67,8 +67,8 @@ class CrmClickEntity:
     
     def validate_click_status(self) -> None:
         if self.status not in ['accepted', 'redirected', 'duplicate', 'rejected', 'test']:
-            raise DomainError(f"Click has incorrect status")
+            raise IncorrectClickStatus()
     
     def validate_platform_match(self, expected_platform_id: int) -> None:
         if self.app_platform_id != expected_platform_id:
-            raise DomainError(f"Click {self.click_id} belongs to another platform")
+            raise IncorrectClickPlatform()

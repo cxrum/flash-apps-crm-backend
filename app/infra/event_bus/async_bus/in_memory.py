@@ -3,7 +3,7 @@ import inspect
 import logging
 from collections.abc import Sequence
 
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.service_protocol import (
     AsyncEventMessageHandler,
@@ -127,7 +127,7 @@ class InMemoryAsyncEventBus(IAsyncEventBus):
         normalized_event_name = self._normalize_event_name(event_name)
         handlers = self._subscribers.get(normalized_event_name)
         if handlers is None or handler not in handlers:
-            raise ApplicationError("Handler is not registered for this event")
+            raise GeneralException("Handler is not registered for this event")
         handlers.remove(handler)
         if not handlers:
             del self._subscribers[normalized_event_name]
@@ -144,7 +144,7 @@ class InMemoryAsyncEventBus(IAsyncEventBus):
     def _normalize_event_name(event_name: str) -> str:
         normalized_event_name = event_name.strip()
         if not normalized_event_name:
-            raise ApplicationError("Event name is required")
+            raise GeneralException("Event name is required")
         return normalized_event_name
 
     def _normalize_message(self, message: DomainEventMessage) -> DomainEventMessage:

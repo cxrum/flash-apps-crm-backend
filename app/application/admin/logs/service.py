@@ -21,14 +21,12 @@ class LogsService:
     ) -> None:
         self._uow_factory = uow_factory
         self._authorization_service = authorization_service
-
-
         
     def list_clicks(
         self,
         command: ListClickLogsCommand,
     ) -> ListClickLogsResponse:
-        self._authorization_service.check_user_app_access(
+        self._authorization_service.has_user_app_access(
             crm_user_id=command.crm_user_id,
             app_id=command.app_id,
         )
@@ -48,7 +46,7 @@ class LogsService:
         self,
         command: ListEventLogsCommand,
     ) -> ListRawEventsResponse:
-        self._authorization_service.check_user_app_access(
+        self._authorization_service.has_user_app_access(
             crm_user_id=command.crm_user_id,
             app_id=command.app_id,
         )
@@ -70,7 +68,7 @@ class LogsService:
         command: ListAuditLogCommand,
     ) -> ListAuditLogsResponse:
         if command.app_id is not None:
-            self._authorization_service.check_user_app_access(
+            self._authorization_service.has_user_app_access(
                 crm_user_id=command.crm_user_id,
                 app_id=command.app_id,
             )

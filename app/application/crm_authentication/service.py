@@ -1,9 +1,10 @@
 
 from app.application.contracts.ip2location import IP2LocationGatewayProtocol
 from app.application.crm_authentication.commands import UserLoginCommand, UserRegistrationCommand
+from app.application.crm_authentication.exceptions import EmailIsExist, InvalidOrExpiredToken, InvalidPasswordOrEmail
 from app.application.crm_authentication.protocol import CrmAuthenticationProtocol
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.hash_protocol import HashProtocol, HashableValue
 from app.domain.uow import UnitOfWorkFactoryProtocol
 from app.domain.user import CrmUserEntity
@@ -25,7 +26,7 @@ class CrmAuthentication(CrmAuthenticationProtocol):
             exist_user = uow.user_repo.get_by_id(int(token))
             
             if exist_user is None or exist_user.user_id is None:
-                raise ApplicationError(f"Invalid or expired token")
+                raise InvalidOrExpiredToken()
         
         return ResolvedCrmUserResponse(
             crm_user_id=exist_user.user_id,
@@ -43,7 +44,7 @@ class CrmAuthentication(CrmAuthenticationProtocol):
             exist_user = uow.user_repo.get_by_email(command.user_login)
             
             if exist_user is None or exist_user.user_id is None:
-                raise ApplicationError(f"Password or email is incorrect")
+                raise InvalidPasswordOrEmail()
             
             is_password_correct = self._hash_service.compare_hash(
                 raw_value=HashableValue.from_str(command.password),
@@ -51,7 +52,7 @@ class CrmAuthentication(CrmAuthenticationProtocol):
             )
             
             if not is_password_correct:
-                raise ApplicationError(f"Password or email is incorrect")
+                raise InvalidPasswordOrEmail()
             
         return ResolvedCrmUserResponse(
             crm_user_id=exist_user.user_id,
@@ -64,7 +65,7 @@ class CrmAuthentication(CrmAuthenticationProtocol):
             exist_user = uow.user_repo.get_by_email(command.user_login)
             
             if exist_user is not None:
-                raise ApplicationError(f"User with this email exists")
+                raise EmailIsExist()
             
             password = self._hash_service.hash_value(
                 HashableValue.from_str(command.password)

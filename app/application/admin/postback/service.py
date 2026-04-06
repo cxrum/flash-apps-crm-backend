@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Any, ClassVar, Protocol
 
 from app.application.admin.crm_authorization.service import CrmAuthorizationService
+from app.application.admin.exception import ClickNotFound, EventNotFound
+from app.application.admin.postback.exception import PostbackAppMismatch, PostbackNotFound, PostbackPlatformNotFound, RuleNotFound, SecretNotFound, TemplateNotFound
 from app.application.admin.postback.mappers import PostbackCommandsMapper
 from app.application.admin.postback.commands import (
     DeletePostbackRuleCommand,
@@ -14,7 +16,6 @@ from app.application.admin.postback.commands import (
 from app.application.admin.postback.commands import CreatePostbackRuleCommand, EvaluatePostbackRuleCommand
 from app.application.base import JsonDict
 from app.application.contracts.requester import S2SRequesterProtocol
-from app.application.exceptions import ApplicationError
 from app.application.admin.postback.responses import (
     CreatePostbackResponse,
     DeletePostbackResponse,
@@ -151,7 +152,7 @@ class PostbackService:
         if self._authorization_service is None or app_id is None:
             return
 
-        self._authorization_service.check_user_app_access(
+        self._authorization_service.has_user_app_access(
             crm_user_id=crm_user_id,
             app_id=app_id,
         )
@@ -165,12 +166,12 @@ class PostbackService:
     ) -> CrmPostbackRuleEntity:
         postback = uow.postback_rule_repo.get_by_id(postback_id)
         if postback is None:
-            raise ApplicationError(f"Postback rule with id {postback_id} doesn't exist")
+            raise PostbackNotFound(postback_id)
 
         if app_id is not None:
             platform = uow.app_platform_repo.get_by_id(postback.platform_app_id)
             if platform is None or platform.app_id != app_id:
-                raise ApplicationError(f"App {app_id} doesn't exist")
+                raise PostbackAppMismatch(app_id)
 
         return postback
 
@@ -196,7 +197,7 @@ class PostbackService:
                 platforms = [uow.app_platform_repo.get_by_id(command.platform_app_id)]
 
             if len(platforms) == 0:
-                raise ApplicationError()
+                raise PostbackPlatformNotFound()
 
             secrets = uow.secret_template_repo.list_all()
             secret_codes = [i.code for i in secrets]
@@ -204,7 +205,7 @@ class PostbackService:
             postback_rules: list[CrmPostbackRuleEntity] = []
             for platform in platforms:
                 if platform is None or platform.platform_id is None:
-                    raise ApplicationError("Platform doesn't exist")
+                    raise PostbackPlatformNotFound()
 
                 postback_rule = CrmPostbackRuleEntity(
                     platform_app_id=platform.platform_id,
@@ -236,11 +237,12 @@ class PostbackService:
         with self._uow_factory.create() as uow:
             event = uow.event_repo.get_by_id(command.event_id)
             if event is None:
-                raise ApplicationError()
+                raise EventNotFound(command.event_id)
 
             click = uow.click_repo.get_by_id(event.click_id)
+            
             if click is None:
-                raise ApplicationError()
+                raise ClickNotFound(event.click_id)
 
             postback_rules = uow.postback_rule_repo.list_by_filters(
                 platform_app_id=click.app_platform_id,
@@ -273,7 +275,7 @@ class PostbackService:
     ) -> JsonDict:
         platform = uow.app_platform_repo.get_by_id(platform_id)
         if platform is None:
-            raise ApplicationError()
+            raise PostbackPlatformNotFound()
 
         latest_secrets = PostbackService._latest_secrets_by_template(
             uow.app_secret_repo.list_active_by_app(platform.app_id, platform_id=platform_id)
@@ -282,12 +284,13 @@ class PostbackService:
         unmasked_auth_params: JsonDict = {}
         for key, value in auth_param.items():
             template = uow.secret_template_repo.get_by_code(value)
+            
             if template is None or template.template_id is None:
-                raise ApplicationError()
+                raise TemplateNotFound(value)
 
             secret = latest_secrets.get(template.template_id)
             if secret is None:
-                raise ApplicationError()
+                raise SecretNotFound(value)
 
             unmasked_auth_params[key] = secret.encrypted_value
 
@@ -297,7 +300,7 @@ class PostbackService:
         with self._uow_factory.create() as uow:
             rule = uow.postback_rule_repo.get_by_id(command.postback_rule_id)
             if rule is None:
-                raise ApplicationError()
+                raise RuleNotFound(command.postback_rule_id)
 
             unmasked_auth_params = self.build_auth_params(
                 uow,
@@ -371,10 +374,10 @@ class PostbackService:
                 platform = uow.app_platform_repo.get_by_id(command.platform_app_id)
                 
                 if platform is None or platform.platform_id is None:
-                    raise ApplicationError("Platform doesn't exist")
+                    raise PostbackPlatformNotFound()
                 
                 if command.app_id is not None and platform.app_id != command.app_id:
-                    raise ApplicationError(f"App {command.app_id} doesn't exist")
+                    raise PostbackAppMismatch(command.app_id)
                 
                 platform_app_id = platform.platform_id
 
@@ -425,7 +428,7 @@ class PostbackService:
             )
             
             if postback.rule_id is None:
-                raise ApplicationError()
+                raise PostbackNotFound()
             
             deleted_postback = uow.postback_rule_repo.delete(postback.rule_id)
 

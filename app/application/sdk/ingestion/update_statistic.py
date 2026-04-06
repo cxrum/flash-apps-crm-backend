@@ -3,7 +3,7 @@ from datetime import UTC, date, datetime
 import json
 from typing import Any
 
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.currency.entity import Money
 from app.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import CustomParamsStatisticsAggregateEntity
@@ -30,7 +30,7 @@ class StatisticAggregates:
     @staticmethod
     def update(*, uow: UnitOfWorkProtocol, message: RawEventMessage, revenue_enabled: bool, app_platform: CrmAppPlatformEntity):
         if app_platform.platform_id is None:
-            raise ApplicationError()
+            raise GeneralException()
         
         definitions = uow.param_definition_repo.list_by_app_id(app_platform.app_id)
         
@@ -49,7 +49,7 @@ class StatisticAggregates:
         ) 
         
         if len(current_conversion_statistic) > 1:
-            raise ApplicationError( )
+            raise GeneralException( )
         
         if len(current_conversion_statistic) == 0:
             current_conversion_statistic.append(
@@ -88,7 +88,7 @@ class StatisticAggregates:
             )
             
             if len(current_conversion_detailed_statistic) > 1:
-                raise ApplicationError( )
+                raise GeneralException( )
             
             if len(current_conversion_detailed_statistic) == 0:
                 current_conversion_detailed_statistic.append(

@@ -4,8 +4,8 @@ from app.application.mapper import PaginationMapper
 from app.application.sdk.apps.commands import CreateAppPlatformCommand, DeleteAppCommand, DeleteAppPlatformCommand, GetAppPlatformCommand, ListAppPlatformsCommand, AppConfigurationCommand, UpdateAppCommand, UpdateAppPlatformCommand
 from app.application.contracts.encryption import EncryptionServiceProtocol
 from app.application.sdk.apps.commands import CreateAppCommand, GetAppCommand, ListAppsCommand
+from app.application.sdk.apps.exception import InvalidAppPlatform, SdkAppCreateFailed, SdkAppNotFound, SdkAppPlatformByInstallKeyNotFound, SdkAppPlatformCreateFailed, SdkAppPlatformRepositoryEmptyEntity
 from app.application.sdk.apps.mappers import SdkAppResponsesMapper
-from app.application.exceptions import ApplicationError
 from app.application.sdk.apps.responses import *
 from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
@@ -29,7 +29,7 @@ class AppService:
         saved_app = uow.app_repo.get_by_id(app_id)
         
         if saved_app is None or saved_app.app_id is None:
-            raise ApplicationError("App repository returned entity without app_id")
+            raise SdkAppNotFound(app_id)
             
         return saved_app
 
@@ -78,7 +78,7 @@ class AppService:
             saved_app = uow.app_repo.save(app)
             
             if saved_app.app_id is None:
-                raise ApplicationError("App repository returned entity without app_id")
+                raise SdkAppCreateFailed()
             
         return CreateAppResponse(
             app=SdkAppResponsesMapper.app_domain_to_value(saved_app)
@@ -117,7 +117,7 @@ class AppService:
             app = uow.app_repo.get_by_id(command.app_id)
             
             if app is None:
-                raise ApplicationError(f"App with id {command.app_id} doesn't exist")
+                raise SdkAppNotFound(command.app_id)
 
             saved_platform_app = uow.app_platform_repo.list_by_app_id(command.app_id)
                 
@@ -136,17 +136,17 @@ class AppService:
         )
         
         if not platform_app.is_valid_platform():
-            raise ApplicationError("App platform does not valid")
+            raise InvalidAppPlatform(command.platform)
 
         with self._uow_factory.create() as uow:
             app = uow.app_repo.get_by_id(platform_app.app_id)
             if app is None:
-                raise ApplicationError(f"App with id {platform_app.app_id} doesn't exist")
+                raise SdkAppNotFound(platform_app.app_id)
 
             saved_platform_app = uow.app_platform_repo.save(platform_app)
                 
             if saved_platform_app.platform_id is None:
-                raise ApplicationError("App platform repository returned empty entity")
+                raise SdkAppPlatformCreateFailed()
         
         return CreatePlatformResponse(
             app_platform=SdkAppResponsesMapper.app_platform_domain_to_value(saved_platform_app),
@@ -157,7 +157,7 @@ class AppService:
         saved_platform_app = uow.app_platform_repo.get_by_id(app_platform_id)
     
         if saved_platform_app is None or saved_platform_app.platform_id is None:
-            raise ApplicationError("App platform repository returned empty entity")
+            raise SdkAppPlatformRepositoryEmptyEntity()
         
         return saved_platform_app
 
@@ -210,7 +210,7 @@ class AppService:
             app_platform = uow.app_platform_repo.get_by_install_key(command.install_key)
             
             if app_platform is None or app_platform.platform_id is None:
-                raise ApplicationError()
+                raise SdkAppPlatformByInstallKeyNotFound(command.install_key)
             
             templates = uow.secret_template_repo.list_all()
             latest_secrets = self._latest_secrets_by_template(

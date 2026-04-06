@@ -4,12 +4,13 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.event_bus.entity import DomainEventMessage
 from app.infra.event_bus.in_memory import (
     InMemoryEventBus,
     InMemoryMessageQueue,
 )
+from app.infra.exception import InfraGeneralException
 
 
 class RecordingHandler:
@@ -90,17 +91,17 @@ def test_event_bus_rejects_blank_event_names() -> None:
     bus = InMemoryEventBus()
     handler = RecordingHandler()
 
-    with pytest.raises(ApplicationError, match="Event name is required"):
+    with pytest.raises(InfraGeneralException, match="Event name is required"):
         bus.subscribe("   ", handler)
 
-    with pytest.raises(ApplicationError, match="Event name is required"):
+    with pytest.raises(InfraGeneralException, match="Event name is required"):
         bus.publish(DomainEventMessage(name="   "))
 
 
 def test_event_bus_unsubscribe_validates_registered_handler() -> None:
     bus = InMemoryEventBus()
 
-    with pytest.raises(ApplicationError, match="Handler is not registered"):
+    with pytest.raises(InfraGeneralException, match="Handler is not registered"):
         bus.unsubscribe("crm.events.saved", RecordingHandler())
 
 

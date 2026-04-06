@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
@@ -43,7 +43,7 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
             new_params.append(current_param)
         
         if new_params == []:
-            raise ApplicationError(
+            raise GeneralException(
                 f"AsyncUpdateParamHandler did not produce any params for click_id='{click_id}' "
                 f"from payload keys={sorted(params.keys())}"
             )
@@ -54,7 +54,7 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
     
     async def handle(self, message: DomainEventMessage) -> None:
         if not isinstance(message, UpdateCurrentParamMessage):
-            raise ApplicationError(
+            raise GeneralException(
                 "AsyncUpdateParamHandler expected UpdateCurrentParamMessage, "
                 f"got {type(message).__name__}"
             )
@@ -64,14 +64,14 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
             click = uow.click_repo.get_by_id(message.click_id)
             
             if click is None:
-                raise ApplicationError(
+                raise GeneralException(
                     f"AsyncUpdateParamHandler could not find click with id='{message.click_id}'"
                 )
             
             app_platform = uow.app_platform_repo.get_by_id(click.app_platform_id)
             
             if app_platform is None:
-                raise ApplicationError(
+                raise GeneralException(
                     "AsyncUpdateParamHandler could not find app platform "
                     f"with id='{click.app_platform_id}' for click_id='{message.click_id}'"
                 )
@@ -79,7 +79,7 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
             params_dictionary = uow.param_definition_repo.list_by_app_id(app_platform.app_id)
             
             if not params_dictionary:
-                raise ApplicationError(
+                raise GeneralException(
                     "AsyncUpdateParamHandler could not find param definitions "
                     f"for app_id='{app_platform.app_id}' and click_id='{message.click_id}'"
                 )

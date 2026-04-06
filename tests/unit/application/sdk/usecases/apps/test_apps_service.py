@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.hash_protocol import HashableValue
 from tests.unit.builders import (
     build_app_entity,
@@ -33,14 +33,14 @@ def test_create_app_drafts_and_saves_app(unit_test_context: UnitTestContext) -> 
 def test_create_app_platform_rejects_invalid_platform(unit_test_context: UnitTestContext) -> None:
     service = unit_test_context.build_app_service()
 
-    with pytest.raises(ApplicationError, match="App platform does not valid"):
+    with pytest.raises(GeneralException, match="App platform does not valid"):
         service.create_app_platform(build_sdk_create_app_platform_command(platform="web"))
 
 
 def test_create_app_platform_rejects_missing_app(unit_test_context: UnitTestContext) -> None:
     service = unit_test_context.build_app_service()
 
-    with pytest.raises(ApplicationError, match="App with id 1 doesn't exist"):
+    with pytest.raises(GeneralException, match="App with id 1 doesn't exist"):
         service.create_app_platform(build_sdk_create_app_platform_command())
 
 

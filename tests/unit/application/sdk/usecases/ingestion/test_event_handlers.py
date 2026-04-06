@@ -8,7 +8,7 @@ import pytest
 from app.application.events_bus.handlers.conversion import AsyncConversionHandler
 from app.application.events_bus.handlers.metric import AsyncMetricHandler
 from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.di.dependencies import get_event_subscribers
 from app.domain.app import CrmAppEntity
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
@@ -195,7 +195,7 @@ def test_async_metric_handler_rejects_wrong_message_type_with_detailed_text() ->
         handler = AsyncMetricHandler(StubUoWFactory(StubUnitOfWork()))
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match="expected MetricEventMessage, got DomainEventMessage",
         ):
             await handler.handle(DomainEventMessage(name=MetricEventMessage.EVENT_NAME))
@@ -209,7 +209,7 @@ def test_async_metric_handler_rejects_missing_click_with_detailed_text() -> None
         handler = AsyncMetricHandler(StubUoWFactory(uow))
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match="could not find click with id='missing-click'",
         ):
             await handler.handle(_build_metric_message(click_id="missing-click"))
@@ -226,7 +226,7 @@ def test_async_metric_handler_rejects_missing_app_platform_with_detailed_text() 
         )
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match=f"could not find app platform with id='{click.app_platform_id}' for click_id='{click.click_id}'",
         ):
             await handler.handle(_build_metric_message(click_id=click.click_id))
@@ -241,7 +241,7 @@ def test_async_metric_handler_rejects_missing_metric_definitions_with_detailed_t
         app, _, click = _seed_click_context(uow)
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match=f"could not find metric definitions for app_id='{app.app_id}' and click_id='{click.click_id}'",
         ):
             await handler.handle(_build_metric_message(click_id=click.click_id))
@@ -262,7 +262,7 @@ def test_async_metric_handler_rejects_unknown_event_key_with_detailed_text() -> 
         )
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match=f"could not find metric definition for event_key='first_open' app_id='{app.app_id}' and click_id='{click.click_id}'",
         ):
             await handler.handle(_build_metric_message(click_id=click.click_id))
@@ -284,7 +284,7 @@ def test_async_metric_handler_rejects_disabled_metric_definition() -> None:
         )
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match="metric definition .* is disabled",
         ):
             await handler.handle(_build_metric_message(click_id=click.click_id))
@@ -305,7 +305,7 @@ def test_async_metric_handler_rejects_money_fields() -> None:
         )
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match="metric events do not support revenue fields",
         ):
             await handler.handle(
@@ -715,7 +715,7 @@ def test_async_conversion_handler_rejects_wrong_message_type_with_detailed_text(
         handler = AsyncConversionHandler(StubUoWFactory(StubUnitOfWork()))
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match="expected ConversionEventMessage, got DomainEventMessage",
         ):
             await handler.handle(DomainEventMessage(name=ConversionEventMessage.EVENT_NAME))
@@ -729,7 +729,7 @@ def test_async_conversion_handler_rejects_missing_click_with_detailed_text() -> 
         handler = AsyncConversionHandler(StubUoWFactory(uow))
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match="could not find click with id='missing-click'",
         ):
             await handler.handle(_build_conversion_message(click_id="missing-click"))
@@ -746,7 +746,7 @@ def test_async_conversion_handler_rejects_missing_app_platform_with_detailed_tex
         )
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match=f"could not find app platform with id='{click.app_platform_id}' for click_id='{click.click_id}'",
         ):
             await handler.handle(_build_conversion_message(click_id=click.click_id))
@@ -761,7 +761,7 @@ def test_async_conversion_handler_rejects_missing_conversion_definitions_with_de
         app, _, click = _seed_click_context(uow)
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match=f"could not find conversion definitions for app_id='{app.app_id}' and click_id='{click.click_id}'",
         ):
             await handler.handle(_build_conversion_message(click_id=click.click_id))
@@ -782,7 +782,7 @@ def test_async_conversion_handler_rejects_unknown_event_key_with_detailed_text()
         )
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match=f"could not find conversion definition for event_key='purchase' app_id='{app.app_id}' and click_id='{click.click_id}'",
         ):
             await handler.handle(_build_conversion_message(click_id=click.click_id))
@@ -804,7 +804,7 @@ def test_async_conversion_handler_rejects_revenue_fields_when_definition_disallo
         )
 
         with pytest.raises(
-            ApplicationError,
+            GeneralException,
             match="does not allow revenue fields",
         ):
             await handler.handle(
@@ -849,7 +849,7 @@ def test_async_conversion_handler_rejects_missing_required_fields(
             )
         )
 
-        with pytest.raises(ApplicationError, match=expected_match):
+        with pytest.raises(GeneralException, match=expected_match):
             await handler.handle(
                 _build_conversion_message(
                     click_id=click.click_id,
@@ -892,7 +892,7 @@ def test_async_conversion_handler_rejects_unexpected_revenue_fields(
             )
         )
 
-        with pytest.raises(ApplicationError, match=expected_match):
+        with pytest.raises(GeneralException, match=expected_match):
             await handler.handle(
                 _build_conversion_message(
                     click_id=click.click_id,

@@ -7,11 +7,13 @@ import logging
 import pytest
 from fastapi import FastAPI, Request
 
-from app.application.exception_bus.handlers.stub import AsyncStubExceptionHandler
-from app.application.exceptions import ApplicationError
+from app.core.exception import BaseBoundaryException
+from app.infra.exception import InfraGeneralException
+from app.infra.exception_bus.handlers.stub import AsyncStubExceptionHandler
+from app.application.exception import GeneralException
 from app.core.config import settings
 from app.di.dependencies import (
-    build_fastapi_exception_handler,
+    build_exception_handler,
     get_exception_event_subscribers,
     register_fastapi_exception_handlers,
 )
@@ -88,7 +90,7 @@ def test_async_stub_exception_handler_rejects_non_exception_messages() -> None:
         handler = AsyncStubExceptionHandler()
 
         with pytest.raises(
-            ApplicationError,
+            InfraGeneralException,
             match="AsyncStubExceptionHandler expected ExceptionEvent, got DomainEventMessage",
         ):
             await handler.handle(DomainEventMessage(name="crm.events.saved"))
@@ -112,13 +114,13 @@ def test_build_fastapi_exception_handler_publishes_exception_event_and_returns_5
         bus = RecordingExceptionBus()
         original_debug_mode = settings.debug_mode
         settings.debug_mode = False
-        handler = build_fastapi_exception_handler(bus)
+        handler = build_exception_handler(bus)
 
         try:
             response = await handler(build_request(), RuntimeError("boom"))
 
             assert response.status_code == 500
-            assert json.loads(response.body) == {"detail": "Internal Server Error"}
+            assert json.loads(response.body) == {"detail": "Internal server error"}
             assert len(bus.published_messages) == 1
 
             message = bus.published_messages[0]
@@ -142,4 +144,4 @@ def test_register_fastapi_exception_handlers_registers_generic_exception_handler
 
     register_fastapi_exception_handlers(app, bus)
 
-    assert Exception in app.exception_handlers
+    assert BaseBoundaryException in app.exception_handlers

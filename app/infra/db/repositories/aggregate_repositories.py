@@ -15,6 +15,7 @@ from app.domain.statistics_aggregate.StatisticsAggregateEntity import Statistics
 from app.domain.statistics_aggregate.statistics_aggregate_repository_protocol import StatisticsRepositoryProtocol
 from app.domain.pagination import Pagination
 from app.infra.db.aggregates.models import CustomParamsStatisticsAggregate, StatisticsAggregate
+from app.infra.exception import InfraGeneralException
 
 
 def _apply_pagination(stmt, pagination: Pagination | None):
@@ -80,7 +81,7 @@ class SqlAlchemyStatisticsRepository(StatisticsRepositoryProtocol):
     def delete(self, aggregate_id: int) -> StatisticsAggregateEntity:
         row = self.session.get(StatisticsAggregate, aggregate_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         aggregate = self._to_domain(row)
         self.session.delete(row)
@@ -197,7 +198,7 @@ class SqlAlchemyCustomParamsStatisticsRepository(CustomParamsStatisticsRepositor
     def delete(self, aggregate_id: int) -> CustomParamsStatisticsAggregateEntity:
         row = self.session.get(CustomParamsStatisticsAggregate, aggregate_id)
         if row is None:
-            raise RuntimeError()
+            raise InfraGeneralException()
 
         aggregate = self._to_domain(row)
         self.session.delete(row)

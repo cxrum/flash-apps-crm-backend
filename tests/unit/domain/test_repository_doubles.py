@@ -251,13 +251,13 @@ def test_postback_rule_repository_save_get_and_list_by_app() -> None:
     repository = InMemoryCrmPostbackRuleRepository(platform_lookup=app_platform_repo.get_by_id)
     first = repository.save(
         build_postback_rule_entity(
-            platfrom_app_id=ios_platform.platform_id or 0,
+            platform_app_id=ios_platform.platform_id or 0,
             is_active=True,
         )
     )
     second = repository.save(
         build_postback_rule_entity(
-            platfrom_app_id=android_platform.platform_id or 0,
+            platform_app_id=android_platform.platform_id or 0,
             name="Purchase postback",
             trigger_type="conversion",
             event_key="purchase",
@@ -266,7 +266,7 @@ def test_postback_rule_repository_save_get_and_list_by_app() -> None:
     )
     repository.save(
         build_postback_rule_entity(
-            platfrom_app_id=other_platform.platform_id or 0,
+            platform_app_id=other_platform.platform_id or 0,
             name="Other app postback",
         )
     )
@@ -286,7 +286,7 @@ def test_postback_rule_repository_can_filter_by_dynamic_fields() -> None:
     repository = InMemoryCrmPostbackRuleRepository(platform_lookup=app_platform_repo.get_by_id)
     repository.save(
         build_postback_rule_entity(
-            platfrom_app_id=ios_platform.platform_id or 0,
+            platform_app_id=ios_platform.platform_id or 0,
             name="Install postback",
             trigger_type="install",
             http_method="POST",
@@ -295,7 +295,7 @@ def test_postback_rule_repository_can_filter_by_dynamic_fields() -> None:
     )
     expected = repository.save(
         build_postback_rule_entity(
-            platfrom_app_id=ios_platform.platform_id or 0,
+            platform_app_id=ios_platform.platform_id or 0,
             name="Purchase postback",
             endpoint_url="https://example.com/postback/purchase",
             trigger_type="conversion",
@@ -309,7 +309,7 @@ def test_postback_rule_repository_can_filter_by_dynamic_fields() -> None:
     )
     repository.save(
         build_postback_rule_entity(
-            platfrom_app_id=android_platform.platform_id or 0,
+            platform_app_id=android_platform.platform_id or 0,
             name="Purchase postback",
             endpoint_url="https://example.com/postback/purchase",
             trigger_type="conversion",
@@ -323,7 +323,7 @@ def test_postback_rule_repository_can_filter_by_dynamic_fields() -> None:
     )
 
     filtered = repository.list_by_filters(
-        platfrom_app_id=ios_platform.platform_id,
+        platform_app_id=ios_platform.platform_id,
         name="Purchase postback",
         endpoint_url="https://example.com/postback/purchase",
         trigger_type="conversion",

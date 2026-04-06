@@ -7,6 +7,7 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 from app.domain.exceptions import DomainError
+from app.domain.param_definition.exception import InvalidParamDataType, InvalidParamValue
 
 @unique
 class DefaultParamKeys(Enum):
@@ -63,7 +64,7 @@ class CrmParamDefinitionEntity:
     
     def validate_data_type(self):
         if self.data_type not in self._data_types():
-            raise DomainError()
+            raise InvalidParamDataType(self.data_type)
     
     @staticmethod
     def _data_types() -> list[str]:
@@ -114,7 +115,7 @@ class CrmParamDefinitionEntity:
         if self.data_type == "list":
             return self._coerce_list(value)
 
-        raise DomainError(f"Unsupported param data_type: {self.data_type}")
+        raise InvalidParamDataType(self.data_type)
 
     def _coerce_integer(self, value: object) -> int:
         if isinstance(value, bool):
@@ -228,6 +229,8 @@ class CrmParamDefinitionEntity:
         raise self._invalid_value(value)
 
     def _invalid_value(self, value: object) -> DomainError:
-        return DomainError(
-            f"Param '{self.machine_key}' expected {self.data_type}, got {value!r}",
+        return InvalidParamValue(
+            machine_key=self.machine_key,
+            data_type=self.data_type,
+            value=value,
         )

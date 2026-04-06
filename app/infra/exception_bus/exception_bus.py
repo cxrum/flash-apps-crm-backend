@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from app.application.exceptions import ApplicationError
 from app.domain.event_bus.events.exception_event import ExceptionEvent
 from app.domain.event_bus.service_protocol import (
     AsyncEventMessageHandler,
@@ -10,6 +9,7 @@ from app.domain.event_bus.service_protocol import (
     IAsyncEventBus,
     IAsyncExceptionBus,
 )
+from app.infra.exception import InfraGeneralException
 
 
 class AsyncExceptionBusAdapter(IAsyncExceptionBus):
@@ -49,7 +49,7 @@ class AsyncExceptionBusAdapter(IAsyncExceptionBus):
     @staticmethod
     def _validate_message(message: object) -> ExceptionEvent:
         if not isinstance(message, ExceptionEvent):
-            raise ApplicationError(
+            raise InfraGeneralException(
                 "AsyncExceptionBusAdapter expected ExceptionEvent message"
             )
         return message

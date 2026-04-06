@@ -1,0 +1,21 @@
+server {
+    listen 8001;
+    server_name ${STAGE_SERVER_NAME};
+    location / {
+        proxy_pass http://${STAGE_API_HOST}:${API_PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+
+
+server {
+    listen 8000;
+    server_name ${PROD_SERVER_NAME};
+
+    location / {
+        proxy_pass http://${PROD_API_HOST}:${API_PORT};
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}

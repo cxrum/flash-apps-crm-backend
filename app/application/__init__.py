@@ -1,3 +1,3 @@
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 
-__all__ = ["ApplicationError"]
+__all__ = ["GeneralException"]

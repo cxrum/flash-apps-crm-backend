@@ -7,7 +7,7 @@ from urllib.parse import urlencode
 import pytest
 
 from app.application.admin.postback.service import PostbackService
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.click.CrmClickEntity import CrmClickEntity
@@ -299,7 +299,7 @@ def test_create_rule_raises_when_app_has_no_platforms(
     uow = StubUnitOfWork()
     service, _ = _build_service(uow, async_event_bus)
 
-    with pytest.raises(ApplicationError):
+    with pytest.raises(GeneralException):
         service.create_postback(build_admin_create_postback_rule_command(app_id=1))
 
     assert uow.commit_count == 0
@@ -313,7 +313,7 @@ def test_create_rule_raises_when_selected_platform_does_not_exist(
     uow = StubUnitOfWork()
     service, _ = _build_service(uow, async_event_bus)
 
-    with pytest.raises(ApplicationError, match="Platform doesn't exist"):
+    with pytest.raises(GeneralException, match="Platform doesn't exist"):
         service.create_postback(
             build_admin_create_postback_rule_command(
                 app_id=1,
@@ -367,7 +367,7 @@ def test_evaluate_raises_when_event_does_not_exist(
     uow = StubUnitOfWork()
     service, _ = _build_service(uow, async_event_bus)
 
-    with pytest.raises(ApplicationError):
+    with pytest.raises(GeneralException):
         service.evaluate(build_admin_evaluate_postback_rule_command(event_id="missing-event"))
 
     assert uow.commit_count == 0
@@ -381,7 +381,7 @@ def test_evaluate_raises_when_click_does_not_exist(
     service, _ = _build_service(uow, async_event_bus)
     uow.event_repo.insert(build_event_entity(event_id="evt-1", click_id="missing-click"))
 
-    with pytest.raises(ApplicationError):
+    with pytest.raises(GeneralException):
         service.evaluate(build_admin_evaluate_postback_rule_command())
 
     assert uow.commit_count == 0
@@ -663,7 +663,7 @@ def test_build_auth_params_raises_for_unknown_secret_template() -> None:
     uow = StubUnitOfWork()
     _, platform, _, _, _ = _seed_event_context(uow)
 
-    with pytest.raises(ApplicationError):
+    with pytest.raises(GeneralException):
         PostbackService.build_auth_params(
             uow,
             {"Authorization": "missing-secret"},
@@ -676,7 +676,7 @@ def test_build_auth_params_raises_when_active_secret_is_missing() -> None:
     _, platform, _, _, _ = _seed_event_context(uow)
     uow.secret_template_repo.save(build_secret_template_entity(code="api_key"))
 
-    with pytest.raises(ApplicationError):
+    with pytest.raises(GeneralException):
         PostbackService.build_auth_params(
             uow,
             {"Authorization": "api_key"},
@@ -691,7 +691,7 @@ def test_execute_raises_when_rule_does_not_exist(
         uow = StubUnitOfWork()
         service, requester = _build_service(uow, async_event_bus)
 
-        with pytest.raises(ApplicationError):
+        with pytest.raises(GeneralException):
             await service.execute(build_admin_execute_postback_rule_command(postback_rule_id=999))
 
         assert requester.calls == []

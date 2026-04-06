@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from app.application.admin.crm_authorization.commands import GrantUserAppAccess, GrantUserAppPermission, ListPermissionCommand, ListAppUsersCommand, ListUserPermissionCommand, RemoveUserAppAccess, RemoveUserAppPermission
 from app.application.admin.crm_authorization.mappers import AuthenticationCommandsMapper
 from app.application.admin.crm_authorization.responses import GrantUserAppAccessResponse, GrantUserPermissionResponse, ListAppUsersResponse, ListPermissionsResponse, ListUserPermissionResponse, RemoveUserAppAccessResponse, RemoveUserPermissionResponse
-from app.application.exceptions import ApplicationError
+from app.application.exception import GeneralException
 from app.application.mapper import PaginationMapper
 from app.core.utils.general_mapper import GeneralMapper
 from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity

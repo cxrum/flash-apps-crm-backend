@@ -1,4 +1,5 @@
 from app.application.admin.crm_authorization.service import CrmAuthorizationService
+from app.application.admin.secrets.exception import AppSecretNotFound, SecretTemplateNotFound
 from app.application.admin.secrets.commands import (
     DeleteAppSecretCommand,
     DeleteSecretTemplateCommand,
@@ -8,9 +9,9 @@ from app.application.admin.secrets.commands import CreateAppSecretCommand, Creat
 from app.application.admin.secrets.mappers import SecretsCommandsMapper, SecretsResponseMapper
 from app.application.admin.secrets.responses import AppSecretResponseEntry, CreateAppSecretResponse, CreateSecretTemplateResponse, DeleteAppSecretResponse, DeleteSecretResponse, GetAppSecretResponse, GetSecretTemplatesResponse, ListAppSecretsResponse, ListSecretTemplatesResponse, UpdateAppSecretResponse, UpdateSecretTemplateResponse
 from app.application.contracts.encryption import EncryptionServiceProtocol
-from app.application.exceptions import ApplicationError
 from app.application.mapper import PaginationMapper
 from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
+from app.domain.role.CrmRoleEntity import Roles
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
@@ -26,22 +27,6 @@ class SecretsService:
         self._encryption_service = encryption_service
 
     @staticmethod
-    def _require_crm_user_id(crm_user_id: int | None) -> int:
-        if crm_user_id is None:
-            raise ApplicationError("CRM user context is required")
-        return crm_user_id
-    
-    def _check_admin_access(self, crm_user_id: int, app_id: int):
-        has_admin_access = self._authorization_service.is_user_admin_permission_access(crm_user_id=crm_user_id, app_id=app_id)
-        if not has_admin_access:
-            raise ApplicationError()
-        
-    def _check_manager_access(self, crm_user_id: int, app_id: int):
-        has_admin_access = self._authorization_service.is_user_manager_permission_access(crm_user_id=crm_user_id, app_id=app_id)
-        if not has_admin_access:
-            raise ApplicationError()
-    
-    @staticmethod
     def _get_secret_template(
         uow: UnitOfWorkProtocol,
         *,
@@ -49,7 +34,7 @@ class SecretsService:
     ) -> CrmSecretTemplateEntity:
         template = uow.secret_template_repo.get_by_id(secret_template_id)
         if template is None:
-            raise ApplicationError(f"")
+            raise SecretTemplateNotFound(secret_template_id)
 
         return template
     
@@ -57,10 +42,16 @@ class SecretsService:
         self,
         command: GetSecretTemplatesCommand
     ) -> GetSecretTemplatesResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        self._check_manager_access(command.crm_user_id, command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
+            self._authorization_service.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.MANAGER
+            )
+            
             template = self._get_secret_template(uow, secret_template_id=command.template_id)
             
         return GetSecretTemplatesResponse(
@@ -71,10 +62,16 @@ class SecretsService:
         self,
         command: ListSecretTemplatesCommand,
     ) -> ListSecretTemplatesResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        self._check_manager_access(command.crm_user_id, command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         
         with self._uow_factory.create() as uow:
+            self._authorization_service.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.MANAGER
+            )
+            
             
             # TODO Return templates that belong to the current user  
             templates = uow.secret_template_repo.list_all(
@@ -89,15 +86,20 @@ class SecretsService:
         self,
         command: UpdateSecretTemplateCommand,
     ) -> UpdateSecretTemplateResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        crm_user_id = self._require_crm_user_id(command.crm_user_id)
-        self._check_admin_access(crm_user_id, command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
+            self._authorization_service.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.ADMIN
+            )
+            
             existing_template = uow.secret_template_repo.get_by_id(command.template_id)
             
             if existing_template is None:
-                raise ApplicationError("Secret template doesn't exist")
+                raise SecretTemplateNotFound(command.template_id)
 
             existing_template.update(
                 code=command.code,
@@ -118,19 +120,25 @@ class SecretsService:
         self,
         command: CreateSecretTemplateCommand,
     ) -> CreateSecretTemplateResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        self._check_admin_access(command.crm_user_id, command.app_id)
-        
-        entity = CrmSecretTemplateEntity(
-            code = command.code,
-            display_name = command.display_name,
-            scope = command.scope,
-            value_type = command.secret_type,
-            is_masked = command.is_masked,
-            is_required = command.is_required
-        )
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
+            self._authorization_service.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.ADMIN
+            )
+            
+            entity = CrmSecretTemplateEntity(
+                code = command.code,
+                display_name = command.display_name,
+                scope = command.scope,
+                value_type = command.secret_type,
+                is_masked = command.is_masked,
+                is_required = command.is_required
+            )
+            
             template = uow.secret_template_repo.save(entity)
 
         return CreateSecretTemplateResponse(
@@ -141,7 +149,7 @@ class SecretsService:
         self, 
         command: DeleteSecretTemplateCommand
     ) -> DeleteSecretResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         
         with self._uow_factory.create() as uow:
             app_secret = uow.secret_template_repo.delete(command.template_id)
@@ -161,17 +169,17 @@ class SecretsService:
         app_secret = uow.app_secret_repo.get_by_id(secret_template_id)
         
         if app_secret is None:
-            raise ApplicationError("App secret doesn't exist")
+            raise AppSecretNotFound(secret_template_id)
 
         if platform_id is not None and app_secret.platform_id != platform_id:
-            raise ApplicationError("App secret doesn't exist")
+            raise AppSecretNotFound(secret_template_id)
 
         if app_secret.platform_id is not None:
             platform = uow.app_platform_repo.get_by_id(app_secret.platform_id)
             if platform is None or platform.app_id != app_id:
-                raise ApplicationError("App secret doesn't exist")
+                raise AppSecretNotFound(secret_template_id)
         elif platform_id is not None:
-            raise ApplicationError("App secret doesn't exist")
+            raise AppSecretNotFound(secret_template_id)
         
         return app_secret
     
@@ -179,26 +187,31 @@ class SecretsService:
         self,
         command: CreateAppSecretCommand,
     ) -> CreateAppSecretResponse: 
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        crm_user_id = self._require_crm_user_id(command.crm_user_id)
-        
-        encrypted_value=self._encryption_service.encrypt(command.value)
-        
-        entity = CrmAppSecretEntity(
-                template_id = command.secret_template_id,
-                encrypted_value = encrypted_value,
-                platform_id = command.platform_id,
-                active_flag = command.active_flag,
-                version = command.version,
-        )
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
+            self._authorization_service.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.ADMIN
+            )
+            
+            encrypted_value=self._encryption_service.encrypt(command.value)
+            entity = CrmAppSecretEntity(
+                    template_id = command.secret_template_id,
+                    encrypted_value = encrypted_value,
+                    platform_id = command.platform_id,
+                    active_flag = command.active_flag,
+                    version = command.version,
+            )
+
             secret = uow.app_secret_repo.save(entity)
             scoped_secrets = self._user_app_secrets_scope(
                 uow,
                 self._authorization_service,
                 app_id=command.app_id,
-                crm_user_id=crm_user_id,
+                crm_user_id=command.crm_user_id,
                 app_secrets=[secret],
                 encryption_service=self._encryption_service,
             )
@@ -210,7 +223,7 @@ class SecretsService:
     @staticmethod
     def _user_app_secrets_scope(
         uow: UnitOfWorkProtocol,
-        user_service: CrmAuthorizationService,
+        authorization_service: CrmAuthorizationService,
         *,
         app_id: int,
         crm_user_id: int,
@@ -219,13 +232,19 @@ class SecretsService:
     ) -> list[AppSecretResponseEntry]:
         
         result_response: list[AppSecretResponseEntry] = []
-        has_admin_access = user_service.is_user_admin_permission_access(crm_user_id=crm_user_id, app_id=app_id)
+        has_admin_access = authorization_service.has_user_role(
+            uow, 
+            crm_user_id=crm_user_id, 
+            app_id=app_id, 
+            level=Roles.ADMIN
+        )
         
         for app_secret in app_secrets:
+            
             template = uow.secret_template_repo.get_by_id(app_secret.template_id)
             
             if template is None or template.template_id is None:
-                raise ApplicationError("Secret template doesn't exist")
+                raise SecretTemplateNotFound(app_secret.template_id)
             
             res_value = app_secret.encrypted_value
             
@@ -256,8 +275,7 @@ class SecretsService:
         self,
         command: GetAppSecretValueCommand,
     ) -> GetAppSecretResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        crm_user_id = self._require_crm_user_id(command.crm_user_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             app_secret = self._get_app_secret(
@@ -269,7 +287,7 @@ class SecretsService:
                 uow,
                 self._authorization_service,
                 app_id=command.app_id,
-                crm_user_id=crm_user_id,
+                crm_user_id=command.crm_user_id,
                 app_secrets=[app_secret],
                 encryption_service=self._encryption_service,
             )
@@ -280,8 +298,7 @@ class SecretsService:
         self,
         command: ListAppSecretsCommand,
     ) -> ListAppSecretsResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        crm_user_id = self._require_crm_user_id(command.crm_user_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
 
         with self._uow_factory.create() as uow:
             app_secrets = uow.app_secret_repo.list_by_app_id(
@@ -294,7 +311,7 @@ class SecretsService:
                 uow,
                 self._authorization_service,
                 app_id=command.app_id,
-                crm_user_id=crm_user_id,
+                crm_user_id=command.crm_user_id,
                 app_secrets=app_secrets,
                 encryption_service=self._encryption_service,
             )
@@ -305,16 +322,16 @@ class SecretsService:
         self,
         command: UpdateAppSecretCommand,
     ) -> UpdateAppSecretResponse:
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        crm_user_id = self._require_crm_user_id(command.crm_user_id)
-        self._check_admin_access(crm_user_id, command.app_id)
-
-        has_admin_access = self._authorization_service.is_user_admin_permission_access(crm_user_id=crm_user_id, app_id=command.app_id)
-        if not has_admin_access:
-            raise ApplicationError()
-        
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         
         with self._uow_factory.create() as uow:
+            self._authorization_service.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.ADMIN
+            )
+            
             app_secret = self._get_app_secret(
                 uow,
                 secret_template_id=command.secret_id,
@@ -346,7 +363,7 @@ class SecretsService:
                 uow,
                 self._authorization_service,
                 app_id=command.app_id,
-                crm_user_id=crm_user_id,
+                crm_user_id=command.crm_user_id,
                 app_secrets=[saved_secret],
                 encryption_service=self._encryption_service,
             )
@@ -357,9 +374,16 @@ class SecretsService:
         self, 
         command: DeleteAppSecretCommand 
     ) -> DeleteAppSecretResponse: 
-        self._authorization_service.check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
+        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         
         with self._uow_factory.create() as uow:
+            self._authorization_service.required_user_role(
+                uow, 
+                crm_user_id=command.crm_user_id, 
+                app_id=command.app_id, 
+                level=Roles.ADMIN
+            )
+            
             app_secret = uow.app_secret_repo.delete(command.secret_id)
         
         return DeleteAppSecretResponse(

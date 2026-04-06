@@ -3,8 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 
+from app.domain.custom_params_statistics_aggregate.exception import InvalidCustomParamsStatisticsAmountCurrency
 from app.domain.currency.entity import Money
-from app.domain.exceptions import DomainError
 
 
 @dataclass()
@@ -27,14 +27,14 @@ class CustomParamsStatisticsAggregateEntity:
         
     def increase_amount_usd(self, amount: Money):
         if amount.base != "USD":
-            raise DomainError()
+            raise InvalidCustomParamsStatisticsAmountCurrency()
         
         self.amount_usd = self.amount_usd if self.amount_usd is not None else 0.0  
         self.amount_usd += amount.value
     
     def decrease_amount_usd(self, amount: Money):
         if amount.base != "USD":
-            raise DomainError()
+            raise InvalidCustomParamsStatisticsAmountCurrency()
         
         self.amount_usd = self.amount_usd if self.amount_usd is not None else 0.0  
         self.amount_usd -= amount.value

@@ -2,9 +2,9 @@ from collections.abc import Sequence
 
 from collections import deque
 
-from app.application.exceptions import ApplicationError
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.service_protocol import EventMessageHandler, IEventBus, IMessageQueue
+from app.infra.exception import InfraGeneralException
 
 
 class InMemoryMessageQueue(IMessageQueue):
@@ -42,7 +42,7 @@ class InMemoryEventBus(IEventBus):
         normalized_event_name = self._normalize_event_name(event_name)
         handlers = self._subscribers.get(normalized_event_name)
         if handlers is None or handler not in handlers:
-            raise ApplicationError("Handler is not registered for this event")
+            raise InfraGeneralException("Handler is not registered for this event")
         handlers.remove(handler)
         if not handlers:
             del self._subscribers[normalized_event_name]
@@ -61,7 +61,7 @@ class InMemoryEventBus(IEventBus):
     def _normalize_event_name(event_name: str) -> str:
         normalized_event_name = event_name.strip()
         if not normalized_event_name:
-            raise ApplicationError("Event name is required")
+            raise InfraGeneralException("Event name is required")
         return normalized_event_name
 
     def _normalize_message(self, message: DomainEventMessage) -> DomainEventMessage:
