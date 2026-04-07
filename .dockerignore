@@ -10,5 +10,4 @@ __pycache__
 .git
 .gitignore
 *.log
-.env
-test/*
+etc/nginx/*

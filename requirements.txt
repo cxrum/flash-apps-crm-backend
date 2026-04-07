@@ -9,3 +9,5 @@ asyncio==4.0.0
 requests==2.32.5
 python-multipart==0.0.22
 bcrypt==5.0.0
+IP2Location==8.11.0
+pytz

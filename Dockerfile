@@ -8,7 +8,12 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY ./alembic ./alembic
+COPY ./app ./app
+COPY ./etc ./etc
+COPY ./tests ./tests
+COPY ./alembic.ini ./alembic.ini
+COPY ./pytest.ini ./pytest.ini 
 
 EXPOSE 8000
 
