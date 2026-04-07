@@ -8,7 +8,8 @@ from app.application.admin.definitions.mappers import DefinitionsCommandsMapper
 from app.application.admin.definitions.service import DefinitionsService
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.core.utils.general_mapper import GeneralMapper
-from app.di.dependencies import get_admin_definitions_service, resolve_user
+from app.di.dependencies import resolve_user
+from app.di.services import get_admin_definitions_service
 
 router = APIRouter()
 

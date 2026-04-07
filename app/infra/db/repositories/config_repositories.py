@@ -36,7 +36,7 @@ from app.infra.db.config.models import (
     PostbackRule,
     SecretTemplate,
 )
-from app.infra.exception import InfraGeneralException
+from app.infra.exception import BaseInfraException
 
 
 def _apply_pagination(stmt, pagination: Pagination | None):
@@ -100,7 +100,7 @@ class SqlAlchemyCrmMetricDefinitionRepository(CrmMetricDefinitionRepositoryProto
     def delete(self, metric_definition_id: int) -> CrmMetricDefinitionEntity:
         row = self.session.get(MetricDefinition, metric_definition_id)
         if row is None:
-            raise InfraGeneralException()
+            raise BaseInfraException()
 
         metric_definition = self._to_domain(row)
         self.session.delete(row)
@@ -177,7 +177,7 @@ class SqlAlchemyCrmConversionDefinitionRepository(CrmConversionDefinitionReposit
     def delete(self, conversion_definition_id: int) -> CrmConversionDefinitionEntity:
         row = self.session.get(ConversionDefinition, conversion_definition_id)
         if row is None:
-            raise InfraGeneralException()
+            raise BaseInfraException()
 
         conversion_definition = self._to_domain(row)
         self.session.delete(row)
@@ -260,7 +260,7 @@ class SqlAlchemyCrmParamDefinitionRepository(CrmParamDefinitionRepositoryProtoco
     def delete(self, param_definition_id: int) -> CrmParamDefinitionEntity:
         row = self.session.get(ParamDefinition, param_definition_id)
         if row is None:
-            raise InfraGeneralException()
+            raise BaseInfraException()
 
         param_definition = self._to_domain(row)
         self.session.delete(row)
@@ -333,7 +333,7 @@ class SqlAlchemyCrmSecretTemplateRepository(CrmSecretTemplateRepositoryProtocol)
     def delete(self, template_id: int) -> CrmSecretTemplateEntity:
         row = self.session.get(SecretTemplate, template_id)
         if row is None:
-            raise InfraGeneralException()
+            raise BaseInfraException()
 
         template = self._to_domain(row)
         self.session.delete(row)
@@ -417,7 +417,7 @@ class SqlAlchemyCrmPostbackRuleRepository(CrmPostbackRuleRepositoryProtocol):
     def delete(self, rule_id: int) -> CrmPostbackRuleEntity:
         row = self.session.get(PostbackRule, rule_id)
         if row is None:
-            raise InfraGeneralException()
+            raise BaseInfraException()
 
         rule = self._to_domain(row)
         self.session.delete(row)
@@ -553,7 +553,7 @@ class SqlAlchemyCrmAppSecretRepository(CrmAppSecretRepositoryProtocol):
     def delete(self, secret_id: int) -> CrmAppSecretEntity:
         row = self.session.get(AppSecret, secret_id)
         if row is None:
-            raise InfraGeneralException()
+            raise BaseInfraException()
 
         secret = self._to_domain(row)
         self.session.delete(row)

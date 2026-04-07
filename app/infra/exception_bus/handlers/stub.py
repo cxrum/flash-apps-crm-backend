@@ -3,7 +3,7 @@ import logging
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.exception_event import ExceptionEvent
 from app.domain.event_bus.service_protocol import AsyncEventMessageHandler
-from app.infra.exception import InfraGeneralException
+from app.infra.exception import BaseInfraException
 
 
 logger = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class AsyncStubExceptionHandler(AsyncEventMessageHandler):
     async def handle(self, message: DomainEventMessage) -> None:
         if not isinstance(message, ExceptionEvent):
-            raise InfraGeneralException(
+            raise BaseInfraException(
                 "AsyncStubExceptionHandler expected ExceptionEvent, "
                 f"got {type(message).__name__}"
             )

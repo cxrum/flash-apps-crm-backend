@@ -9,7 +9,7 @@ from app.application.events_bus.handlers.conversion import AsyncConversionHandle
 from app.application.events_bus.handlers.metric import AsyncMetricHandler
 from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
 from app.application.exception import GeneralException
-from app.di.dependencies import get_event_subscribers
+from app.di.event_bus import get_event_subscribers
 from app.domain.app import CrmAppEntity
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.click import CrmClickEntity

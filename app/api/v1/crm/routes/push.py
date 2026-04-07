@@ -14,7 +14,8 @@ from app.api.v1.stubs import build_stub_response
 from app.api.v1.transport import PaginationQueryPayload
 from app.application.admin.push.mappers import PushResponseMapper as AdminCommandMapper
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
-from app.di.dependencies import get_push_service, resolve_user
+from app.di.dependencies import resolve_user
+from app.di.services import get_push_service
 
 router = APIRouter()
 

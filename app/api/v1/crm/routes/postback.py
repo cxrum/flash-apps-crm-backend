@@ -12,7 +12,8 @@ from app.api.v1.transport import PaginationQueryPayload
 from app.application.admin.postback.mappers import PostbackResponseMapper as AdminCommandMapper
 from app.application.admin.postback.service import PostbackService
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
-from app.di.dependencies import get_admin_postback_service, resolve_user
+from app.di.dependencies import resolve_user
+from app.di.services import get_admin_postback_service
 
 router = APIRouter()
 

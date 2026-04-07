@@ -13,7 +13,8 @@ from app.api.v1.transport import PaginationQueryPayload
 from app.application.admin.secrets.mappers import SecretsResponseMapper as AdminCommandMapper
 from app.application.admin.secrets.service import SecretsService
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
-from app.di.dependencies import get_admin_secrets_service, resolve_user
+from app.di.dependencies import resolve_user
+from app.di.services import get_admin_secrets_service
 
 router = APIRouter()
 

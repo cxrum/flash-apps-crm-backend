@@ -8,7 +8,7 @@ from app.core.utils.general_mapper import GeneralMapper
 from app.api.v1.sdk.s2s.payloads import S2SClickPayload
 from app.application.sdk.s2s.mappers import S2SCommandMapper
 from app.application.sdk.s2s.service import ClickService
-from app.di.dependencies import get_s2s_service
+from app.di.services import get_s2s_service
 
 router = APIRouter()
 

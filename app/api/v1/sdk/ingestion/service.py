@@ -16,7 +16,8 @@ from app.api.v1.stubs import build_stub_response
 from app.application.sdk.apps.service import AppService
 from app.application.sdk.ingestion.mappers import SdkIngestionCommandMapper
 from app.application.sdk.ingestion.service import IngestionService
-from app.di.dependencies import get_sdk_app_service, get_sdk_ingestion_service
+from app.di.services import get_sdk_app_service
+from app.di.services import get_sdk_ingestion_service
 
 router = APIRouter()
 

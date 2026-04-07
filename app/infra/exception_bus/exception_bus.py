@@ -9,7 +9,7 @@ from app.domain.event_bus.service_protocol import (
     IAsyncEventBus,
     IAsyncExceptionBus,
 )
-from app.infra.exception import InfraGeneralException
+from app.infra.exception import BaseInfraException
 
 
 class AsyncExceptionBusAdapter(IAsyncExceptionBus):
@@ -49,7 +49,7 @@ class AsyncExceptionBusAdapter(IAsyncExceptionBus):
     @staticmethod
     def _validate_message(message: object) -> ExceptionEvent:
         if not isinstance(message, ExceptionEvent):
-            raise InfraGeneralException(
+            raise BaseInfraException(
                 "AsyncExceptionBusAdapter expected ExceptionEvent message"
             )
         return message

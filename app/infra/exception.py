@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-class InfraGeneralException(Exception):
+class BaseInfraException(Exception):
     def __init__(self, msg: str | None = None, context: Dict[str, Any] | None = None):
         self.msg = msg
         self.context = context

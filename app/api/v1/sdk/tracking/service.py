@@ -10,7 +10,7 @@ from app.application.sdk.s2s.service import ClickService
 from app.core.utils.general_mapper import GeneralMapper as GeneralMapper
 from app.api.v1.stubs import build_stub_response
 from app.application.tracking.mappers import TrackingCommandMapper
-from app.di.dependencies import get_s2s_service
+from app.di.services import get_s2s_service
 
 router = APIRouter()
 

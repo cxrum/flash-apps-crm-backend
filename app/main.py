@@ -2,7 +2,8 @@ from fastapi import FastAPI
 
 from app.api.router import api_router
 from app.core.config import settings
-from app.di.dependencies import application_lifespan, register_fastapi_exception_handlers
+from app.di.dependencies import application_lifespan
+from app.di.exception_bus import register_fastapi_exception_handlers
 
 
 app = FastAPI(

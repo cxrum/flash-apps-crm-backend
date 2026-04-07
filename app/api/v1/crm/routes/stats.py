@@ -9,7 +9,8 @@ from app.application.admin.logs.mappers import LogsResponseMapper
 from app.application.admin.logs.service import LogsService
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.core.utils.general_mapper import GeneralMapper
-from app.di.dependencies import get_admin_logs_service, resolve_user
+from app.di.dependencies import resolve_user
+from app.di.services import get_admin_logs_service
 
 router = APIRouter()
 

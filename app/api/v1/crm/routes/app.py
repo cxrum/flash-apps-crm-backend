@@ -15,7 +15,8 @@ from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.application.sdk.apps.mappers import SdkAppCommandsMapper
 from app.application.sdk.apps.service import AppService
 from app.core.utils.general_mapper import GeneralMapper
-from app.di.dependencies import get_sdk_app_service, resolve_user
+from app.di.dependencies import resolve_user
+from app.di.services import get_sdk_app_service
 
 router = APIRouter()
 

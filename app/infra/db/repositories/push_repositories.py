@@ -12,7 +12,7 @@ from app.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
 from app.domain.push_token.push_token_repository_protocol import CrmPushTokenRepositoryProtocol
 from app.infra.db.apps.models import Install
 from app.infra.db.push.models import PushCampaign, PushEvent, PushToken
-from app.infra.exception import InfraGeneralException
+from app.infra.exception import BaseInfraException
 
 
 def _apply_pagination(stmt, pagination: Pagination | None):
@@ -80,7 +80,7 @@ class SqlAlchemyCrmPushCampaignRepository(CrmPushCampaignRepositoryProtocol):
     def delete(self, campaign_id: int) -> CrmPushCampaignEntity:
         row = self.session.get(PushCampaign, campaign_id)
         if row is None:
-            raise InfraGeneralException()
+            raise BaseInfraException()
 
         campaign = self._to_domain(row)
         self.session.delete(row)
@@ -154,7 +154,7 @@ class SqlAlchemyCrmPushTokenRepository(CrmPushTokenRepositoryProtocol):
     def delete(self, token_id: int) -> CrmPushTokenEntity:
         row = self.session.get(PushToken, token_id)
         if row is None:
-            raise InfraGeneralException()
+            raise BaseInfraException()
 
         token = self._to_domain(row)
         self.session.delete(row)
@@ -231,7 +231,7 @@ class SqlAlchemyCrmPushEventRepository(CrmPushEventRepositoryProtocol):
     def delete(self, push_event_id: int) -> CrmPushEventEntity:
         row = self.session.get(PushEvent, push_event_id)
         if row is None:
-            raise InfraGeneralException()
+            raise BaseInfraException()
 
         push_event = self._to_domain(row)
         self.session.delete(row)
