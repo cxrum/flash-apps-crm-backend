@@ -30,13 +30,16 @@ class CrmAuthentication(CrmAuthenticationProtocol):
         
         return ResolvedCrmUserResponse(
             crm_user_id=exist_user.user_id,
+            email=exist_user.email,
+            is_active=exist_user.is_active,
+            full_name=exist_user.full_name,
             access_token=str(exist_user.user_id),
-            token_type="bearer",
+            token_type="bearer"
         )
         
     def verify_token(self, token: str) -> str: 
         if not token.isnumeric():
-            raise Exception()
+            raise InvalidOrExpiredToken()
         return token
     
     def login(self, command: UserLoginCommand) -> ResolvedCrmUserResponse:
@@ -56,6 +59,9 @@ class CrmAuthentication(CrmAuthenticationProtocol):
             
         return ResolvedCrmUserResponse(
             crm_user_id=exist_user.user_id,
+            email=exist_user.email,
+            is_active=exist_user.is_active,
+            full_name=exist_user.full_name,
             access_token=str(exist_user.user_id),
             token_type="bearer"
         )
@@ -88,3 +94,19 @@ class CrmAuthentication(CrmAuthenticationProtocol):
         ))
                     
         return login_user
+    
+    def get_user_info(self, user_id) -> ResolvedCrmUserResponse:
+        with self._uow_factory.create() as uow:
+            exist_user = uow.user_repo.get_by_id(user_id)
+            
+            if exist_user is None or exist_user.user_id is None:
+                raise Exception()
+            
+        return ResolvedCrmUserResponse(
+            crm_user_id=exist_user.user_id,
+            email=exist_user.email,
+            is_active=exist_user.is_active,
+            full_name=exist_user.full_name,
+            access_token=str(exist_user.user_id),
+            token_type="bearer"
+        )

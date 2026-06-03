@@ -4,6 +4,9 @@ from typing import Any, Dict
 class MessageResolver:
     CATALOG: dict[str, str] = {
         "internal": "Internal server error",
+        "authentication.credentials.invalid": "Invalid email or password",
+        "authentication.email.exists": "User with this email already exists",
+        "authentication.token.invalid_or_expired": "Invalid or expired token",
         "err.user.missing": "User '{username}' does not exist.",
         "metric.money.value": "Metric events cannot carry money values",
         "revenue.money.value": "Revenue events cannot carry invalid money values",

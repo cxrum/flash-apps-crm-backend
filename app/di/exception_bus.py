@@ -89,12 +89,12 @@ def build_exception_handler(
         if settings.debug_mode:
             return JSONResponse(
                 status_code=code,
-                content={"detail": msg, **event.payload} ,
+                content={"details": msg, **event.payload} ,
             )
         else:
             return JSONResponse(
                 status_code=code,
-                content={"detail": msg},
+                content={"details": msg},
             )
 
     return handler

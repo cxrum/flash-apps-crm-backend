@@ -1,28 +1,49 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Body, Depends, Request
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Body, Depends, Form, Header, Request
 
 from app.api.authentication.payloads import UserRegistrationSchemaPayload
 from app.application.base import JsonDict
 from app.application.crm_authentication.commands import UserLoginCommand, UserRegistrationCommand
+from app.application.crm_authentication.exceptions import InvalidOrExpiredToken, InvalidPasswordOrEmail
 from app.application.crm_authentication.protocol import CrmAuthenticationProtocol
 from app.di.dependencies import stub_user_resolver
 
 
 router = APIRouter()
 
+
+def _extract_bearer_token(authorization: str | None) -> str | None:
+    if authorization is None:
+        return None
+
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise InvalidOrExpiredToken()
+
+    return token
+
 @router.post("/token", tags=["authentication"])
 def login(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    username: Annotated[str | None, Form()] = None,
+    password: Annotated[str | None, Form()] = None,
+    authorization: Annotated[str | None, Header()] = None,
     authentication_service: CrmAuthenticationProtocol = Depends(stub_user_resolver)
 ) -> JsonDict:
-    resolved_user = authentication_service.login(
-        UserLoginCommand(
-            user_login=form_data.username, 
-            password=form_data.password
+    token = _extract_bearer_token(authorization)
+
+    if token is not None:
+        resolved_user = authentication_service.resolve_user(token)
+    elif username is not None and password is not None:
+        resolved_user = authentication_service.login(
+            UserLoginCommand(
+                user_login=username,
+                password=password,
+            )
         )
-    )
+    else:
+        raise InvalidPasswordOrEmail()
+
     return resolved_user.model_dump()
 
 @router.post("/register", tags=["authentication"])
