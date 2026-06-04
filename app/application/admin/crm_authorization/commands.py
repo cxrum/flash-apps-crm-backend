@@ -7,12 +7,11 @@ class ShareAppAccessCommand(FlexibleCommand):
     crm_user_id: int
     app_id: int
     manager_id: int
-    role_code: str
+    role_code: str = Field(alias="role_code_slug")
 
 
 class ListUsersWithAccessCommand(PaginationCommand):
     crm_user_id: int
-    role_code: str
     app_id: int | None = None
 
 

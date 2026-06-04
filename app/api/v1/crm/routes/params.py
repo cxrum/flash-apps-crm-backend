@@ -30,7 +30,7 @@ async def list_params(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, pagination_queries)
     )
     response = definition_service.list_params(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/{param_definition_id}", tags=["admin", "params"])
@@ -48,7 +48,7 @@ async def get_param(
         )
     )
     response = definition_service.get_param_definition(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.patch("/{param_definition_id}", tags=["admin", "params"])
@@ -68,7 +68,7 @@ async def update_param(
         )
     )
     response = definition_service.update_param_definition(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "params"])

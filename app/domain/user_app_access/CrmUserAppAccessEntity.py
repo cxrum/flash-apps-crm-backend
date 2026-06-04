@@ -21,3 +21,17 @@ class CrmUserAppAccessEntity:
         self.app_id = app_id if app_id is not None else self.app_id
         self.role_id = role_id if role_id is not None else self.role_id
         self.assigned_at = assigned_at if assigned_at is not None else datetime.now(UTC)
+
+    @classmethod
+    def create(
+        cls,
+        user_id: int,
+        app_id: int,
+        role_id: int,
+    )-> "CrmUserAppAccessEntity":
+        return cls(
+            user_id=user_id,
+            app_id=app_id,
+            role_id=role_id,
+            assigned_at=datetime.now(UTC)
+        )

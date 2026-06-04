@@ -26,7 +26,7 @@ async def list_conversions(
     )
 
     response = definition_service.list_conversions(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/{conversion_definition_id}", tags=["admin", "conversion"])
@@ -44,7 +44,7 @@ async def get_conversion(
         )
     )
     response = definition_service.get_conversion_definition(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "conversion"])
@@ -57,7 +57,7 @@ async def create_conversion(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
     )
     response = definition_service.create_conversion_definition(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.delete("/{conversion_definition_id}", tags=["admin", "conversion"])
@@ -75,7 +75,7 @@ async def delete_conversion(
         )
     )
     response = definition_service.delete_conversion_definition(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 @router.patch("/{conversion_definition_id}", tags=["admin", "metrics"])
 async def update_conversion(
@@ -94,4 +94,4 @@ async def update_conversion(
         )
     )
     response = definition_service.update_conversion_definition(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")

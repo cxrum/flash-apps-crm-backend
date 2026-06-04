@@ -52,7 +52,12 @@ class SqlAlchemyCrmUserAppAccessRepository(CrmUserAppAccessRepositoryProtocol):
         return [self._to_domain(row) for row in rows]
 
     def get_by_user_and_app(self, user_id: int, app_id: int) -> CrmUserAppAccessEntity | None:
-        row = self.session.get(CrmUserAppAccess, {"user_id": user_id, "app_id": app_id})
+        row = self.session.scalars(
+            select(CrmUserAppAccess)
+            .where(CrmUserAppAccess.user_id == user_id)
+            .where(CrmUserAppAccess.app_id == app_id)
+            .order_by(CrmUserAppAccess.assigned_at.desc())
+        ).first()
         return self._to_domain(row) if row is not None else None
     
     def delete(
@@ -60,7 +65,12 @@ class SqlAlchemyCrmUserAppAccessRepository(CrmUserAppAccessRepositoryProtocol):
         user_id: int,
         app_id: int
     ) -> CrmUserAppAccessEntity:
-        row = self.session.get(CrmUserAppAccess, {"user_id": user_id, "app_id": app_id})
+        row = self.session.scalars(
+            select(CrmUserAppAccess)
+            .where(CrmUserAppAccess.user_id == user_id)
+            .where(CrmUserAppAccess.app_id == app_id)
+            .order_by(CrmUserAppAccess.assigned_at.desc())
+        ).first()
         
         if row is None:
             raise RuntimeError

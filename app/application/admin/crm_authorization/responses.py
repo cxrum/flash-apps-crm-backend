@@ -7,6 +7,10 @@ class RoleResponseValue(BaseResponse):
     key: str
     name: str
 
+
+class ListRolesResponse(BaseResponse):
+    roles: list[RoleResponseValue]
+
 class GrantUserAppAccessResponse(BaseResponse):
     app_id: int
     crm_user_id: int

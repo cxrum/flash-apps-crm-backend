@@ -1,7 +1,7 @@
 from typing import Mapping
 
 from app.application.admin.crm_authorization.commands import CreateRoleCommand, DeleteAppAccessCommand, ListRolesCommand, ListUsersWithAccessCommand, ShareAppAccessCommand
-from app.application.admin.crm_authorization.responses import CrmUserResponseValue, RoleResponseValue, PermissionResponseValue
+from app.application.admin.crm_authorization.responses import CrmUserResponseValue, PermissionResponseValue, RoleResponseValue
 from app.core.utils.general_mapper import GeneralMapper
 from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.role.CrmRoleEntity import CrmRoleEntity
@@ -41,7 +41,11 @@ class AuthenticationCommandsMapper:
         
     @classmethod
     def role_domain_to_value(cls, domain: CrmRoleEntity) -> RoleResponseValue:
-        return RoleResponseValue.model_validate(domain)
+        return RoleResponseValue(
+            role_id=domain.role_id,
+            key=domain.code,
+            name=domain.display_name,
+        )
         
     @classmethod
     def user_domain_to_value(cls, domain: tuple[CrmUserEntity, CrmRoleEntity]) -> CrmUserResponseValue:

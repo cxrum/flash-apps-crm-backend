@@ -11,8 +11,11 @@ from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
 from app.domain.hash_protocol import HashProtocol
+from app.domain.role.CrmRoleEntity import Roles
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
+from app.domain.user_app_access import CrmUserAppAccessEntity
+from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
 
 
 class AppService:
@@ -72,14 +75,22 @@ class AppService:
             screenshots = command.screenshots,
         )
         
-        app.activate()
-
         with self._uow_factory.create() as uow:
             saved_app = uow.app_repo.save(app)
             
             if saved_app.app_id is None:
                 raise SdkAppCreateFailed()
             
+            admin_role = uow.role_repo.get_by_code(Roles.ADMIN)
+            
+            uow.user_app_access_repo.save(
+                CrmUserAppAccessEntity.create(
+                    user_id=command.crm_user_id,
+                    app_id=saved_app.app_id,
+                    role_id=admin_role.role_id
+                )
+            )
+                        
         return CreateAppResponse(
             app=SdkAppResponsesMapper.app_domain_to_value(saved_app)
         )

@@ -8,6 +8,7 @@ from app.application.exception import GeneralException
 from app.domain.hash_protocol import HashProtocol, HashableValue
 from app.domain.uow import UnitOfWorkFactoryProtocol
 from app.domain.user import CrmUserEntity
+from app.domain.user_app_access import CrmUserAppAccessEntity
 
 class CrmAuthentication(CrmAuthenticationProtocol):
 
@@ -86,8 +87,7 @@ class CrmAuthentication(CrmAuthenticationProtocol):
             
             new_crm_user = uow.user_repo.insert(
                 entity
-            )
-        
+            )            
         login_user = self.login(UserLoginCommand(
             user_login=new_crm_user.email,
             password=command.password,

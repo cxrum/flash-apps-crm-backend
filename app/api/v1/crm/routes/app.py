@@ -11,6 +11,7 @@ from app.api.v1.crm.payloads import (
 )
 from app.api.v1.stubs import build_stub_response
 from app.api.v1.transport import PaginationQueryPayload
+from app.application.base import JsonDict
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.application.sdk.apps.mappers import SdkAppCommandsMapper
 from app.application.sdk.apps.service import AppService
@@ -27,13 +28,13 @@ async def get_app(
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
-) -> str:
+) -> JsonDict:
     command = SdkAppCommandsMapper.get_app_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id)
     )
     
     response = app_service.get_app(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/", tags=["admin", "app"])
@@ -42,14 +43,14 @@ async def list_apps(
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
-) -> str:
+) -> JsonDict:
     command = SdkAppCommandsMapper.list_apps_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, pagination_queries)
     )
     
     response = app_service.get_apps(command)
 
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
 async def create_app(
@@ -57,12 +58,12 @@ async def create_app(
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
-) -> str:
+) -> JsonDict:
     command = SdkAppCommandsMapper.create_app_from_transport(GeneralMapper.transport_to_command_payload(crm_user, payload))
     
     response = app_service.create_app(command)
 
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.patch("/", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
@@ -71,14 +72,14 @@ async def update_app(
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
-) -> str:
+) -> JsonDict:
     command = SdkAppCommandsMapper.update_app_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
     )
     
     response = app_service.update_app(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.delete("/", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
@@ -87,7 +88,7 @@ async def delete_app(
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
-) -> str:
+) -> JsonDict:
     
     command = SdkAppCommandsMapper.delete_app_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -95,7 +96,7 @@ async def delete_app(
     
     response = app_service.delete_app(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/{app_id}/platform/{platform_id}", tags=["admin", "app"])
@@ -105,14 +106,14 @@ async def get_app_platform(
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
-) -> str:
+) -> JsonDict:
     command = SdkAppCommandsMapper.get_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id, platform_id=platform_id)
     )
     
     response = app_service.get_app_platform(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 @router.get("/{app_id}/platform", tags=["admin", "app"])
 async def list_app_platforms(
@@ -121,14 +122,14 @@ async def list_app_platforms(
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
-) -> str:
+) -> JsonDict:
     command = SdkAppCommandsMapper.list_app_platforms_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, pagination_queries, app_id=app_id)
     )
     
     response = app_service.get_app_platforms(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.patch("/{app_id}/platform/{platform_id}", tags=["admin", "app"])
@@ -139,7 +140,7 @@ async def update_app_platform(
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
-) -> str:
+) -> JsonDict:
     command = SdkAppCommandsMapper.update_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(
             crm_user,
@@ -151,7 +152,7 @@ async def update_app_platform(
     
     response = app_service.update_app_platform(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 @router.post("/platform", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
 async def create_app_platform(
@@ -159,14 +160,14 @@ async def create_app_platform(
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
-) -> str:
+) -> JsonDict:
     command = SdkAppCommandsMapper.create_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
     )
     
     response = app_service.create_app_platform(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.delete("/{app_id}/platform/{platform_id}", tags=["admin", "app"])
@@ -176,11 +177,11 @@ async def delete_app_platform(
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     
     app_service: AppService = Depends(get_sdk_app_service)
-) -> str:
+) -> JsonDict:
     command = SdkAppCommandsMapper.delete_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id, platform_id=platform_id)
     )
     
     response = app_service.delete_app_platform(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")

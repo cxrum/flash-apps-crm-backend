@@ -28,7 +28,7 @@ async def list_postbacks(
         GeneralMapper.transport_to_command_payload(crm_user, app_filter_queries, pagination_queries)
     )
     response = postback_service.get_list_postbacks(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/{postback_id}", tags=["admin", "postback"])
@@ -42,7 +42,7 @@ async def get_postback(
         GeneralMapper.transport_to_command_payload(crm_user, app_filter_queries, postback_id=postback_id)
     )
     response = postback_service.get_postback(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.patch("/{postback_id}", tags=["admin", "postback"])
@@ -62,7 +62,7 @@ async def update_postback(
         )
     )
     response = postback_service.update_postback(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.delete("/{postback_id}", tags=["admin", "postback"])
@@ -76,7 +76,7 @@ async def delete_postback(
         GeneralMapper.transport_to_command_payload(crm_user, app_filter_queries, postback_id=postback_id)
     )
     response = postback_service.delete_postback(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "postback"])
@@ -89,4 +89,4 @@ async def create_postback(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
     )
     response = postback_service.create_postback(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")

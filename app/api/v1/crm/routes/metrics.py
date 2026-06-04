@@ -28,7 +28,7 @@ async def create_metric(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
     )
     response = definition_service.create_metric_definition(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/", tags=["admin", "metrics"])
@@ -42,7 +42,7 @@ async def list_metrics(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, pagination_queries)
     )
     response = definition_service.list_metrics(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/{metric_definition_id}", tags=["admin", "metrics"])
@@ -60,7 +60,7 @@ async def get_metric(
         )
     )
     response = definition_service.get_metric_definition(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.patch("/{metric_definition_id}", tags=["admin", "metrics"])
@@ -80,7 +80,7 @@ async def update_metric(
         )
     )
     response = definition_service.update_metric_definition(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.delete("/{metric_definition_id}", tags=["admin", "metrics"])
@@ -98,4 +98,4 @@ async def delete_metric(
         )
     )
     response = definition_service.delete_metric_definition(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")

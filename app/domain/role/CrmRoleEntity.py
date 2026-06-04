@@ -59,6 +59,12 @@ class CrmRoleEntity:
                 raise ManagerAccessRequired()
             else:
                 raise RoleAccessException()
+
+    def can_share_app_access(self) -> bool:
+        return self.compare(Roles.ADMIN)
+
+    def required_share_app_access(self) -> None:
+        self.required(Roles.ADMIN)
     
     def is_admin_role(self) -> bool:
         return self._normalize_role(self.code) is Roles.ADMIN

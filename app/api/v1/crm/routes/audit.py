@@ -25,4 +25,4 @@ async def get_audit_logs(
         GeneralMapper.transport_to_command_payload(crm_user, audit_queries, pagination_queries)
     )
     response = logs_service.list_audit_logs(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")

@@ -38,7 +38,7 @@ async def list_click_logs(
         GeneralMapper.transport_to_command_payload(crm_user, click_log_queries, pagination_queries)
     )
     response = logs_service.list_clicks(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/logs/events", tags=["admin", "stats"])
@@ -52,4 +52,4 @@ async def list_event_logs(
         GeneralMapper.transport_to_command_payload(crm_user, event_log_queries, pagination_queries)
     )
     response = logs_service.list_raw_events(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")

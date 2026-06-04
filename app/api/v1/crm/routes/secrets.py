@@ -30,7 +30,7 @@ async def list_secret_templates(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, pagination_queries)
     )
     response = secrets_service.list_secret_templates(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/template/{template_id}", tags=["admin", "secrets"])
@@ -44,7 +44,7 @@ async def get_secret_template(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, template_id=template_id)
     )
     response = secrets_service.get_secret_template(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.post("/template", status_code=status.HTTP_201_CREATED, tags=["admin", "secrets"])
@@ -57,7 +57,7 @@ async def create_secret_template(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
     )
     response = secrets_service.create_secret_template(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.patch("/template/{template_id}", tags=["admin", "secrets"])
@@ -77,7 +77,7 @@ async def update_secret_template(
         )
     )
     response = secrets_service.update_secret_template(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.delete("/template/{template_id}", tags=["admin", "secrets"])
@@ -91,7 +91,7 @@ async def delete_secret_template(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, template_id=template_id)
     )
     response = secrets_service.delete_secret(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/", tags=["admin", "secrets"])
@@ -105,7 +105,7 @@ async def list_app_secrets(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, pagination_queries)
     )
     response = secrets_service.list_app_secrets(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/{secret_id}", tags=["admin", "secrets"])
@@ -119,7 +119,7 @@ async def get_app_secret(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, app_secret_id=secret_id)
     )
     response = secrets_service.get_app_secret(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.patch("/{secret_id}", tags=["admin", "secrets"])
@@ -139,7 +139,7 @@ async def update_app_secret(
         )
     )
     response = secrets_service.update_app_secret(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.delete("/{secret_id}", tags=["admin", "secrets"])
@@ -153,4 +153,4 @@ async def delete_app_secret(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, secret_id=secret_id)
     )
     response = secrets_service.delete_app_secret(command)
-    return response.model_dump_json()
+    return response.model_dump(mode="json")

@@ -33,7 +33,7 @@ async def list_push_campaigns(
     
     response = push_service.list(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.get("/{push_id}", tags=["admin", "push"])
@@ -48,7 +48,7 @@ async def get_push_campaign(
     )
     response = push_service.get(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "push"])
@@ -62,7 +62,7 @@ async def create_push_campaign(
     )
     response = push_service.create(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.patch("/{push_id}", tags=["admin", "push"])
@@ -83,7 +83,7 @@ async def update_push_campaign(
     )
     response = push_service.update(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.delete("/{push_id}", tags=["admin", "push"])
@@ -98,7 +98,7 @@ async def delete_push_campaign(
     )
     response = push_service.delete(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")
 
 
 @router.post("/{push_id}/start", tags=["admin", "push"])
@@ -123,4 +123,4 @@ async def register_push_token(
     
     response = push_service.register_device(command)
     
-    return response.model_dump_json()
+    return response.model_dump(mode="json")

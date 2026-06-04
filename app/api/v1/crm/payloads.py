@@ -17,7 +17,7 @@ class AppFilterQueryPayload(TransportPayload):
 
 
 class CreateAppPayload(TransportPayload):
-    code: str
+    code_slug: str
     name: str
     description: str | None = None
     is_active: bool = True
@@ -25,7 +25,7 @@ class CreateAppPayload(TransportPayload):
 
 class UpdateAppPayload(TransportPayload):
     app_id: int
-    code: str | None = None
+    code_slug: str | None = None
     name: str | None = None
     description: str | None = None
     is_active: bool | None = None
@@ -198,7 +198,7 @@ class CreateRolePayload(TransportPayload):
 class ShareAppPayload(TransportPayload):
     app_id: int
     manager_id: int
-    role_code: str
+    role_code_slug: str
 
 
 class StatsQueryPayload(TransportPayload):
