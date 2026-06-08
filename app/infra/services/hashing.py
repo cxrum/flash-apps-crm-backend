@@ -7,7 +7,7 @@ from app.domain.hash_protocol import HashProtocol, HashableValue
 
 class ServerHash(HashProtocol):
     @staticmethod
-    def random_hash(lenb: int = 32) -> HashableValue: 
+    def random_hash(lenb: int = 16) -> HashableValue: 
         token = secrets.token_urlsafe(lenb).encode()
         crypt = bcrypt.hashpw(token, bcrypt.gensalt())
         return HashableValue(crypt)

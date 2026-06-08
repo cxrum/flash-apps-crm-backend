@@ -1,3 +1,4 @@
+from app.application.access_decorators import require_permission
 from app.application.admin.logs.mappers import LogsCommandsMapper
 from app.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.application.admin.logs.commands import (
@@ -9,7 +10,7 @@ from app.application.admin.logs.responses import (
     ListClickLogsResponse,
 )
 from app.application.mapper import PaginationMapper
-from app.domain.pagination import Pagination
+from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.uow import UnitOfWorkFactoryProtocol
 
 
@@ -21,16 +22,12 @@ class LogsService:
     ) -> None:
         self._uow_factory = uow_factory
         self._authorization_service = authorization_service
-        
+
+    @require_permission(CrmPermissionEntity.view_raw_logs_permission())
     def list_clicks(
         self,
         command: ListClickLogsCommand,
     ) -> ListClickLogsResponse:
-        self._authorization_service.has_user_app_access(
-            crm_user_id=command.crm_user_id,
-            app_id=command.app_id,
-        )
-
         with self._uow_factory.create() as uow:
             clicks = uow.click_repo.list_by_app_id(
                 command.app_id,
@@ -42,15 +39,11 @@ class LogsService:
             clicks=[LogsCommandsMapper.click_log_domain_to_value(it) for it in clicks]
         )
 
+    @require_permission(CrmPermissionEntity.view_raw_logs_permission())
     def list_raw_events(
         self,
         command: ListEventLogsCommand,
     ) -> ListRawEventsResponse:
-        self._authorization_service.has_user_app_access(
-            crm_user_id=command.crm_user_id,
-            app_id=command.app_id,
-        )
-
         with self._uow_factory.create() as uow:
             events = uow.event_repo.list_by_app_id(
                 command.app_id,

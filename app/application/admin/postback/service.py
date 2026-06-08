@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, ClassVar, Protocol
 
+from app.application.access_decorators import require_permission
 from app.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.application.admin.exception import ClickNotFound, EventNotFound
 from app.application.admin.postback.exception import PostbackAppMismatch, PostbackNotFound, PostbackPlatformNotFound, RuleNotFound, SecretNotFound, TemplateNotFound
@@ -26,6 +27,7 @@ from app.application.mapper import PaginationMapper
 from app.domain.pagination import Pagination
 from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
 from app.domain.event_bus.service_protocol import IAsyncEventBus
+from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.postback_rule import CrmPostbackRuleEntity
 from app.domain.postback_rule.template import PostbackTemplateEntity
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
@@ -175,6 +177,24 @@ class PostbackService:
 
         return postback
 
+    def _postback_command_access_context(
+        _service: "PostbackService",
+        uow: UnitOfWorkProtocol,
+        command: Any,
+    ) -> tuple[int | None, int | None]:
+        if command.app_id is not None:
+            return command.crm_user_id, command.app_id
+
+        postback = PostbackService._get_postback_rule(
+            uow,
+            postback_id=command.postback_id,
+        )
+        platform = uow.app_platform_repo.get_by_id(postback.platform_app_id)
+        if platform is None:
+            raise PostbackPlatformNotFound()
+
+        return command.crm_user_id, platform.app_id
+
 
     @staticmethod
     def _latest_secrets_by_template(
@@ -187,9 +207,8 @@ class PostbackService:
                 latest_by_template[secret.template_id] = secret
         return latest_by_template
 
+    @require_permission(CrmPermissionEntity.edit_app_config_permission())
     def create_postback(self, command: CreatePostbackRuleCommand) -> CreatePostbackResponse:
-        self._check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-
         with self._uow_factory.create() as uow:
             if command.platform_app_id is None:
                 platforms = uow.app_platform_repo.list_by_app_id(command.app_id)
@@ -354,13 +373,15 @@ class PostbackService:
         return GetPostbackResponse(
             postback=PostbackCommandsMapper.postback_domain_to_value(postback)
         )
-    
+
+    @require_permission(
+        CrmPermissionEntity.edit_app_config_permission(),
+        context_resolver=_postback_command_access_context,
+    )
     def update_postback(
         self,
         command: UpdatePostbackRuleCommand
     ) -> CreatePostbackResponse:
-        self._check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-
         with self._uow_factory.create() as uow:
             postback = self._get_postback_rule(
                 uow,
@@ -413,13 +434,15 @@ class PostbackService:
         return CreatePostbackResponse(
             postback=PostbackCommandsMapper.postback_domain_to_value(saved_postback)
         )
-    
+
+    @require_permission(
+        CrmPermissionEntity.edit_app_config_permission(),
+        context_resolver=_postback_command_access_context,
+    )
     def delete_postback(
         self,
         command: DeletePostbackRuleCommand
     ) -> DeletePostbackResponse:
-        self._check_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-
         with self._uow_factory.create() as uow:
             postback = self._get_postback_rule(
                 uow,

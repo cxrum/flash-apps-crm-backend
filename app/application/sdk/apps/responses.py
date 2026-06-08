@@ -1,8 +1,7 @@
 
-from dataclasses import dataclass, field
+from dataclasses import field
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
 
 from app.application.base import BaseResponse
 

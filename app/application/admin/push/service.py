@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from app.application.access_decorators import require_permission
 from app.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.application.admin.exception import ClickNotFound, InstallNotFound
 from app.application.admin.push.exception import InvalidScheduledAt, PushAppUserNotFound, PushCampaignAppMismatch, PushCampaignNotFound, PushPlatformNotFound
@@ -23,6 +24,7 @@ from app.application.admin.push.responses import (
     UpdatePushCampaignResponse,
 )
 from app.application.mapper import PaginationMapper
+from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity, DefaultParamKeys
 from app.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
 from app.domain.push_token import CrmPushTokenEntity
@@ -64,12 +66,16 @@ class PushService:
 
         return campaign
 
-    def create(self, command: CreatePushCampaignCommand) -> CreatePushCampaignResponse:
-        self._authorization_service.has_user_app_access(
-            crm_user_id=command.crm_user_id,
-            app_id=command.app_id,
-        )
+    def _delete_command_access_context(
+        _service: "PushService",
+        uow: UnitOfWorkProtocol,
+        command: DeletePushCampaignCommand,
+    ) -> tuple[int | None, int | None]:
+        campaign = PushService._get_push_campaign(uow, push_id=command.push_id)
+        return command.crm_user_id, campaign.app_id
 
+    @require_permission(CrmPermissionEntity.manage_push_permission())
+    def create(self, command: CreatePushCampaignCommand) -> CreatePushCampaignResponse:
         entity = CrmPushCampaignEntity(
             app_id=command.app_id,
             title=command.title,
@@ -89,12 +95,8 @@ class PushService:
             campaign=PushCommandsMapper.push_campaign_domain_to_value(saved_campaign)
         )
 
+    @require_permission(CrmPermissionEntity.manage_push_permission())
     def update(self, command: UpdatePushCampaignCommand) -> UpdatePushCampaignResponse:
-        self._authorization_service.has_user_app_access(
-            crm_user_id=command.crm_user_id,
-            app_id=command.app_id,
-        )
-
         with self._uow_factory.create() as uow:
             campaign = self._get_push_campaign(
                 uow,
@@ -117,7 +119,11 @@ class PushService:
         return UpdatePushCampaignResponse(
             campaign=PushCommandsMapper.push_campaign_domain_to_value(saved_campaign)
         )
-    
+
+    @require_permission(
+        CrmPermissionEntity.manage_push_permission(),
+        context_resolver=_delete_command_access_context,
+    )
     def delete(self, command: DeletePushCampaignCommand) -> DeletePushCampaignResponse:
         with self._uow_factory.create() as uow:
             campaign = self._get_push_campaign(
@@ -125,23 +131,14 @@ class PushService:
                 push_id=command.push_id,
             )
 
-            self._authorization_service.has_user_app_access(
-                crm_user_id=command.crm_user_id,
-                app_id=campaign.app_id,
-            )
-
             deleted_campaign = uow.push_campaign_repo.delete(command.push_id)
 
         return DeletePushCampaignResponse(
             campaign=PushCommandsMapper.push_campaign_domain_to_value(deleted_campaign)
         )
-    
-    def list(self, command: ListPushCampaignsCommand) -> ListPushCampaignResponse:
-        self._authorization_service.has_user_app_access(
-            crm_user_id=command.crm_user_id,
-            app_id=command.app_id,
-        )
 
+    @require_permission(CrmPermissionEntity.manage_push_permission())
+    def list(self, command: ListPushCampaignsCommand) -> ListPushCampaignResponse:
         with self._uow_factory.create() as uow:
             campaigns = uow.push_campaign_repo.list_by_app_id(
                 command.app_id,
@@ -151,13 +148,9 @@ class PushService:
         return ListPushCampaignResponse(
             campaigns=[PushCommandsMapper.push_campaign_domain_to_value(it) for it in campaigns]
         )
-    
-    def get(self, command: GetPushCampaignCommand) -> GetPushCampaignResponse:
-        self._authorization_service.has_user_app_access(
-            crm_user_id=command.crm_user_id,
-            app_id=command.app_id,
-        )
 
+    @require_permission(CrmPermissionEntity.manage_push_permission())
+    def get(self, command: GetPushCampaignCommand) -> GetPushCampaignResponse:
         with self._uow_factory.create() as uow:
             campaign = self._get_push_campaign(
                 uow,

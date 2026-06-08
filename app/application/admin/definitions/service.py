@@ -1,49 +1,55 @@
 from __future__ import annotations
 
+from app.application.access_decorators import require_app_access, require_permission
 from app.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.application.admin.definitions.commands import (
-    CreateParamDefinitionCommand, 
     CreateConversionDefinitionCommand,
+    CreateMetricDefinitionCommand,
+    CreateParamDefinitionCommand,
     DeleteConversionDefinitionCommand,
     DeleteMetricDefinitionCommand,
     DeleteParamDefinitionCommand,
     GetConversionDefinitionCommand,
     GetMetricDefinitionCommand,
-    GetParamDefinitionCommand, 
-    ListConversionDefinitionsCommand, 
-    ListMetricDefinitionsCommand, 
-    ListParamDefinitionsCommand, 
-    UpdateConversionDefinitionCommand, 
-    UpdateMetricDefinitionCommand, 
-    UpdateParamDefinitionCommand
+    GetParamDefinitionCommand,
+    ListConversionDefinitionsCommand,
+    ListMetricDefinitionsCommand,
+    ListParamDefinitionsCommand,
+    UpdateConversionDefinitionCommand,
+    UpdateMetricDefinitionCommand,
+    UpdateParamDefinitionCommand,
 )
-from app.application.admin.definitions.exceptions import ConversionDefinitionNotFound, DefinitionAppMismatch, MetricDefinitionNotFound, ParamDefinitionNotFound
+from app.application.admin.definitions.exceptions import (
+    ConversionDefinitionNotFound,
+    DefinitionAppMismatch,
+    MetricDefinitionNotFound,
+    ParamDefinitionNotFound,
+)
 from app.application.admin.definitions.mappers import DefinitionsResponseMapper
 from app.application.admin.definitions.responses import (
+    CreateConversionDefinitionResponse,
+    CreateMetricDefinitionResponse,
+    CreateParamDefinitionResponse,
     DeleteConversionDefinitionResponse,
     DeleteMetricDefinitionResponse,
     DeleteParamDefinitionResponse,
     GetConversionDefinitionResponse,
     GetMetricDefinitionResponse,
     GetParamDefinitionResponse,
-    ListParamDefinitionsResponse,
-    CreateConversionDefinitionResponse,
-    CreateMetricDefinitionResponse,
-    CreateParamDefinitionResponse,
     ListConversionDefinitionsResponse,
     ListMetricDefinitionsResponse,
+    ListParamDefinitionsResponse,
     UpdateConversionDefinitionResponse,
-    UpdateMetricDefinitionResponse, 
-    UpdateParamDefinitionResponse
+    UpdateMetricDefinitionResponse,
+    UpdateParamDefinitionResponse,
 )
 from app.application.mapper import PaginationMapper
-from app.application.sdk.apps.service import AppService
-from app.application.admin.definitions.commands import CreateMetricDefinitionCommand
 from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
     CrmConversionDefinitionEntity,
 )
 from app.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
 from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
+from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
@@ -56,16 +62,15 @@ class DefinitionsService:
         self._uow_factory = uow_factory
         self._authorization_service = authorization_service
 
+    @require_app_access()
     def list_metrics(
         self,
         command: ListMetricDefinitionsCommand,
     ) -> ListMetricDefinitionsResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-
         with self._uow_factory.create() as uow:
             def_list = uow.metric_definition_repo.list_by_app_id(
                 command.app_id,
-                pagination=PaginationMapper.pagination_from_command(command)
+                pagination=PaginationMapper.pagination_from_command(command),
             )
 
         return ListMetricDefinitionsResponse(
@@ -84,65 +89,69 @@ class DefinitionsService:
             raise MetricDefinitionNotFound(metric_definition_id)
         if definition.app_id != app_id:
             raise DefinitionAppMismatch("Metric", app_id)
-        
+
         return definition
 
+    @require_app_access()
     def get_metric_definition(
         self,
         command: GetMetricDefinitionCommand,
     ) -> GetMetricDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-
         with self._uow_factory.create() as uow:
-            metric = self._get_metric_definition(uow, app_id=command.app_id, metric_definition_id=command.metric_definition_id)
+            metric = self._get_metric_definition(
+                uow,
+                app_id=command.app_id,
+                metric_definition_id=command.metric_definition_id,
+            )
 
         return GetMetricDefinitionResponse(
             metric_definition=DefinitionsResponseMapper.metric_domain_to_value(metric)
         )
 
+    @require_permission(CrmPermissionEntity.edit_app_config_permission())
     def update_metric_definition(
         self,
         command: UpdateMetricDefinitionCommand,
     ) -> UpdateMetricDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-
         with self._uow_factory.create() as uow:
             definition = self._get_metric_definition(
                 uow,
                 app_id=command.app_id,
                 metric_definition_id=command.metric_definition_id,
             )
-            
+
             definition.update(
                 machine_key=command.key,
                 display_name=command.name,
                 description=command.description,
-                enabled=command.is_active
+                enabled=command.is_active,
             )
-            
+
             saved_definition = uow.metric_definition_repo.save(definition)
 
         return UpdateMetricDefinitionResponse(
             metric_definition=DefinitionsResponseMapper.metric_domain_to_value(saved_definition)
         )
-    
-    def delete_metric_definition(self, command: DeleteMetricDefinitionCommand) -> DeleteMetricDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        
+
+    @require_permission(CrmPermissionEntity.edit_app_config_permission())
+    def delete_metric_definition(
+        self,
+        command: DeleteMetricDefinitionCommand,
+    ) -> DeleteMetricDefinitionResponse:
         with self._uow_factory.create() as uow:
             definition = uow.metric_definition_repo.delete(command.metric_definition_id)
-        
+
         return DeleteMetricDefinitionResponse(
             metric_definition=DefinitionsResponseMapper.metric_domain_to_value(definition)
         )
-    
+
+    @require_permission(CrmPermissionEntity.edit_app_config_permission())
     def create_metric_definition(
         self,
         command: CreateMetricDefinitionCommand,
     ) -> CreateMetricDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         entity = CrmMetricDefinitionEntity(
-            machine_key=command.key, 
+            machine_key=command.key,
             display_name=command.name,
             app_id=command.app_id,
             description=command.description,
@@ -155,21 +164,20 @@ class DefinitionsService:
         return CreateMetricDefinitionResponse(
             metric_definition=DefinitionsResponseMapper.metric_domain_to_value(saved_definition)
         )
-    
+
+    @require_app_access()
     def list_conversions(
         self,
         command: ListConversionDefinitionsCommand,
     ) -> ListConversionDefinitionsResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-
         with self._uow_factory.create() as uow:
             def_list = uow.conversion_definition_repo.list_by_app_id(
                 command.app_id,
-                pagination=PaginationMapper.pagination_from_command(command)
+                pagination=PaginationMapper.pagination_from_command(command),
             )
 
         return ListConversionDefinitionsResponse(
-            conversion_definitions = [DefinitionsResponseMapper.conversion_domain_to_value(it) for it in def_list]
+            conversion_definitions=[DefinitionsResponseMapper.conversion_domain_to_value(it) for it in def_list]
         )
 
     @staticmethod
@@ -182,38 +190,40 @@ class DefinitionsService:
         definition = uow.conversion_definition_repo.get_by_id(conversion_definition_id)
         if definition is None:
             raise ConversionDefinitionNotFound(conversion_definition_id)
-        
+
         if definition.app_id != app_id:
             raise DefinitionAppMismatch("Conversion", app_id)
-        
+
         return definition
-    
+
+    @require_app_access()
     def get_conversion_definition(
         self,
-        command:GetConversionDefinitionCommand,
+        command: GetConversionDefinitionCommand,
     ) -> GetConversionDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-
         with self._uow_factory.create() as uow:
-            saved_definition = self._get_conversion_definition(uow, app_id=command.app_id, conversion_definition_id=command.conversion_definition_id)
+            saved_definition = self._get_conversion_definition(
+                uow,
+                app_id=command.app_id,
+                conversion_definition_id=command.conversion_definition_id,
+            )
 
         return GetConversionDefinitionResponse(
             conversion_definition=DefinitionsResponseMapper.conversion_domain_to_value(saved_definition)
         )
-        
+
+    @require_permission(CrmPermissionEntity.edit_app_config_permission())
     def update_conversion_definition(
         self,
         command: UpdateConversionDefinitionCommand,
     ) -> UpdateConversionDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-
         with self._uow_factory.create() as uow:
             definition = self._get_conversion_definition(
                 uow,
                 app_id=command.app_id,
                 conversion_definition_id=command.conversion_definition_id,
             )
-            
+
             definition.update(
                 machine_key=command.key,
                 display_name=command.name,
@@ -221,20 +231,20 @@ class DefinitionsService:
                 revenue_enabled=command.revenue_enabled,
                 expects_amount=command.expects_amount,
                 expects_currency=command.expects_currency,
-                dedup_mode=command.dedup_mode
+                dedup_mode=command.dedup_mode,
             )
-            
+
             saved_definition = uow.conversion_definition_repo.save(definition)
 
         return UpdateConversionDefinitionResponse(
             conversion_definition=DefinitionsResponseMapper.conversion_domain_to_value(saved_definition)
         )
-    
+
+    @require_permission(CrmPermissionEntity.edit_app_config_permission())
     def create_conversion_definition(
         self,
         command: CreateConversionDefinitionCommand,
     ) -> CreateConversionDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         entity = CrmConversionDefinitionEntity(
             machine_key=command.key,
             display_name=command.name,
@@ -252,30 +262,28 @@ class DefinitionsService:
         return CreateConversionDefinitionResponse(
             conversion_definition=DefinitionsResponseMapper.conversion_domain_to_value(saved_definition)
         )
-    
+
+    @require_permission(CrmPermissionEntity.edit_app_config_permission())
     def delete_conversion_definition(
-        self, 
-        command: DeleteConversionDefinitionCommand
+        self,
+        command: DeleteConversionDefinitionCommand,
     ) -> DeleteConversionDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        
         with self._uow_factory.create() as uow:
             definition = uow.conversion_definition_repo.delete(command.conversion_definition_id)
-        
+
         return DeleteConversionDefinitionResponse(
             conversion_definition=DefinitionsResponseMapper.conversion_domain_to_value(definition)
         )
-    
+
+    @require_app_access()
     def list_params(
         self,
         command: ListParamDefinitionsCommand,
     ) -> ListParamDefinitionsResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-
         with self._uow_factory.create() as uow:
             def_list = uow.param_definition_repo.list_by_app_id(
-                command.app_id, 
-                pagination=PaginationMapper.pagination_from_command(command)
+                command.app_id,
+                pagination=PaginationMapper.pagination_from_command(command),
             )
 
         return ListParamDefinitionsResponse(
@@ -294,28 +302,30 @@ class DefinitionsService:
             raise ParamDefinitionNotFound(param_definition_id)
         if definition.app_id != app_id:
             raise DefinitionAppMismatch("Param", app_id)
-        
+
         return definition
 
+    @require_app_access()
     def get_param_definition(
-        self, 
-        command: GetParamDefinitionCommand
+        self,
+        command: GetParamDefinitionCommand,
     ) -> GetParamDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        
         with self._uow_factory.create() as uow:
-            saved_definition = self._get_param_definition(uow, app_id=command.app_id, param_definition_id=command.param_definition_id)
+            saved_definition = self._get_param_definition(
+                uow,
+                app_id=command.app_id,
+                param_definition_id=command.param_definition_id,
+            )
 
         return GetParamDefinitionResponse(
             param_definition=DefinitionsResponseMapper.param_domain_to_value(saved_definition)
         )
-    
+
+    @require_permission(CrmPermissionEntity.edit_app_config_permission())
     def update_param_definition(
         self,
         command: UpdateParamDefinitionCommand,
     ) -> UpdateParamDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-
         with self._uow_factory.create() as uow:
             definition = self._get_param_definition(
                 uow,
@@ -323,29 +333,29 @@ class DefinitionsService:
                 param_definition_id=command.param_definition_id,
             )
             definition.update(
-                display_name = command.name,
-                machine_key = command.key,
-                data_type = command.data_type,
-                description = command.description,
-                overwrite_policy = command.overwrite_policy,
-                is_active = command.is_active,
-                visible_in_logs = command.visible_in_logs,
-                visible_in_stats = command.visible_in_stats,
-                filterable = command.filterable,
-                groupable = command.groupable,
+                display_name=command.name,
+                machine_key=command.key,
+                data_type=command.data_type,
+                description=command.description,
+                overwrite_policy=command.overwrite_policy,
+                is_active=command.is_active,
+                visible_in_logs=command.visible_in_logs,
+                visible_in_stats=command.visible_in_stats,
+                filterable=command.filterable,
+                groupable=command.groupable,
             )
-            
+
             saved_definition = uow.param_definition_repo.save(definition)
 
         return UpdateParamDefinitionResponse(
             param_definition=DefinitionsResponseMapper.param_domain_to_value(saved_definition)
         )
-    
+
+    @require_permission(CrmPermissionEntity.edit_app_config_permission())
     def create_param_definition(
         self,
         command: CreateParamDefinitionCommand,
     ) -> CreateParamDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
         entity = CrmParamDefinitionEntity(
             display_name=command.label,
             machine_key=command.key,
@@ -359,7 +369,7 @@ class DefinitionsService:
             filterable=command.filterable if command.filterable is not None else False,
             groupable=command.groupable if command.groupable is not None else False,
         )
-        
+
         with self._uow_factory.create() as uow:
             saved_definition = uow.param_definition_repo.save(entity)
 
@@ -367,15 +377,14 @@ class DefinitionsService:
             param_definition=DefinitionsResponseMapper.param_domain_to_value(saved_definition)
         )
 
+    @require_permission(CrmPermissionEntity.edit_app_config_permission())
     def delete_param_definition(
-        self, 
-        command: DeleteParamDefinitionCommand
+        self,
+        command: DeleteParamDefinitionCommand,
     ) -> DeleteParamDefinitionResponse:
-        self._authorization_service.has_user_app_access(crm_user_id=command.crm_user_id, app_id=command.app_id)
-        
         with self._uow_factory.create() as uow:
             definition = uow.param_definition_repo.delete(command.param_definition_id)
-        
+
         return DeleteParamDefinitionResponse(
             param_definition=DefinitionsResponseMapper.param_domain_to_value(definition)
         )

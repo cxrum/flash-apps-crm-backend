@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from app.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.core.config import Settings
 from app.domain.event_bus.service_protocol import IAsyncEventBus
 from app.application.sdk.apps.service import AppService
@@ -28,6 +29,7 @@ class UnitTestContext:
     def build_app_service(self) -> AppService:
         return AppService(
             uow_factory=self.uow_factory,
+            authorization_service=CrmAuthorizationService(self.uow_factory),
             encryption_service=self.encryption_service,
             hash_service=self.hash_service,
         )

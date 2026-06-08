@@ -4,7 +4,12 @@ from app.application.sdk.exception import SdkException
 
 
 class SdkAppException(SdkException):
-    def __init__(self, message_key: str = "internal", context: Dict[str, Any]={}, code: int = 500):
+    def __init__(
+        self,
+        message_key: str = "internal",
+        context: Dict[str, Any] = {},
+        code: int = 500,
+    ):
         super().__init__(message_key, context, code)
 
 
@@ -41,4 +46,8 @@ class SdkAppPlatformRepositoryEmptyEntity(SdkAppException):
 
 class SdkAppPlatformByInstallKeyNotFound(SdkAppException):
     def __init__(self, install_key: str):
-        super().__init__("sdk.app.platform.by_install_key.not_found", {"install_key": install_key}, 404)
+        super().__init__(
+            "sdk.app.platform.by_install_key.not_found",
+            {"install_key": install_key},
+            404,
+        )

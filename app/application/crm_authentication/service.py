@@ -1,14 +1,19 @@
 
-from app.application.contracts.ip2location import IP2LocationGatewayProtocol
-from app.application.crm_authentication.commands import UserLoginCommand, UserRegistrationCommand
-from app.application.crm_authentication.exceptions import EmailIsExist, InvalidOrExpiredToken, InvalidPasswordOrEmail
+from app.application.crm_authentication.commands import (
+    UserLoginCommand,
+    UserRegistrationCommand,
+)
+from app.application.crm_authentication.exceptions import (
+    EmailIsExist,
+    InvalidOrExpiredToken,
+    InvalidPasswordOrEmail,
+)
 from app.application.crm_authentication.protocol import CrmAuthenticationProtocol
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
-from app.application.exception import GeneralException
-from app.domain.hash_protocol import HashProtocol, HashableValue
+from app.domain.hash_protocol import HashableValue, HashProtocol
 from app.domain.uow import UnitOfWorkFactoryProtocol
 from app.domain.user import CrmUserEntity
-from app.domain.user_app_access import CrmUserAppAccessEntity
+
 
 class CrmAuthentication(CrmAuthenticationProtocol):
 

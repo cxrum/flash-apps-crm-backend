@@ -11,8 +11,6 @@ class Roles(str, Enum):
     MANAGER = "manager"
     
 
-
-
 @dataclass(frozen=True)
 class CrmRoleEntity:
     code: str
