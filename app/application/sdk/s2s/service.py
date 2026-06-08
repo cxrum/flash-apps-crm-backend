@@ -85,7 +85,7 @@ class ClickService:
             is_signature_correct = self._signature_service.compare(
                 value=HashableValue.from_str(command.raw_params),
                 signature=HashableValue.from_hex(command.signature),
-                key=platform.sdk_secret_hash
+                key=platform.sdk_secret_encrypted
             )
             
             if not is_signature_correct:

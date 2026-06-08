@@ -56,7 +56,13 @@ class SdkAppResponsesMapper:
         return AppResponseValue.model_validate(domain)
     
     @classmethod
-    def app_platform_domain_to_value(cls, domain: CrmAppPlatformEntity) -> AppPlatformResponseValue:
-        return AppPlatformResponseValue.model_validate(domain)
+    def app_platform_domain_to_value(
+        cls,
+        domain: CrmAppPlatformEntity,
+        *,
+        sdk_secret_view: str | None = None,
+    ) -> AppPlatformResponseValue:
+        response = AppPlatformResponseValue.model_validate(domain)
+        return response.model_copy(update={"sdk_secret_encrypted": sdk_secret_view})
     
     

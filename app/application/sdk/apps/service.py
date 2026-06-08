@@ -11,6 +11,7 @@ from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
 from app.domain.hash_protocol import HashProtocol
+from app.domain.role.CrmRoleEntity import CrmRoleEntity
 from app.domain.role.CrmRoleEntity import Roles
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
@@ -35,6 +36,23 @@ class AppService:
             raise SdkAppNotFound(app_id)
             
         return saved_app
+
+    def _get_user_app_role(
+        self,
+        uow: UnitOfWorkProtocol,
+        *,
+        crm_user_id: int,
+        app_id: int,
+    ) -> CrmRoleEntity:
+        app_access = uow.user_app_access_repo.get_by_user_and_app(crm_user_id, app_id)
+        if app_access is None:
+            raise PermissionError()
+
+        role = uow.role_repo.get_by_id(app_access.role_id)
+        if role is None:
+            raise PermissionError()
+
+        return role
 
     def get_app(self, command: GetAppCommand) -> GetAppResponse: 
         
@@ -126,6 +144,7 @@ class AppService:
 
         with self._uow_factory.create() as uow:
             app = uow.app_repo.get_by_id(command.app_id)
+            role = self._get_user_app_role(uow, crm_user_id=command.crm_user_id, app_id=command.app_id)
             
             if app is None:
                 raise SdkAppNotFound(command.app_id)
@@ -133,7 +152,7 @@ class AppService:
             saved_platform_app = uow.app_platform_repo.list_by_app_id(command.app_id)
                 
         return ListAppPlatformsResponse(
-            app_platforms=[SdkAppResponsesMapper.app_platform_domain_to_value(it) for it in saved_platform_app]
+            app_platforms=[SdkAppResponsesMapper.app_platform_domain_to_value(it, sdk_secret_view=it.secret_view_for_role(role.code)) for it in saved_platform_app]
         )
 
     def create_app_platform(self, command: CreateAppPlatformCommand) -> CreatePlatformResponse:
@@ -150,23 +169,31 @@ class AppService:
             raise InvalidAppPlatform(command.platform)
 
         with self._uow_factory.create() as uow:
+            role = self._get_user_app_role(uow, crm_user_id=command.crm_user_id, app_id=command.app_id)
             app = uow.app_repo.get_by_id(platform_app.app_id)
+            
             if app is None:
                 raise SdkAppNotFound(platform_app.app_id)
 
+            platform_app.encrypt_secret(self._encryption_service)
             saved_platform_app = uow.app_platform_repo.save(platform_app)
                 
             if saved_platform_app.platform_id is None:
                 raise SdkAppPlatformCreateFailed()
+
+        secret_view = saved_platform_app.secret_view_for_role(role.code)
         
         return CreatePlatformResponse(
-            app_platform=SdkAppResponsesMapper.app_platform_domain_to_value(saved_platform_app),
-            sdk_secret_hash=platform_app.sdk_secret_hash.to_hex()
+            app_platform=SdkAppResponsesMapper.app_platform_domain_to_value(
+                saved_platform_app,
+                sdk_secret_view=secret_view,
+            ),
+            sdk_secret=self._encryption_service.decrypt(secret_view),
         )
 
     def _get_app_platform(self, uow: UnitOfWorkProtocol, *, app_platform_id: int) -> CrmAppPlatformEntity:
         saved_platform_app = uow.app_platform_repo.get_by_id(app_platform_id)
-    
+
         if saved_platform_app is None or saved_platform_app.platform_id is None:
             raise SdkAppPlatformRepositoryEmptyEntity()
         
@@ -176,9 +203,13 @@ class AppService:
         
         with self._uow_factory.create() as uow:
             saved_platform = self._get_app_platform(uow, app_platform_id=command.platform_id)
-
+            role = self._get_user_app_role(uow, crm_user_id=command.crm_user_id, app_id=command.app_id)
+            
         return GetPlatformResponse(
-            app_platform=SdkAppResponsesMapper.app_platform_domain_to_value(saved_platform)
+            app_platform=SdkAppResponsesMapper.app_platform_domain_to_value(
+                saved_platform,
+                sdk_secret_view=saved_platform.secret_view_for_role(role.code),
+            )
         )
     
     def update_app_platform(self, command: UpdateAppPlatformCommand) -> UpdatePlatformResponse:

@@ -26,6 +26,7 @@ class AppPlatformResponseValue(BaseResponse):
     install_key: str
     store_url: str | None = None
     sdk_public_key: str | None = None
+    sdk_secret_encrypted: str | None = None
     status: str
     platform_id: int | None = None
     created_at: datetime | None = None
@@ -52,7 +53,7 @@ class ListAppPlatformsResponse(BaseResponse):
 
 class CreatePlatformResponse(BaseResponse):
     app_platform: AppPlatformResponseValue
-    sdk_secret_hash: str
+    sdk_secret: str
     
 class UpdatePlatformResponse(BaseResponse):
     app_platform: AppPlatformResponseValue

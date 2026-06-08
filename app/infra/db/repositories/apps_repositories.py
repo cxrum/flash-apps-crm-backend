@@ -111,7 +111,7 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
             store_url=row.store_url,
             install_key=row.install_key,
             sdk_public_key=row.sdk_public_key,
-            sdk_secret_hash=HashableValue.from_hex(row.sdk_secret_hash),
+            sdk_secret_encrypted=row.sdk_secret_encrypted,
             status=row.status,
             created_at=row.created_at,
             updated_at=row.updated_at,
@@ -125,7 +125,7 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
             "store_url": entity.store_url,
             "install_key": entity.install_key,
             "sdk_public_key": entity.sdk_public_key,
-            "sdk_secret_hash": entity.sdk_secret_hash.to_hex(),
+            "sdk_secret_encrypted": entity.sdk_secret_encrypted,
             "status": entity.status,
         }
         if entity.platform_id is not None:
