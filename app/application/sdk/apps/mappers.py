@@ -1,11 +1,24 @@
 from collections.abc import Mapping
 from dataclasses import asdict
 
-from app.application.sdk.apps.commands import CreateAppCommand, CreateAppPlatformCommand, DeleteAppCommand, DeleteAppPlatformCommand, GetAppCommand, GetAppPlatformCommand, ListAppPlatformsCommand, ListAppsCommand, UpdateAppCommand, UpdateAppPlatformCommand
+from app.application.sdk.apps.commands import (
+    CreateAppCommand,
+    CreateAppPlatformCommand,
+    DeleteAppCommand,
+    DeleteAppPlatformCommand,
+    GetAppCommand,
+    GetAppPlatformCommand,
+    ListAppPlatformsCommand,
+    ListAppsCommand,
+    RotatePlatformSecretCommand,
+    UpdateAppCommand,
+    UpdateAppPlatformCommand,
+)
 from app.application.sdk.apps.responses import AppPlatformResponseValue, AppResponseValue
 from app.core.utils.general_mapper import GeneralMapper
 from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app_platform import CrmAppPlatformEntity
+
 
 class SdkAppCommandsMapper:
     @classmethod
@@ -47,14 +60,17 @@ class SdkAppCommandsMapper:
     @classmethod
     def delete_app_platform_from_transport(cls, payload: Mapping[str, object]) -> DeleteAppPlatformCommand:
         return GeneralMapper.command_payload_to_command(DeleteAppPlatformCommand, payload)
-    
+
+    @classmethod
+    def rotate_platform_secret_from_transport(cls, payload: Mapping[str, object]) -> RotatePlatformSecretCommand:
+        return GeneralMapper.command_payload_to_command(RotatePlatformSecretCommand, payload)
+
 
 class SdkAppResponsesMapper:
-    
     @classmethod
     def app_domain_to_value(cls, domain: CrmAppEntity) -> AppResponseValue:
         return AppResponseValue.model_validate(domain)
-    
+
     @classmethod
     def app_platform_domain_to_value(
         cls,
@@ -64,5 +80,3 @@ class SdkAppResponsesMapper:
     ) -> AppPlatformResponseValue:
         response = AppPlatformResponseValue.model_validate(domain)
         return response.model_copy(update={"sdk_secret_encrypted": sdk_secret_view})
-    
-    

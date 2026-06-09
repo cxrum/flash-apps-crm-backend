@@ -3,16 +3,16 @@ from __future__ import annotations
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
-from app.domain.hash_protocol import HashableValue
-from app.domain.pagination import Pagination
-from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
-from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app_platform.app_platform_repository_protocol import CrmAppPlatformRepositoryProtocol
-from app.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
+from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.app_user.app_user_repository_protocol import CrmAppUserRepositoryProtocol
+from app.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
+from app.domain.hash_protocol import HashableValue
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
+from app.domain.pagination import Pagination
 from app.infra.db.apps.models import App, AppPlatform, AppUser, Install
 from app.infra.exception import BaseInfraException
 
@@ -86,15 +86,11 @@ class SqlAlchemyCrmAppRepository(CrmAppRepositoryProtocol):
         return self._to_domain(row) if row is not None else None
 
     def get_by_slug(self, code_slug: str) -> CrmAppEntity | None:
-        row = self.session.scalars(
-            select(App).where(App.code_slug == code_slug)
-        ).first()
+        row = self.session.scalars(select(App).where(App.code_slug == code_slug)).first()
         return self._to_domain(row) if row is not None else None
 
     def list_all(self, *, pagination: Pagination | None = None) -> list[CrmAppEntity]:
-        rows = self.session.scalars(
-            _apply_pagination(select(App).order_by(App.app_id.asc()), pagination)
-        ).all()
+        rows = self.session.scalars(_apply_pagination(select(App).order_by(App.app_id.asc()), pagination)).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -112,6 +108,7 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
             install_key=row.install_key,
             sdk_public_key=row.sdk_public_key,
             sdk_secret_encrypted=row.sdk_secret_encrypted,
+            sdk_secret_fallback_encrypted=row.sdk_secret_fallback_encrypted,
             status=row.status,
             created_at=row.created_at,
             updated_at=row.updated_at,
@@ -126,6 +123,7 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
             "install_key": entity.install_key,
             "sdk_public_key": entity.sdk_public_key,
             "sdk_secret_encrypted": entity.sdk_secret_encrypted,
+            "sdk_secret_fallback_encrypted": entity.sdk_secret_fallback_encrypted,
             "status": entity.status,
         }
         if entity.platform_id is not None:
@@ -162,24 +160,22 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
 
     def get_by_install_key(self, install_key: str) -> CrmAppPlatformEntity | None:
         row = self.session.scalars(
-            select(AppPlatform)
-            .where(AppPlatform.install_key == install_key)
-            .order_by(AppPlatform.platform_id.asc())
+            select(AppPlatform).where(AppPlatform.install_key == install_key).order_by(AppPlatform.platform_id.asc())
         ).first()
         return self._to_domain(row) if row is not None else None
-    
+
     def list_by_app_id(
         self,
         app_id: int,
         *,
         pagination: Pagination | None = None,
     ) -> list[CrmAppPlatformEntity]:
-        rows = self.session.scalars(_apply_pagination(
-            select(AppPlatform)
-            .where(AppPlatform.app_id == app_id)
-            .order_by(AppPlatform.platform_id.asc()),
-            pagination,
-        )).all()
+        rows = self.session.scalars(
+            _apply_pagination(
+                select(AppPlatform).where(AppPlatform.app_id == app_id).order_by(AppPlatform.platform_id.asc()),
+                pagination,
+            )
+        ).all()
         return [self._to_domain(row) for row in rows]
 
     def list_by_platform(
@@ -188,12 +184,12 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
         *,
         pagination: Pagination | None = None,
     ) -> list[CrmAppPlatformEntity]:
-        rows = self.session.scalars(_apply_pagination(
-            select(AppPlatform)
-            .where(AppPlatform.platform == platform)
-            .order_by(AppPlatform.platform_id.asc()),
-            pagination,
-        )).all()
+        rows = self.session.scalars(
+            _apply_pagination(
+                select(AppPlatform).where(AppPlatform.platform == platform).order_by(AppPlatform.platform_id.asc()),
+                pagination,
+            )
+        ).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -248,12 +244,12 @@ class SqlAlchemyCrmAppUserRepository(CrmAppUserRepositoryProtocol):
         *,
         pagination: Pagination | None = None,
     ) -> list[CrmAppUserEntity]:
-        rows = self.session.scalars(_apply_pagination(
-            select(AppUser)
-            .where(AppUser.app_id == app_id)
-            .order_by(AppUser.app_user_id.asc()),
-            pagination,
-        )).all()
+        rows = self.session.scalars(
+            _apply_pagination(
+                select(AppUser).where(AppUser.app_id == app_id).order_by(AppUser.app_user_id.asc()),
+                pagination,
+            )
+        ).all()
         return [self._to_domain(row) for row in rows]
 
 
@@ -315,7 +311,7 @@ class SqlAlchemyCrmInstallRepository(CrmInstallRepositoryProtocol):
             .order_by(desc(Install.installed_at), desc(Install.install_id))
         ).first()
         return self._to_domain(row) if row is not None else None
-    
+
     def get_by_click_id(self, click_id: str) -> CrmInstallEntity | None:
         row = self.session.scalars(
             select(Install)

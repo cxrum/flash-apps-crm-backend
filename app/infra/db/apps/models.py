@@ -1,19 +1,24 @@
-from app.infra.db.base import Base
+from datetime import datetime
 
-
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, String, Text, UniqueConstraint, func
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    String,
+    Text,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-
-from datetime import datetime
+from app.infra.db.base import Base
 
 
 class AppUser(Base):
     __tablename__ = "crm_app_users"
-    __table_args__ = (
-        UniqueConstraint("app_user_id", "app_id", name="uq_crm_app_users_platform_external_user"),
-    )
+    __table_args__ = (UniqueConstraint("app_user_id", "app_id", name="uq_crm_app_users_platform_external_user"),)
     app_user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     app_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -31,9 +36,7 @@ class AppUser(Base):
 
 class App(Base):
     __tablename__ = "crm_apps"
-    __table_args__ = (
-        CheckConstraint("status IN ('draft', 'active', 'archived')", name="ck_crm_apps_status"),
-    )
+    __table_args__ = (CheckConstraint("status IN ('draft', 'active', 'archived')", name="ck_crm_apps_status"),)
 
     app_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(120), nullable=False)
@@ -78,6 +81,7 @@ class AppPlatform(Base):
     install_key: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
     sdk_public_key: Mapped[str] = mapped_column(String(255), nullable=False)
     sdk_secret_encrypted: Mapped[str] = mapped_column(String(255), nullable=False)
+    sdk_secret_fallback_encrypted: Mapped[str] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="active", index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -94,9 +98,7 @@ class AppPlatform(Base):
 
 class Install(Base):
     __tablename__ = "crm_installs"
-    __table_args__ = (
-        UniqueConstraint("app_platform_id", "app_user_id", name="uq_crm_installs_app_user"),
-    )
+    __table_args__ = (UniqueConstraint("app_platform_id", "app_user_id", name="uq_crm_installs_app_user"),)
 
     install_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     click_id: Mapped[str] = mapped_column(

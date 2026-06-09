@@ -35,6 +35,12 @@ class CreateAppCommand(FlexibleCommand):
     screenshots: list[str] = Field(default_factory=list)
 
 
+class RotatePlatformSecretCommand(FlexibleCommand):
+    crm_user_id: int
+    app_id: int
+    platform_id: int
+
+
 class GetAppCommand(FlexibleCommand):
     crm_user_id: int
     app_id: int

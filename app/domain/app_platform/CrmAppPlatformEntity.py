@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import copy
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
@@ -16,12 +17,17 @@ class CrmAppPlatformEntity:
     install_key: str
     sdk_secret_encrypted: str
     sdk_public_key: str
+    sdk_secret_fallback_encrypted: str | None = None
     store_url: str | None = None
     status: str = "active"
     platform_id: int | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
     _sdk_secret_plain: str | None = field(default=None, repr=False, compare=False)
+
+    @classmethod
+    def __sdk_secret_blen(cls) -> int:
+        return 8
 
     @staticmethod
     def __available_statuses() -> list[str]:
@@ -52,10 +58,10 @@ class CrmAppPlatformEntity:
         self.updated_at = datetime.now()
 
     def create_secret(self, hasher: HashProtocol) -> None:
-        self._sdk_secret_plain = hasher.random_hash().to_hex()
+        self._sdk_secret_plain = hasher.random_hash(self.__sdk_secret_blen()).to_hex()
 
     def encrypt_secret(self, encryption: EncryptionServiceProtocol) -> None:
-        source_secret = self._sdk_secret_plain or self.sdk_secret_encrypted
+        source_secret = self._sdk_secret_plain
         self.sdk_secret_encrypted = encryption.encrypt(source_secret)
         self._sdk_secret_plain = None
 
@@ -63,6 +69,11 @@ class CrmAppPlatformEntity:
         if CrmRoleEntity.normalize_role(user_role) is Roles.ADMIN:
             return self.sdk_secret_encrypted
         return self._mask_secret(self.sdk_secret_encrypted)
+
+    def rotate_secret(self, hasher: HashProtocol, encryption: EncryptionServiceProtocol):
+        self.sdk_secret_fallback_encrypted = copy(self.sdk_secret_encrypted)
+        self.create_secret(hasher)
+        self.encrypt_secret(encryption)
 
     @staticmethod
     def create(
@@ -75,8 +86,8 @@ class CrmAppPlatformEntity:
         store_url: str | None = None,
         status: str = "active",
     ) -> "CrmAppPlatformEntity":
-        secret_plain = hasher.random_hash().to_hex()
-        sdk_public_key = hasher.random_hash(8).to_hex()
+        secret_plain = hasher.random_hash(CrmAppPlatformEntity.__sdk_secret_blen()).to_hex()
+        sdk_public_key = hasher.random_hash(CrmAppPlatformEntity.__sdk_secret_blen()).to_hex()
         return CrmAppPlatformEntity(
             app_id=app_id,
             platform=platform,

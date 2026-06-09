@@ -1,7 +1,5 @@
-
 from dataclasses import field
 from datetime import datetime
-
 
 from app.application.base import BaseResponse
 
@@ -18,6 +16,7 @@ class AppResponseValue(BaseResponse):
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
+
 class AppPlatformResponseValue(BaseResponse):
     app_id: int
     platform: str
@@ -32,40 +31,55 @@ class AppPlatformResponseValue(BaseResponse):
     updated_at: datetime | None = None
 
 
+class RotatePlatformSecretResponse(BaseResponse):
+    new_sdk_secret: str
+
+
 class CreateAppResponse(BaseResponse):
     app: AppResponseValue
-    
+
+
 class UpdateAppResponse(BaseResponse):
     app: AppResponseValue
-    
+
+
 class DeleteAppResponse(BaseResponse):
     app: AppResponseValue
-    
+
+
 class GetAppResponse(BaseResponse):
     app: AppResponseValue
 
+
 class AppListResponse(BaseResponse):
     apps: list[AppResponseValue]
-    
+
+
 class ListAppPlatformsResponse(BaseResponse):
     app_platforms: list[AppPlatformResponseValue]
+
 
 class CreatePlatformResponse(BaseResponse):
     app_platform: AppPlatformResponseValue
     sdk_secret: str
-    
+
+
 class UpdatePlatformResponse(BaseResponse):
     app_platform: AppPlatformResponseValue
-    
+
+
 class GetPlatformResponse(BaseResponse):
     app_platform: AppPlatformResponseValue
-    
+
+
 class DeletePlatformResponse(BaseResponse):
     app_platform: AppPlatformResponseValue
+
 
 class AppConfigQueryEntry(BaseResponse):
     code: str
     value: str
-        
+
+
 class AppConfigQueryResponse(BaseResponse):
     platform_configurations: list[AppConfigQueryEntry]

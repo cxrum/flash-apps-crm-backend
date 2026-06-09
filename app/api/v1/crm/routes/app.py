@@ -104,9 +104,7 @@ async def get_app_platform(
     app_service: AppService = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.get_app_platform_from_transport(
-        GeneralMapper.transport_to_command_payload(
-            crm_user, app_id=app_id, platform_id=platform_id
-        )
+        GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id, platform_id=platform_id)
     )
 
     response = app_service.get_app_platform(command)
@@ -122,9 +120,7 @@ async def list_app_platforms(
     app_service: AppService = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.list_app_platforms_from_transport(
-        GeneralMapper.transport_to_command_payload(
-            crm_user, pagination_queries, app_id=app_id
-        )
+        GeneralMapper.transport_to_command_payload(crm_user, pagination_queries, app_id=app_id)
     )
 
     response = app_service.get_app_platforms(command)
@@ -177,11 +173,28 @@ async def delete_app_platform(
     app_service: AppService = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.delete_app_platform_from_transport(
-        GeneralMapper.transport_to_command_payload(
-            crm_user, app_id=app_id, platform_id=platform_id
-        )
+        GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id, platform_id=platform_id)
     )
 
     response = app_service.delete_app_platform(command)
+
+    return response.model_dump(mode="json")
+
+
+@router.post(
+    "/{app_id}/platform/{platform_id}/rotate",
+    tags=["admin", "app", "secrets"],
+)
+async def rotate_platform_secret(
+    app_id: int,
+    platform_id: int,
+    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
+    app_service: AppService = Depends(get_sdk_app_service),
+) -> JsonDict:
+    command = SdkAppCommandsMapper.rotate_platform_secret_from_transport(
+        GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id, platform_id=platform_id)
+    )
+
+    response = app_service.rotate_platform_secret(command)
 
     return response.model_dump(mode="json")
