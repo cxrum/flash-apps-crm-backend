@@ -10,7 +10,6 @@ from app.application.crm_authentication.exceptions import (
 from app.application.crm_authentication.protocol import CrmAuthenticationProtocol
 from app.application.crm_authentication.responses import (
     AuthenticatedCrmUserResponse,
-    CrmUserInfoResponse,
     ResolvedCrmUserResponse,
     TokenResponse,
 )
@@ -50,7 +49,7 @@ class CrmAuthentication(CrmAuthenticationProtocol):
             exist_user = self.__resolve_user(uow, token=token)
 
         return ResolvedCrmUserResponse(
-            crm_user_id=exist_user.user_id,
+            crm_user_id=exist_user.crm_user_id,
         )
 
     def verify_token(self, token: str) -> str:

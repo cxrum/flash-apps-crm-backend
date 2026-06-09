@@ -1,9 +1,5 @@
-import json
-from datetime import UTC, date, datetime
-from typing import Any
-
-from app.application.sdk.ingestion.update_statistic import StatisticAggregates
 from app.application.exception import GeneralException
+from app.application.sdk.ingestion.update_statistic import StatisticAggregates
 from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
     CrmConversionDefinitionEntity,
 )
@@ -32,25 +28,19 @@ class AsyncConversionHandler(AsyncEventMessageHandler):
                 f"for app_id='{app_id}' and click_id='{click_id}'"
             )
 
-        return {
-            definition.machine_key: definition
-            for definition in definitions
-        }
+        return {definition.machine_key: definition for definition in definitions}
 
     async def handle(self, message: DomainEventMessage) -> None:
         if not isinstance(message, ConversionEventMessage):
             raise GeneralException(
-                "AsyncConversionHandler expected ConversionEventMessage, "
-                f"got {type(message).__name__}"
+                f"AsyncConversionHandler expected ConversionEventMessage, got {type(message).__name__}"
             )
 
         with self.__uow_factory.create() as uow:
             click = uow.click_repo.get_by_id(message.click_id)
 
             if click is None:
-                raise GeneralException(
-                    f"AsyncConversionHandler could not find click with id='{message.click_id}'"
-                )
+                raise GeneralException(f"AsyncConversionHandler could not find click with id='{message.click_id}'")
 
             app_platform = uow.app_platform_repo.get_by_id(click.app_platform_id)
 
@@ -59,7 +49,7 @@ class AsyncConversionHandler(AsyncEventMessageHandler):
                     "AsyncConversionHandler could not find app platform "
                     f"with id='{click.app_platform_id}' for click_id='{message.click_id}'"
                 )
-            
+
             definition_lookup = self._get_definition_lookup(
                 uow,
                 app_id=app_platform.app_id,
@@ -120,10 +110,7 @@ class AsyncConversionHandler(AsyncEventMessageHandler):
                     f"for event_key='{message.event_key}' requires amount and currency "
                     "when amount_usd is present"
                 )
-                
+
             StatisticAggregates.update(
-                uow=uow,
-                message=message,
-                revenue_enabled=definition.revenue_enabled,
-                app_platform=app_platform
+                uow=uow, message=message, revenue_enabled=definition.revenue_enabled, app_platform=app_platform
             )

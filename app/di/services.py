@@ -135,7 +135,8 @@ def get_sdk_app_service(
         get_app_secrets_encryption_service
     ),
     hash_service: HashProtocol = Depends(get_hash_service),
+    event_bus: IAsyncEventBus = Depends(get_in_memory_event_bus),
 ) -> AppService:
     return AppService(
-        uow_factory, authorization_service, encryption_service, hash_service
+        uow_factory, authorization_service, encryption_service, hash_service, event_bus
     )

@@ -1,8 +1,16 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import pytest
 
+from app.application.admin.crm_authorization.service import CrmAuthorizationService
+from app.application.sdk.apps.commands import UpdateAppCommand, UpdateAppPlatformCommand
+from app.application.sdk.apps.service import AppService
 from app.application.exception import GeneralException
+from app.domain.event_bus.entity import DomainEventMessage
+from app.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
+from app.domain.event_bus.service_protocol import AsyncEventMessageHandler, EventMessageHandler
 from app.domain.role.CrmRoleEntity import Roles
 from app.domain.hash_protocol import HashableValue
 from tests.unit.builders import (
@@ -17,6 +25,60 @@ from tests.unit.builders import (
     build_user_app_access_entity,
 )
 from tests.unit.base import UnitTestContext
+
+
+class RecordingAsyncEventBus:
+    def __init__(self) -> None:
+        self.published_messages: list[DomainEventMessage] = []
+
+    def subscribe(
+        self,
+        event_name: str,
+        handler: AsyncEventMessageHandler | EventMessageHandler,
+    ) -> None:
+        return None
+
+    def unsubscribe(
+        self,
+        event_name: str,
+        handler: AsyncEventMessageHandler | EventMessageHandler,
+    ) -> None:
+        return None
+
+    async def publish(self, message: DomainEventMessage) -> None:
+        self.published_messages.append(message)
+
+    async def publish_many(self, messages: Sequence[DomainEventMessage]) -> None:
+        for message in messages:
+            await self.publish(message)
+
+    async def start(self) -> None:
+        return None
+
+    async def stop(self) -> None:
+        return None
+
+
+def _build_app_service_with_bus(
+    unit_test_context: UnitTestContext,
+    event_bus: RecordingAsyncEventBus,
+) -> AppService:
+    return AppService(
+        uow_factory=unit_test_context.uow_factory,
+        authorization_service=CrmAuthorizationService(unit_test_context.uow_factory),
+        encryption_service=unit_test_context.encryption_service,
+        hash_service=unit_test_context.hash_service,
+        async_event_bus=event_bus,
+    )
+
+
+def _seed_manager_access(unit_test_context: UnitTestContext) -> None:
+    manager_role = unit_test_context.uow.role_repo.save(
+        build_role_entity(code=Roles.MANAGER.value, display_name="Manager")
+    )
+    unit_test_context.uow.user_app_access_repo.save(
+        build_user_app_access_entity(role_id=manager_role.role_id)
+    )
 
 
 def test_create_app_drafts_and_saves_app(unit_test_context: UnitTestContext) -> None:
@@ -99,6 +161,75 @@ def test_create_app_platform_hides_secret_for_manager(unit_test_context: UnitTes
 
     assert response.sdk_secret == "enc***"
     assert response.app_platform.sdk_secret_encrypted == "enc***"
+
+
+def test_update_app_publishes_value_changed_event(unit_test_context: UnitTestContext) -> None:
+    event_bus = RecordingAsyncEventBus()
+    service = _build_app_service_with_bus(unit_test_context, event_bus)
+    unit_test_context.uow.app_repo.save(
+        build_app_entity(app_id=1, name="Old App", status="active")
+    )
+    _seed_manager_access(unit_test_context)
+
+    service.update_app(
+        UpdateAppCommand(
+            crm_user_id=1,
+            app_id=1,
+            name="New App",
+            is_active=False,
+        )
+    )
+
+    assert len(event_bus.published_messages) == 1
+    message = event_bus.published_messages[0]
+    assert isinstance(message, ValueChangedEvent)
+    assert message.crm_user_id == 1
+    assert message.app_id == 1
+    assert message.entity_id == "1"
+    assert message.old_value["crm_apps"]["name"] == "Old App"
+    assert message.old_value["crm_apps"]["status"] == "active"
+    assert message.new_value["crm_apps"]["name"] == "New App"
+    assert message.new_value["crm_apps"]["status"] == "draft"
+    assert message.ignore_fields == ("created_at", "updated_at")
+
+
+def test_update_app_platform_publishes_value_changed_event(
+    unit_test_context: UnitTestContext,
+) -> None:
+    event_bus = RecordingAsyncEventBus()
+    service = _build_app_service_with_bus(unit_test_context, event_bus)
+    unit_test_context.uow.app_repo.save(build_app_entity(app_id=1))
+    saved_platform = unit_test_context.uow.app_platform_repo.save(
+        build_app_platform_entity(
+            app_id=1,
+            platform_id=7,
+            install_key="old-install-key",
+            status="active",
+        )
+    )
+    _seed_manager_access(unit_test_context)
+
+    service.update_app_platform(
+        UpdateAppPlatformCommand(
+            crm_user_id=1,
+            app_id=1,
+            platform_id=saved_platform.platform_id or 0,
+            install_key="new-install-key",
+            is_active=False,
+        )
+    )
+
+    assert len(event_bus.published_messages) == 1
+    message = event_bus.published_messages[0]
+    assert isinstance(message, ValueChangedEvent)
+    assert message.crm_user_id == 1
+    assert message.app_id == 1
+    assert message.entity_id == "7"
+    assert message.old_value["crm_app_platforms"]["install_key"] == "old-install-key"
+    assert message.old_value["crm_app_platforms"]["status"] == "active"
+    assert message.new_value["crm_app_platforms"]["install_key"] == "new-install-key"
+    assert message.new_value["crm_app_platforms"]["status"] == "inactive"
+    assert message.ignore_fields == ("created_at", "updated_at")
 
 
 def test_get_app_config_secrets_merges_templates_with_platform_values(

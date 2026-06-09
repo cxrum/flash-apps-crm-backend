@@ -4,7 +4,7 @@ from app.domain.exceptions import DomainException
 
 
 class EventBusException(DomainException):
-    def __init__(self, message_key: str = "internal", context: Dict[str, Any]={}, code: int = 400):
+    def __init__(self, message_key: str = "internal", context: Dict[str, Any] = {}, code: int = 400):
         super().__init__(message_key, context, code)
 
 
@@ -21,6 +21,11 @@ class InvalidRawEventPayload(EventBusException):
 class InvalidUpdateCurrentParamUpdatedAt(EventBusException):
     def __init__(self):
         super().__init__("domain.event_bus.update_params.updated_at.invalid", {}, 400)
+
+
+class InvalidValueUpdateUpdatedAt(EventBusException):
+    def __init__(self):
+        super().__init__("domain.event_bus.audit.updated_at.invalid", {}, 400)
 
 
 class InvalidExceptionEventType(EventBusException):

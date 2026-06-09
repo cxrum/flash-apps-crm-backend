@@ -62,18 +62,19 @@ class CrmAppPlatformEntity:
 
     def encrypt_secret(self, encryption: EncryptionServiceProtocol) -> None:
         source_secret = self._sdk_secret_plain
-        self.sdk_secret_encrypted = encryption.encrypt(source_secret)
+        self.sdk_secret_encrypted = encryption.encrypt(source_secret)  # type: ignore
         self._sdk_secret_plain = None
 
     def secret_view_for_role(self, user_role: Roles | str | None = None) -> str:
-        if CrmRoleEntity.normalize_role(user_role) is Roles.ADMIN:
+        if CrmRoleEntity.normalize_role(user_role) is Roles.ADMIN:  # type: ignore
             return self.sdk_secret_encrypted
         return self._mask_secret(self.sdk_secret_encrypted)
 
-    def rotate_secret(self, hasher: HashProtocol, encryption: EncryptionServiceProtocol):
+    def rotate_secret(self, hasher: HashProtocol, encryption: EncryptionServiceProtocol) -> str:
         self.sdk_secret_fallback_encrypted = copy(self.sdk_secret_encrypted)
         self.create_secret(hasher)
         self.encrypt_secret(encryption)
+        return self.sdk_secret_fallback_encrypted
 
     @staticmethod
     def create(
@@ -84,7 +85,7 @@ class CrmAppPlatformEntity:
         package_name: str,
         install_key: str,
         store_url: str | None = None,
-        status: str = "active",
+        status: str = "draft",
     ) -> "CrmAppPlatformEntity":
         secret_plain = hasher.random_hash(CrmAppPlatformEntity.__sdk_secret_blen()).to_hex()
         sdk_public_key = hasher.random_hash(CrmAppPlatformEntity.__sdk_secret_blen()).to_hex()

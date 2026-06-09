@@ -32,6 +32,7 @@ class UnitTestContext:
             authorization_service=CrmAuthorizationService(self.uow_factory),
             encryption_service=self.encryption_service,
             hash_service=self.hash_service,
+            async_event_bus=self.async_event_bus,
         )
         
     def build_ingestion_service(self) -> IngestionService:

@@ -1,8 +1,17 @@
 from __future__ import annotations
 
+import asyncio
+from dataclasses import asdict, is_dataclass
+from datetime import UTC, datetime
+from typing import Any
+
 from app.application.access_decorators import require_app_access, require_role
 from app.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.application.contracts.encryption import EncryptionServiceProtocol
+from app.application.events_bus.factories.value_update_event import (
+    ValueChangedEventFactory,
+    ValueChangedEventValue,
+)
 from app.application.mapper import PaginationMapper
 from app.application.sdk.apps.commands import (
     AppConfigurationCommand,
@@ -45,6 +54,8 @@ from app.application.sdk.apps.responses import (
 from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
+from app.domain.event_bus.entity import DomainEventMessage
+from app.domain.event_bus.service_protocol import IAsyncEventBus
 from app.domain.hash_protocol import HashProtocol
 from app.domain.role.CrmRoleEntity import CrmRoleEntity, Roles
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
@@ -52,17 +63,23 @@ from app.domain.user_app_access import CrmUserAppAccessEntity
 
 
 class AppService:
+    APP_AUDIT_ENTITY = "crm_apps"
+    APP_PLATFORM_AUDIT_ENTITY = "crm_app_platforms"
+    UPDATE_AUDIT_IGNORE_FIELDS = ("created_at", "updated_at")
+
     def __init__(
         self,
         uow_factory: UnitOfWorkFactoryProtocol,
         authorization_service: CrmAuthorizationService,
         encryption_service: EncryptionServiceProtocol,
         hash_service: HashProtocol,
+        async_event_bus: IAsyncEventBus,
     ) -> None:
         self._uow_factory = uow_factory
         self._authorization_service = authorization_service
         self._encryption_service = encryption_service
         self._hash_service = hash_service
+        self._async_event_bus = async_event_bus
 
     def _get_app(self, uow: UnitOfWorkProtocol, *, app_id: int) -> CrmAppEntity:
         saved_app = uow.app_repo.get_by_id(app_id)
@@ -96,6 +113,62 @@ class AppService:
             sdk_secret_view=secret_view,
         ), secret_view
 
+    @classmethod
+    def _audit_value(cls, value: Any) -> Any:
+        if isinstance(value, datetime):
+            return value.isoformat()
+        if isinstance(value, dict):
+            return {str(key): cls._audit_value(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [cls._audit_value(item) for item in value]
+        if isinstance(value, tuple):
+            return [cls._audit_value(item) for item in value]
+        return value
+
+    @classmethod
+    def _audit_entity_value(cls, entity: object) -> dict[str, Any]:
+        if is_dataclass(entity):
+            data = asdict(entity)
+        else:
+            data = dict(vars(entity))
+
+        data.pop("_sdk_secret_plain", None)
+        return cls._audit_value(data)
+
+    def _dispatch_async_event(self, message: DomainEventMessage) -> None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            asyncio.run(self._async_event_bus.publish(message))
+            return
+
+        loop.create_task(self._async_event_bus.publish(message))
+
+    def _publish_value_update_event(
+        self,
+        *,
+        crm_user_id: int,
+        app_id: int,
+        entity_changed: str,
+        entity_id: int | str | None,
+        old_value: dict[str, Any],
+        new_value: dict[str, Any],
+        updated_at: datetime | None,
+        ignore_fields: tuple[str, ...] = UPDATE_AUDIT_IGNORE_FIELDS,
+    ) -> None:
+        message = ValueChangedEventFactory.from_raw_payload(
+            ValueChangedEventValue(
+                crm_user_id=crm_user_id,
+                app_id=app_id,
+                entity_id=entity_id,
+                old_value={entity_changed: old_value},
+                new_value={entity_changed: new_value},
+                updated_at=updated_at or datetime.now(UTC),
+                ignore_fields=ignore_fields,
+            )
+        )
+        self._dispatch_async_event(message)
+
     @require_app_access()
     def get_app(self, command: GetAppCommand) -> GetAppResponse:
         with self._uow_factory.create() as uow:
@@ -124,19 +197,33 @@ class AppService:
     def rotate_platform_secret(self, command: RotatePlatformSecretCommand) -> RotatePlatformSecretResponse:
         with self._uow_factory.create() as uow:
             saved_app = uow.app_repo.get_by_id(command.app_id)
-            saved_platform = uow.app_platform_repo.get_by_id(command.platform_id)
 
-            if saved_app.app_id is None:
+            if saved_app is None or saved_app.app_id is None:
                 raise SdkAppNotFound(command.app_id)
 
-            if saved_platform.app_id is None:
+            saved_platform = uow.app_platform_repo.get_by_id(command.platform_id)
+
+            if saved_platform is None or saved_platform.app_id is None:
                 raise SdkAppPlatformRepositoryEmptyEntity()
 
-            saved_platform.rotate_secret(hasher=self._hash_service, encryption=self._encryption_service)
+            old_platform_value = self._audit_entity_value(saved_platform)
+            sdk_secret_fallback_encrypted = saved_platform.rotate_secret(
+                hasher=self._hash_service, encryption=self._encryption_service
+            )
             saved_platform = uow.app_platform_repo.save(saved_platform)
 
+        self._publish_value_update_event(
+            crm_user_id=command.crm_user_id,
+            app_id=command.app_id,
+            entity_changed=self.APP_PLATFORM_AUDIT_ENTITY,
+            entity_id=command.platform_id,
+            old_value=old_platform_value,
+            new_value=self._audit_entity_value(saved_platform),
+            updated_at=saved_platform.updated_at,
+        )
+
         return RotatePlatformSecretResponse(
-            new_sdk_secret=self._encryption_service.decrypt(saved_platform.sdk_secret_fallback_encrypted)
+            new_sdk_secret=self._encryption_service.decrypt(sdk_secret_fallback_encrypted)
         )
 
     def create_app(self, command: CreateAppCommand) -> CreateAppResponse:
@@ -148,6 +235,8 @@ class AppService:
             logo_url=command.logo_url,
             screenshots=command.screenshots,
         )
+
+        app.draft()
 
         with self._uow_factory.create() as uow:
             saved_app = uow.app_repo.save(app)
@@ -171,13 +260,21 @@ class AppService:
     def update_app(self, command: UpdateAppCommand) -> UpdateAppResponse:
         with self._uow_factory.create() as uow:
             saved_app = self._get_app(uow, app_id=command.app_id)
+            old_app_value = self._audit_entity_value(saved_app)
             saved_app.update(
-                code=command.code,
-                name=command.name,
-                description=command.description,
-                is_active=command.is_active,
+                code=command.code, name=command.name, description=command.description, status=command.status
             )
             saved_app = uow.app_repo.save(saved_app)
+
+        self._publish_value_update_event(
+            crm_user_id=command.crm_user_id,
+            app_id=command.app_id,
+            entity_changed=self.APP_AUDIT_ENTITY,
+            entity_id=command.app_id,
+            old_value=old_app_value,
+            new_value=self._audit_entity_value(saved_app),
+            updated_at=saved_app.updated_at,
+        )
 
         return UpdateAppResponse(app=SdkAppResponsesMapper.app_domain_to_value(saved_app))
 
@@ -260,11 +357,25 @@ class AppService:
     def update_app_platform(self, command: UpdateAppPlatformCommand) -> UpdatePlatformResponse:
         with self._uow_factory.create() as uow:
             saved_platform = self._get_app_platform(uow, app_platform_id=command.platform_id)
+            old_platform_value = self._audit_entity_value(saved_platform)
+
             saved_platform.update(
                 install_key=command.install_key,
-                is_active=command.is_active,
+                package_name=command.package_name,
+                store_url=command.store_url,
+                status=command.status,
             )
             saved_platform = uow.app_platform_repo.save(saved_platform)
+
+        self._publish_value_update_event(
+            crm_user_id=command.crm_user_id,
+            app_id=command.app_id,
+            entity_changed=self.APP_PLATFORM_AUDIT_ENTITY,
+            entity_id=command.platform_id,
+            old_value=old_platform_value,
+            new_value=self._audit_entity_value(saved_platform),
+            updated_at=saved_platform.updated_at,
+        )
 
         return UpdatePlatformResponse(app_platform=SdkAppResponsesMapper.app_platform_domain_to_value(saved_platform))
 

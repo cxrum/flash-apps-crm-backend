@@ -6,6 +6,7 @@ from app.api.v1.crm.payloads import AuditLogQueryPayload
 from app.api.v1.transport import PaginationQueryPayload
 from app.application.admin.logs.mappers import LogsResponseMapper
 from app.application.admin.logs.service import LogsService
+from app.application.base import JsonDict
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.core.utils.general_mapper import GeneralMapper
 from app.di.dependencies import resolve_user
@@ -20,7 +21,7 @@ async def get_audit_logs(
     audit_queries: Annotated[AuditLogQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
     logs_service: LogsService = Depends(get_admin_logs_service),
-) -> str:
+) -> JsonDict:
     command = LogsResponseMapper.audit_logs_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, audit_queries, pagination_queries)
     )

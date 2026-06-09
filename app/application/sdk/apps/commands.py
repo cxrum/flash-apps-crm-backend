@@ -17,8 +17,10 @@ class UpdateAppPlatformCommand(FlexibleCommand):
     crm_user_id: int
     app_id: int
     platform_id: int
-    install_key: str | None = None
-    is_active: bool | None = None
+    package_name: str
+    install_key: str
+    store_url: str | None = None
+    status: str = "active"
 
 
 class ListAppsCommand(PaginationCommand):
@@ -52,7 +54,7 @@ class UpdateAppCommand(FlexibleCommand):
     code: str | None = None
     name: str | None = None
     description: str | None = None
-    is_active: bool | None = None
+    status: str | None = None
 
 
 class DeleteAppCommand(FlexibleCommand):

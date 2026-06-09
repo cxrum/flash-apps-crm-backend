@@ -1,17 +1,9 @@
-from datetime import date, datetime
-import json
-from typing import Any
-
-from app.application.events_bus.factories.param_update_event import UpdateParamMessageFactory, UpdateParamValue
-from app.application.sdk.ingestion.update_statistic import StatisticAggregates
 from app.application.exception import GeneralException
-from app.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import CustomParamsStatisticsAggregateEntity
+from app.application.sdk.ingestion.update_statistic import StatisticAggregates
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_events import MetricEventMessage
-from app.domain.event_bus.service_protocol import AsyncEventMessageHandler, IAsyncEventBus
+from app.domain.event_bus.service_protocol import AsyncEventMessageHandler
 from app.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
-from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
-from app.domain.statistics_aggregate import StatisticsAggregateEntity
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
@@ -30,29 +22,20 @@ class AsyncMetricHandler(AsyncEventMessageHandler):
 
         if not definitions:
             raise GeneralException(
-                "AsyncMetricHandler could not find metric definitions "
-                f"for app_id='{app_id}' and click_id='{click_id}'"
+                f"AsyncMetricHandler could not find metric definitions for app_id='{app_id}' and click_id='{click_id}'"
             )
 
-        return {
-            definition.machine_key: definition
-            for definition in definitions
-        }
+        return {definition.machine_key: definition for definition in definitions}
 
     async def handle(self, message: DomainEventMessage) -> None:
         if not isinstance(message, MetricEventMessage):
-            raise GeneralException(
-                "AsyncMetricHandler expected MetricEventMessage, "
-                f"got {type(message).__name__}"
-            )
+            raise GeneralException(f"AsyncMetricHandler expected MetricEventMessage, got {type(message).__name__}")
 
         with self.__uow_factory.create() as uow:
             click = uow.click_repo.get_by_id(message.click_id)
 
             if click is None:
-                raise GeneralException(
-                    f"AsyncMetricHandler could not find click with id='{message.click_id}'"
-                )
+                raise GeneralException(f"AsyncMetricHandler could not find click with id='{message.click_id}'")
 
             app_platform = uow.app_platform_repo.get_by_id(click.app_platform_id)
 
@@ -83,19 +66,10 @@ class AsyncMetricHandler(AsyncEventMessageHandler):
                     f"for app_id='{app_platform.app_id}' and click_id='{message.click_id}'"
                 )
 
-            if (
-                message.amount is not None
-                or message.currency is not None
-                or message.amount_usd is not None
-            ):
+            if message.amount is not None or message.currency is not None or message.amount_usd is not None:
                 raise GeneralException(
                     "AsyncMetricHandler metric events do not support revenue fields "
                     f"for event_id='{message.event_id}' and click_id='{message.click_id}'"
                 )
 
-            StatisticAggregates.update(
-                uow=uow,
-                message=message,
-                revenue_enabled=False,
-                app_platform=app_platform
-            )
+            StatisticAggregates.update(uow=uow, message=message, revenue_enabled=False, app_platform=app_platform)

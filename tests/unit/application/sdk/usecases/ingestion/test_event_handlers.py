@@ -8,6 +8,7 @@ import pytest
 from app.application.events_bus.handlers.conversion import AsyncConversionHandler
 from app.application.events_bus.handlers.metric import AsyncMetricHandler
 from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
+from app.application.events_bus.handlers.value_update import AsyncAuditValueHandler
 from app.application.exception import GeneralException
 from app.di.event_bus import get_event_subscribers
 from app.domain.app import CrmAppEntity
@@ -16,6 +17,7 @@ from app.domain.click import CrmClickEntity
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
+from app.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
 from app.domain.exceptions import DomainError
 from tests.unit.builders import build_app_entity, build_app_platform_entity, build_click_entity
 from tests.unit.builders.entities import (
@@ -903,7 +905,7 @@ def test_async_conversion_handler_rejects_unexpected_revenue_fields(
     asyncio.run(scenario())
 
 
-def test_get_event_subscribers_includes_update_param_metric_and_conversion_handlers() -> None:
+def test_get_event_subscribers_includes_update_param_metric_conversion_and_audit_handlers() -> None:
     subscriber_map = {
         event_name: type(handler)
         for event_name, handler in get_event_subscribers()
@@ -913,4 +915,5 @@ def test_get_event_subscribers_includes_update_param_metric_and_conversion_handl
         UpdateCurrentParamMessage.EVENT_NAME: AsyncUpdateParamHandler,
         MetricEventMessage.EVENT_NAME: AsyncMetricHandler,
         ConversionEventMessage.EVENT_NAME: AsyncConversionHandler,
+        ValueChangedEvent.EVENT_NAME: AsyncAuditValueHandler,
     }

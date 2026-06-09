@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from functools import wraps
 import inspect
+from functools import wraps
 from typing import Any, Callable, Protocol
 
 from app.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.application.exception import AppNotFound, UserNotFound
-from app.domain.role.CrmRoleEntity import CrmRoleEntity, Roles
+from app.domain.role.CrmRoleEntity import Roles
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 

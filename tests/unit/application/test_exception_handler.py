@@ -7,17 +7,16 @@ import logging
 import pytest
 from fastapi import FastAPI, Request
 
-from app.core.exception import BaseBoundaryException
-from app.di.exception_bus import build_boundary_exception_handler, get_exception_event_subscribers
-from app.infra.exception import BaseInfraException
-from app.infra.exception_bus.handlers.stub import AsyncStubExceptionHandler
-from app.application.exception import GeneralException
 from app.core.config import settings
+from app.core.exception import BaseBoundaryException
 from app.di.exception_bus import (
+    get_exception_event_subscribers,
     register_fastapi_exception_handlers,
 )
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.exception_event import ExceptionEvent
+from app.infra.exception import BaseInfraException
+from app.infra.exception_bus.handlers.stub import AsyncStubExceptionHandler
 
 
 def build_exception_event(**payload_overrides: object) -> ExceptionEvent:
@@ -98,10 +97,7 @@ def test_async_stub_exception_handler_rejects_non_exception_messages() -> None:
 
 
 def test_get_exception_event_subscribers_includes_stub_handler() -> None:
-    subscriber_map = {
-        event_name: type(handler)
-        for event_name, handler in get_exception_event_subscribers()
-    }
+    subscriber_map = {event_name: type(handler) for event_name, handler in get_exception_event_subscribers()}
 
     assert subscriber_map == {
         ExceptionEvent.EVENT_NAME: AsyncStubExceptionHandler,

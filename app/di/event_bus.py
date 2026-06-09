@@ -3,10 +3,12 @@ from collections.abc import Sequence
 from app.application.events_bus.handlers.conversion import AsyncConversionHandler
 from app.application.events_bus.handlers.metric import AsyncMetricHandler
 from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
+from app.application.events_bus.handlers.value_update import AsyncAuditValueHandler
 from app.di.exception_bus import AsyncHandlerSubscription
 from app.di.infra import get_uow_factory
 from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
+from app.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
 
 
 from functools import lru_cache
@@ -39,6 +41,12 @@ def build_conversion_handler(
 ) -> AsyncEventMessageHandler:
     return AsyncConversionHandler(uow_factory)
 
+
+def build_audit_value_handler(
+    uow_factory: UnitOfWorkFactoryProtocol,
+) -> AsyncEventMessageHandler:
+    return AsyncAuditValueHandler(uow_factory)
+
 @lru_cache
 def get_event_subscribers() -> tuple[AsyncHandlerSubscription, ...]:
     uow_factory = get_uow_factory()
@@ -55,6 +63,10 @@ def get_event_subscribers() -> tuple[AsyncHandlerSubscription, ...]:
         (
             ConversionEventMessage.EVENT_NAME,
             build_conversion_handler(uow_factory),
+        ),
+        (
+            ValueChangedEvent.EVENT_NAME,
+            build_audit_value_handler(uow_factory),
         ),
     )
 

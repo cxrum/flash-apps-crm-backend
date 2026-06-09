@@ -1,10 +1,11 @@
+from collections.abc import Mapping, Sequence
+from typing import Any, Protocol
+
 from app.application.events_bus.factories.raw_event import RawEventMessageFactory
 from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage, RawEventMessage
 from app.domain.events.CrmEventEntity import EventEntity
 
-from collections.abc import Mapping, Sequence
-from typing import Any, Protocol
 
 class EventMessageFactoryStrategyProtocol(Protocol):
     def supports(self, event: EventEntity) -> bool: ...
@@ -68,9 +69,7 @@ class SdkEventMessageFactory:
             message_cls=ConversionEventMessage,
         ),
     )
-    _fallback_strategy: EventMessageFactoryStrategyProtocol = (
-        _RawEventMessageFactoryStrategy()
-    )
+    _fallback_strategy: EventMessageFactoryStrategyProtocol = _RawEventMessageFactoryStrategy()
 
     @classmethod
     def from_event(
@@ -89,10 +88,7 @@ class SdkEventMessageFactory:
         *,
         metadata: Mapping[str, Any] | None = None,
     ) -> list[DomainEventMessage]:
-        return [
-            cls.from_event(event, metadata=metadata)
-            for event in events
-        ]
+        return [cls.from_event(event, metadata=metadata) for event in events]
 
     @classmethod
     def _resolve_strategy(
