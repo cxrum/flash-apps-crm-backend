@@ -5,7 +5,7 @@ from collections.abc import Sequence
 import pytest
 
 from app.application.admin.crm_authorization.service import CrmAuthorizationService
-from app.application.sdk.apps.commands import UpdateAppCommand, UpdateAppPlatformCommand
+from app.application.sdk.apps.commands import DeleteAppPlatformCommand, UpdateAppCommand, UpdateAppPlatformCommand
 from app.application.sdk.apps.service import AppService
 from app.application.exception import GeneralException
 from app.domain.event_bus.entity import DomainEventMessage
@@ -78,6 +78,15 @@ def _seed_manager_access(unit_test_context: UnitTestContext) -> None:
     )
     unit_test_context.uow.user_app_access_repo.save(
         build_user_app_access_entity(role_id=manager_role.role_id)
+    )
+
+
+def _seed_admin_access(unit_test_context: UnitTestContext) -> None:
+    admin_role = unit_test_context.uow.role_repo.save(
+        build_role_entity(code=Roles.ADMIN.value, display_name="Admin")
+    )
+    unit_test_context.uow.user_app_access_repo.save(
+        build_user_app_access_entity(role_id=admin_role.role_id)
     )
 
 
@@ -230,6 +239,39 @@ def test_update_app_platform_publishes_value_changed_event(
     assert message.new_value["crm_app_platforms"]["install_key"] == "new-install-key"
     assert message.new_value["crm_app_platforms"]["status"] == "inactive"
     assert message.ignore_fields == ("created_at", "updated_at")
+
+
+def test_delete_app_platform_deletes_by_platform_id(
+    unit_test_context: UnitTestContext,
+) -> None:
+    service = AppService(
+        uow_factory=unit_test_context.uow_factory,
+        authorization_service=CrmAuthorizationService(unit_test_context.uow_factory),
+        encryption_service=unit_test_context.encryption_service,
+        hash_service=unit_test_context.hash_service,
+    )
+    unit_test_context.uow.app_repo.save(build_app_entity(app_id=1))
+    saved_platform = unit_test_context.uow.app_platform_repo.save(
+        build_app_platform_entity(app_id=1, platform_id=7)
+    )
+    _seed_admin_access(unit_test_context)
+
+    response = service.delete_app_platform(
+        DeleteAppPlatformCommand(
+            crm_user_id=1,
+            app_id=1,
+            platform_id=saved_platform.platform_id or 0,
+        )
+    )
+
+    assert response.app_platform.platform_id == 7
+    assert unit_test_context.uow.app_platform_repo.get_by_id(7) is None
+    delete_calls = [
+        call
+        for call in unit_test_context.uow.app_platform_repo.calls
+        if call.method == "delete"
+    ]
+    assert delete_calls[-1].args == (7,)
 
 
 def test_get_app_config_secrets_merges_templates_with_platform_values(

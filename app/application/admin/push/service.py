@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from app.application.access_decorators import require_permission
-from app.application.admin.crm_authorization.service import CrmAuthorizationService
+from app.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.application.admin.exception import ClickNotFound, InstallNotFound
 from app.application.admin.push.exception import InvalidScheduledAt, PushAppUserNotFound, PushCampaignAppMismatch, PushCampaignNotFound, PushPlatformNotFound
 from app.application.admin.push.commands import (
@@ -15,6 +15,7 @@ from app.application.admin.push.commands import (
     UpdatePushCampaignCommand,
 )
 from app.application.admin.push.mappers import PushCommandsMapper
+from app.application.admin.push.protocol import PushServiceProtocol
 from app.application.admin.push.responses import (
     CreatePushCampaignResponse,
     DeletePushCampaignResponse,
@@ -30,11 +31,11 @@ from app.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
 from app.domain.push_token import CrmPushTokenEntity
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
-class PushService:
+class PushService(PushServiceProtocol):
     def __init__(
         self, 
         uow_factory: UnitOfWorkFactoryProtocol,
-        authorization_service: CrmAuthorizationService, 
+        authorization_service: CrmAuthorizationServiceProtocol,
     ) -> None:
         self._uow_factory = uow_factory
         self._authorization_service = authorization_service

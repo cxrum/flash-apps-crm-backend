@@ -13,7 +13,7 @@ from app.api.v1.transport import PaginationQueryPayload
 from app.application.base import JsonDict
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.application.sdk.apps.mappers import SdkAppCommandsMapper
-from app.application.sdk.apps.service import AppService
+from app.application.sdk.apps.protocol import AppServiceProtocol
 from app.core.utils.general_mapper import GeneralMapper
 from app.di.dependencies import resolve_user
 from app.di.services import get_sdk_app_service
@@ -25,7 +25,7 @@ router = APIRouter()
 async def get_app(
     app_id: int,
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppService = Depends(get_sdk_app_service),
+    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.get_app_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id)
@@ -39,7 +39,7 @@ async def get_app(
 async def list_apps(
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppService = Depends(get_sdk_app_service),
+    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.list_apps_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, pagination_queries)
@@ -54,7 +54,7 @@ async def list_apps(
 async def create_app(
     payload: Annotated[CreateAppPayload, Body()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppService = Depends(get_sdk_app_service),
+    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.create_app_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -69,7 +69,7 @@ async def create_app(
 async def update_app(
     payload: Annotated[UpdateAppPayload, Body()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppService = Depends(get_sdk_app_service),
+    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.update_app_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -84,7 +84,7 @@ async def update_app(
 async def delete_app(
     payload: Annotated[DeleteAppPayload, Body()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppService = Depends(get_sdk_app_service),
+    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
 ) -> JsonDict:
 
     command = SdkAppCommandsMapper.delete_app_from_transport(
@@ -101,7 +101,7 @@ async def get_app_platform(
     app_id: int,
     platform_id: int,
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppService = Depends(get_sdk_app_service),
+    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.get_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id, platform_id=platform_id)
@@ -117,7 +117,7 @@ async def list_app_platforms(
     app_id: int,
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppService = Depends(get_sdk_app_service),
+    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.list_app_platforms_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, pagination_queries, app_id=app_id)
@@ -134,7 +134,7 @@ async def update_app_platform(
     platform_id: int,
     payload: Annotated[UpdateAppPlatformPayload, Body()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppService = Depends(get_sdk_app_service),
+    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.update_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -154,7 +154,7 @@ async def update_app_platform(
 async def create_app_platform(
     payload: Annotated[CreateAppPlatformPayload, Body()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppService = Depends(get_sdk_app_service),
+    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.create_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -170,7 +170,7 @@ async def delete_app_platform(
     app_id: int,
     platform_id: int,
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppService = Depends(get_sdk_app_service),
+    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.delete_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id, platform_id=platform_id)
@@ -189,7 +189,7 @@ async def rotate_platform_secret(
     app_id: int,
     platform_id: int,
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppService = Depends(get_sdk_app_service),
+    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
 ) -> JsonDict:
     command = SdkAppCommandsMapper.rotate_platform_secret_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id, platform_id=platform_id)

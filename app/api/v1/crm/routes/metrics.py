@@ -9,7 +9,7 @@ from app.api.v1.crm.payloads import (
 )
 from app.api.v1.transport import PaginationQueryPayload
 from app.application.admin.definitions.mappers import DefinitionsCommandsMapper
-from app.application.admin.definitions.service import DefinitionsService
+from app.application.admin.definitions.protocol import DefinitionsServiceProtocol
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.core.utils.general_mapper import GeneralMapper
 from app.di.dependencies import resolve_user
@@ -22,7 +22,7 @@ router = APIRouter()
 async def create_metric(
     payload: Annotated[CreateMetricDefinitionPayload, Body()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.create_metric_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -36,7 +36,7 @@ async def list_metrics(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.list_metrics_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, pagination_queries)
@@ -50,7 +50,7 @@ async def get_metric(
     metric_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.get_metric_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -69,7 +69,7 @@ async def update_metric(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     payload: Annotated[UpdateMetricDefinitionPayload, Body()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.update_metric_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -88,7 +88,7 @@ async def delete_metric(
     metric_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.delete_metric_from_transport(
         GeneralMapper.transport_to_command_payload(

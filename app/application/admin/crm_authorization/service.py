@@ -17,6 +17,7 @@ from app.application.admin.crm_authorization.exceptions import (
     RoleNotFound,
 )
 from app.application.admin.crm_authorization.mappers import AuthenticationCommandsMapper
+from app.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.application.admin.crm_authorization.responses import (
     GrantUserAppAccessResponse,
     GrantUserPermissionResponse,
@@ -37,7 +38,7 @@ from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEn
 from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
 
 
-class CrmAuthorizationService:
+class CrmAuthorizationService(CrmAuthorizationServiceProtocol):
     def __init__(
         self,
         uow_factory: UnitOfWorkFactoryProtocol,

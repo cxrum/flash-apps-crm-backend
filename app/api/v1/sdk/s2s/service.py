@@ -7,7 +7,7 @@ from fastapi import APIRouter, Body, Depends, Request, status
 from app.core.utils.general_mapper import GeneralMapper
 from app.api.v1.sdk.s2s.payloads import S2SClickPayload
 from app.application.sdk.s2s.mappers import S2SCommandMapper
-from app.application.sdk.s2s.service import ClickService
+from app.application.sdk.s2s.protocol import ClickServiceProtocol
 from app.di.services import get_s2s_service
 
 router = APIRouter()
@@ -17,7 +17,7 @@ router = APIRouter()
 async def ingest_s2s_click(
     request: Request,
     payload: Annotated[S2SClickPayload, Body()],
-    s2s_service: ClickService = Depends(get_s2s_service),
+    s2s_service: ClickServiceProtocol = Depends(get_s2s_service),
 ) -> str:
     
     user_agent = request.headers.get("user-agent")

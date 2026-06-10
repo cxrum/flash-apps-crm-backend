@@ -10,6 +10,7 @@ from app.application.sdk.ingestion.commands import SdkEventCommand, SdkEventsCom
 from app.application.sdk.ingestion.event_builder import ConversionEventBuilder, MetricsEventBuilder, RevenueEventBuilder
 from app.application.events_bus.factories.sdk_event import SdkEventMessageFactory
 from app.application.sdk.ingestion.exception import InvalidInstallKey, RevenueDataRequired, UnsupportedEventType
+from app.application.sdk.ingestion.protocol import IngestionServiceProtocol
 from app.application.sdk.ingestion.responses import SdkEventResponse, SdkInstallResponse, SdkUpdateParamsResponse
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.domain.click.CrmClickEntity import CrmClickEntity
@@ -22,7 +23,7 @@ from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
 
-class IngestionService:
+class IngestionService(IngestionServiceProtocol):
     def __init__(
         self,
         uow_factory: UnitOfWorkFactoryProtocol,

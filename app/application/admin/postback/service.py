@@ -3,10 +3,11 @@ from __future__ import annotations
 from typing import Any, ClassVar, Protocol
 
 from app.application.access_decorators import require_permission
-from app.application.admin.crm_authorization.service import CrmAuthorizationService
+from app.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.application.admin.exception import ClickNotFound, EventNotFound
 from app.application.admin.postback.exception import PostbackAppMismatch, PostbackNotFound, PostbackPlatformNotFound, RuleNotFound, SecretNotFound, TemplateNotFound
 from app.application.admin.postback.mappers import PostbackCommandsMapper
+from app.application.admin.postback.protocol import PostbackServiceProtocol
 from app.application.admin.postback.commands import (
     DeletePostbackRuleCommand,
     ExecutePostbackRuleCommand,
@@ -132,13 +133,13 @@ class TemplateResolverFactory:
         return _FallbackTemplateParam(), value
 
 
-class PostbackService:
+class PostbackService(PostbackServiceProtocol):
     def __init__(
         self,
         uow_factory: UnitOfWorkFactoryProtocol,
         async_event_bus: IAsyncEventBus,
         s2s_requester: S2SRequesterProtocol,
-        authorization_service: CrmAuthorizationService | None = None,
+        authorization_service: CrmAuthorizationServiceProtocol | None = None,
     ) -> None:
         self._uow_factory = uow_factory
         self._async_event_bus = async_event_bus

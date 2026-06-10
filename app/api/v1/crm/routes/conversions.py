@@ -9,7 +9,7 @@ from app.api.v1.crm.payloads import (
 )
 from app.api.v1.transport import PaginationQueryPayload
 from app.application.admin.definitions.mappers import DefinitionsCommandsMapper
-from app.application.admin.definitions.service import DefinitionsService
+from app.application.admin.definitions.protocol import DefinitionsServiceProtocol
 from app.application.base import JsonDict
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.core.utils.general_mapper import GeneralMapper
@@ -24,7 +24,7 @@ async def list_conversions(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.list_conversions_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, pagination_queries)
@@ -39,7 +39,7 @@ async def get_conversion(
     conversion_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.get_conversion_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -56,7 +56,7 @@ async def get_conversion(
 async def create_conversion(
     payload: Annotated[CreateConversionDefinitionPayload, Body()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.create_conversion_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -70,7 +70,7 @@ async def delete_conversion(
     conversion_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.delete_conversion_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -89,7 +89,7 @@ async def update_conversion(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     payload: Annotated[UpdateConversionDefinitionPayload, Body()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.update_conversion_from_transport(
         GeneralMapper.transport_to_command_payload(

@@ -30,6 +30,7 @@ class ListAppsCommand(PaginationCommand):
 class CreateAppCommand(FlexibleCommand):
     crm_user_id: int
     name: str
+    status: str
     code_slug: str
     description: str | None = None
     tech_description: str | None = None
@@ -80,7 +81,7 @@ class CreateAppPlatformCommand(FlexibleCommand):
     package_name: str
     install_key: str
     store_url: str | None = None
-    status: str = "active"
+    status: str
 
 
 class AppConfigurationCommand(FlexibleCommand):

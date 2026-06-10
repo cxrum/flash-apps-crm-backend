@@ -9,7 +9,7 @@ from app.api.v1.crm.payloads import (
 )
 from app.api.v1.transport import PaginationQueryPayload
 from app.application.admin.definitions.mappers import DefinitionsCommandsMapper
-from app.application.admin.definitions.service import DefinitionsService
+from app.application.admin.definitions.protocol import DefinitionsServiceProtocol
 from app.application.base import JsonDict
 from app.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.core.utils.general_mapper import GeneralMapper
@@ -24,7 +24,7 @@ async def list_params(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.list_params_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, pagination_queries)
@@ -38,7 +38,7 @@ async def get_param(
     param_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.get_param_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -57,7 +57,7 @@ async def update_param(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     payload: Annotated[UpdateParamDefinitionPayload, Body()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> str:
     command = DefinitionsCommandsMapper.update_param_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -75,7 +75,7 @@ async def update_param(
 async def create_param(
     payload: Annotated[CreateParamDefinitionPayload, Body()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.create_param_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -89,7 +89,7 @@ async def delete_param(
     param_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsService = Depends(get_admin_definitions_service),
+    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.delete_param_from_transport(
         GeneralMapper.transport_to_command_payload(

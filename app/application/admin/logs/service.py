@@ -1,6 +1,6 @@
 from app.application.access_decorators import require_permission
+from app.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.application.admin.logs.mappers import LogsCommandsMapper
-from app.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.application.admin.logs.commands import (
     ListAuditLogCommand,
 )
@@ -9,16 +9,17 @@ from app.application.admin.logs.responses import ListAuditLogsResponse, ListRawE
 from app.application.admin.logs.responses import (
     ListClickLogsResponse,
 )
+from app.application.admin.logs.protocol import LogsServiceProtocol
 from app.application.mapper import PaginationMapper
 from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.uow import UnitOfWorkFactoryProtocol
 
 
-class LogsService:
+class LogsService(LogsServiceProtocol):
     def __init__(
         self,
         uow_factory: UnitOfWorkFactoryProtocol,
-        authorization_service: CrmAuthorizationService,
+        authorization_service: CrmAuthorizationServiceProtocol,
     ) -> None:
         self._uow_factory = uow_factory
         self._authorization_service = authorization_service

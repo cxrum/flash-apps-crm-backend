@@ -119,6 +119,11 @@ class InMemoryCrmAppPlatformRepository(CallRecorderMixin, CrmAppPlatformReposito
         item = self._items.get(platform_id)
         return clone(item) if item is not None else None
 
+    def delete(self, platform_id: int) -> CrmAppPlatformEntity:
+        self._record("delete", platform_id)
+        item = self._items.pop(platform_id)
+        return clone(item)
+
     def get_by_install_key(self, install_key: str) -> CrmAppPlatformEntity | None:
         self._record("get_by_install_key", install_key)
         item = next(

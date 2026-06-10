@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import RedirectResponse
 
 from app.api.v1.sdk.tracking.payloads import TrackingRedirectQueries
-from app.application.sdk.s2s.service import ClickService
+from app.application.sdk.s2s.protocol import ClickServiceProtocol
 from app.core.utils.general_mapper import GeneralMapper as GeneralMapper
 from app.api.v1.stubs import build_stub_response
 from app.application.tracking.mappers import TrackingCommandMapper
@@ -22,7 +22,7 @@ async def tracking_redirect(
     platform: str,
     redirect_url: Annotated[str, Query()],
     idempotency_key: Annotated[str | None, Query()] = None,
-    s2s_service: ClickService = Depends(get_s2s_service),
+    s2s_service: ClickServiceProtocol = Depends(get_s2s_service),
 ) -> RedirectResponse:
     
     user_agent = request.headers.get("user-agent")

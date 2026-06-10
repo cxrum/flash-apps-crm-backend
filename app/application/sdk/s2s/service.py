@@ -1,6 +1,7 @@
 from app.application.contracts.ip2location import IP2LocationGatewayProtocol, IpLocation
 from app.application.sdk.s2s.commands import S2SClickCommand
 from app.application.sdk.s2s.exception import PlatformNotConfigured, ResolvedPlatformInvalid, SignatureMismatch, UnknownAppCode
+from app.application.sdk.s2s.protocol import ClickServiceProtocol
 from app.application.sdk.s2s.responses import S2SClickResponse
 from app.application.tracking.entities import TrackingRedirectCommand
 from app.application.tracking.responses import TrackingRedirectResponse
@@ -11,7 +12,7 @@ from app.domain.signature_protocol import SignatureProtocol
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
-class ClickService:
+class ClickService(ClickServiceProtocol):
     def __init__(
         self,
         uow_factory: UnitOfWorkFactoryProtocol,

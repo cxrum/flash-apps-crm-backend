@@ -22,11 +22,11 @@ class AppPlatformResponseValue(BaseResponse):
     platform: str
     package_name: str
     install_key: str
+    platform_id: int
     store_url: str | None = None
     sdk_public_key: str | None = None
     sdk_secret_encrypted: str | None = None
     status: str
-    platform_id: int | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

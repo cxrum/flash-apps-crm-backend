@@ -1,4 +1,4 @@
-from app.application.admin.crm_authorization.service import CrmAuthorizationService
+from app.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.application.admin.secrets.exception import AppSecretNotFound, SecretTemplateNotFound
 from app.application.admin.secrets.commands import (
     DeleteAppSecretCommand,
@@ -7,6 +7,7 @@ from app.application.admin.secrets.commands import (
 )
 from app.application.admin.secrets.commands import CreateAppSecretCommand, CreateSecretTemplateCommand, GetAppSecretValueCommand, GetSecretTemplatesCommand, ListAppSecretsCommand, ListSecretTemplatesCommand, UpdateSecretTemplateCommand
 from app.application.admin.secrets.mappers import SecretsCommandsMapper, SecretsResponseMapper
+from app.application.admin.secrets.protocol import SecretsServiceProtocol
 from app.application.admin.secrets.responses import AppSecretResponseEntry, CreateAppSecretResponse, CreateSecretTemplateResponse, DeleteAppSecretResponse, DeleteSecretResponse, GetAppSecretResponse, GetSecretTemplatesResponse, ListAppSecretsResponse, ListSecretTemplatesResponse, UpdateAppSecretResponse, UpdateSecretTemplateResponse
 from app.application.contracts.encryption import EncryptionServiceProtocol
 from app.application.mapper import PaginationMapper
@@ -15,11 +16,11 @@ from app.domain.role.CrmRoleEntity import Roles
 from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
-class SecretsService:
+class SecretsService(SecretsServiceProtocol):
     def __init__(
         self,
         uow_factory: UnitOfWorkFactoryProtocol,
-        authorization_service: CrmAuthorizationService,
+        authorization_service: CrmAuthorizationServiceProtocol,
         encryption_service: EncryptionServiceProtocol
     ) -> None:
         self._uow_factory = uow_factory
@@ -223,7 +224,7 @@ class SecretsService:
     @staticmethod
     def _user_app_secrets_scope(
         uow: UnitOfWorkProtocol,
-        authorization_service: CrmAuthorizationService,
+        authorization_service: CrmAuthorizationServiceProtocol,
         *,
         app_id: int,
         crm_user_id: int,

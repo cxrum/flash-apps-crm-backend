@@ -4,14 +4,14 @@ import inspect
 from functools import wraps
 from typing import Any, Callable, Protocol
 
-from app.application.admin.crm_authorization.service import CrmAuthorizationService
+from app.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.application.exception import AppNotFound, UserNotFound
 from app.domain.role.CrmRoleEntity import Roles
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
 class AuthorizationAwareService(Protocol):
-    _authorization_service: CrmAuthorizationService
+    _authorization_service: CrmAuthorizationServiceProtocol
     _uow_factory: UnitOfWorkFactoryProtocol
 
 
@@ -86,7 +86,7 @@ def _access_decorator(
 
 
 def _authorize_access(
-    authorization_service: CrmAuthorizationService,
+    authorization_service: CrmAuthorizationServiceProtocol,
     uow: UnitOfWorkProtocol,
     *,
     crm_user_id: int,

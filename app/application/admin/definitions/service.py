@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.application.access_decorators import require_app_access, require_permission
-from app.application.admin.crm_authorization.service import CrmAuthorizationService
+from app.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.application.admin.definitions.commands import (
     CreateConversionDefinitionCommand,
     CreateMetricDefinitionCommand,
@@ -26,6 +26,7 @@ from app.application.admin.definitions.exceptions import (
     ParamDefinitionNotFound,
 )
 from app.application.admin.definitions.mappers import DefinitionsResponseMapper
+from app.application.admin.definitions.protocol import DefinitionsServiceProtocol
 from app.application.admin.definitions.responses import (
     CreateConversionDefinitionResponse,
     CreateMetricDefinitionResponse,
@@ -53,11 +54,11 @@ from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
-class DefinitionsService:
+class DefinitionsService(DefinitionsServiceProtocol):
     def __init__(
         self,
         uow_factory: UnitOfWorkFactoryProtocol,
-        authorization_service: CrmAuthorizationService,
+        authorization_service: CrmAuthorizationServiceProtocol,
     ) -> None:
         self._uow_factory = uow_factory
         self._authorization_service = authorization_service

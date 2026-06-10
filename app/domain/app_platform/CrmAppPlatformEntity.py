@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 
 from app.application.contracts.encryption import EncryptionServiceProtocol
+from app.domain.exceptions import PlatformDoestExist, PlatformStatusDoestExist
 from app.domain.hash_protocol import HashProtocol
 from app.domain.role.CrmRoleEntity import CrmRoleEntity, Roles
 
@@ -85,10 +86,17 @@ class CrmAppPlatformEntity:
         package_name: str,
         install_key: str,
         store_url: str | None = None,
-        status: str = "draft",
+        status: str = "inactive",
     ) -> "CrmAppPlatformEntity":
         secret_plain = hasher.random_hash(CrmAppPlatformEntity.__sdk_secret_blen()).to_hex()
         sdk_public_key = hasher.random_hash(CrmAppPlatformEntity.__sdk_secret_blen()).to_hex()
+
+        if platform not in CrmAppPlatformEntity.__available_platforms():
+            raise PlatformDoestExist(platform)
+
+        if status not in CrmAppPlatformEntity.__available_statuses():
+            raise PlatformStatusDoestExist(platform)
+
         return CrmAppPlatformEntity(
             app_id=app_id,
             platform=platform,
@@ -112,10 +120,9 @@ class CrmAppPlatformEntity:
         store_url: str | None = None,
         sdk_public_key: str | None = None,
         status: str | None = None,
-        is_active: bool | None = None,
     ) -> None:
         self.app_id = app_id if app_id is not None else self.app_id
-        self.platform = platform if platform is not None else self.platform
+        self.platform = platform if platform is not None and platform in self.__available_platforms() else self.platform
         self.package_name = package_name if package_name is not None else self.package_name
         self.install_key = install_key if install_key is not None else self.install_key
         self.sdk_secret_encrypted = (
@@ -123,9 +130,7 @@ class CrmAppPlatformEntity:
         )
         self.store_url = store_url if store_url is not None else self.store_url
         self.sdk_public_key = sdk_public_key if sdk_public_key is not None else self.sdk_public_key
-        self.status = status if status is not None else self.status
 
-        if is_active is not None:
-            self.status = "active" if is_active else "inactive"
+        self.status = status if status is not None and status in self.__available_statuses() else self.status
 
         self.updated_at = datetime.now(UTC)
