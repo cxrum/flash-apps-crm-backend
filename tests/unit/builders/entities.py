@@ -59,6 +59,7 @@ def build_app_platform_entity(**overrides: Any) -> CrmAppPlatformEntity:
                 "install_key": "install-key-ios",
                 "sdk_secret_encrypted": "enc::sdk-secret",
                 "sdk_public_key": "sdk-public-key",
+                "current_version": "1.0.0",
             },
             overrides,
         )

@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from app.application.base import FlexibleCommand, PaginationCommand
+from app.application.base import FlexibleCommand, JsonDict, PaginationCommand
 
 
 class GetAppsCommand(FlexibleCommand):
@@ -19,7 +19,9 @@ class UpdateAppPlatformCommand(FlexibleCommand):
     platform_id: int
     package_name: str
     install_key: str
+    current_version: str | None = None
     store_url: str | None = None
+    version_policy: JsonDict | None = None
     status: str = "active"
 
 
@@ -80,8 +82,10 @@ class CreateAppPlatformCommand(FlexibleCommand):
     platform: str
     package_name: str
     install_key: str
-    store_url: str | None = None
+    current_version: str
     status: str
+    store_url: str | None = None
+    version_policy: JsonDict | None = None
 
 
 class AppConfigurationCommand(FlexibleCommand):

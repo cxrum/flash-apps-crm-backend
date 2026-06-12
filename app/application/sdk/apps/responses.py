@@ -1,7 +1,7 @@
 from dataclasses import field
 from datetime import datetime
 
-from app.application.base import BaseResponse
+from app.application.base import BaseResponse, JsonDict
 
 
 class AppResponseValue(BaseResponse):
@@ -23,9 +23,11 @@ class AppPlatformResponseValue(BaseResponse):
     package_name: str
     install_key: str
     platform_id: int
+    current_version: str
     store_url: str | None = None
     sdk_public_key: str | None = None
     sdk_secret_encrypted: str | None = None
+    version_policy: JsonDict | None = None
     status: str
     created_at: datetime | None = None
     updated_at: datetime | None = None
@@ -81,5 +83,15 @@ class AppConfigQueryEntry(BaseResponse):
     value: str
 
 
+class VersionControl(BaseResponse):
+    required: bool = False
+    current_version: str
+    min_version: str | None = None
+    max_version: str | None = None
+    allowed_versions: list[str] | None = None
+    blocked_versions: list[str] | None = None
+
+
 class AppConfigQueryResponse(BaseResponse):
+    version_control: VersionControl
     platform_configurations: list[AppConfigQueryEntry]

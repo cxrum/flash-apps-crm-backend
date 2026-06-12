@@ -39,12 +39,16 @@ class CreateAppPlatformPayload(TransportPayload):
     app_id: int
     platform: str
     install_key: str 
+    current_version: str
+    version_policy: JsonDict | None = None
     is_active: bool = True
 
 
 class UpdateAppPlatformPayload(TransportPayload):
     platform: str | None = None
     install_key: str | None = None
+    current_version: str | None = None
+    version_policy: JsonDict | None = None
     is_active: bool | None = None
 
 
@@ -226,4 +230,3 @@ class EventLogsQueryPayload(TransportPayload):
 
 class RolesQueryPayload(TransportPayload):
     app_id: int | None = None
-

@@ -1,17 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import asdict
-
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from app.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
 from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app_platform.app_platform_repository_protocol import CrmAppPlatformRepositoryProtocol
-from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity, VersionPolicyEntity
 from app.domain.app_user.app_user_repository_protocol import CrmAppUserRepositoryProtocol
 from app.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
-from app.domain.hash_protocol import HashableValue
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
 from app.domain.pagination import Pagination
@@ -111,6 +108,10 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
             sdk_public_key=row.sdk_public_key,
             sdk_secret_encrypted=row.sdk_secret_encrypted,
             sdk_secret_fallback_encrypted=row.sdk_secret_fallback_encrypted,
+            current_version=row.current_version,
+            version_policy=None
+            if row.version_policy is None
+            else VersionPolicyEntity.create_from_dict(row.version_policy),
             status=row.status,
             created_at=row.created_at,
             updated_at=row.updated_at,
@@ -126,6 +127,8 @@ class SqlAlchemyCrmAppPlatformRepository(CrmAppPlatformRepositoryProtocol):
             "sdk_public_key": entity.sdk_public_key,
             "sdk_secret_encrypted": entity.sdk_secret_encrypted,
             "sdk_secret_fallback_encrypted": entity.sdk_secret_fallback_encrypted,
+            "version_policy": entity.version_policy_dict(),
+            "current_version": entity.current_version,
             "status": entity.status,
         }
         if entity.platform_id is not None:

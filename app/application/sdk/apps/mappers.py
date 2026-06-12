@@ -78,5 +78,8 @@ class SdkAppResponsesMapper:
         *,
         sdk_secret_view: str | None = None,
     ) -> AppPlatformResponseValue:
-        response = AppPlatformResponseValue.model_validate(domain)
-        return response.model_copy(update={"sdk_secret_encrypted": sdk_secret_view})
+        payload = dict(vars(domain))
+        payload.pop("_sdk_secret_plain", None)
+        payload["version_policy"] = domain.version_policy_dict()
+        payload["sdk_secret_encrypted"] = sdk_secret_view
+        return AppPlatformResponseValue.model_validate(payload)

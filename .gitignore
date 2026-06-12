@@ -14,7 +14,6 @@ __pycache__/
 *.md
 
 *.xlsx
-settings.json
 .coverage
 .codex
 IP2LOCATION-LITE-DB3.BIN

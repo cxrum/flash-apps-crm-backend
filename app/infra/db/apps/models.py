@@ -82,6 +82,8 @@ class AppPlatform(Base):
     sdk_public_key: Mapped[str] = mapped_column(String(255), nullable=False)
     sdk_secret_encrypted: Mapped[str] = mapped_column(String(255), nullable=False)
     sdk_secret_fallback_encrypted: Mapped[str] = mapped_column(String(255), nullable=True)
+    version_policy: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    current_version: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="active", index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

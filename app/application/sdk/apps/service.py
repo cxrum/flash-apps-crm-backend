@@ -3,7 +3,7 @@ from __future__ import annotations
 from app.application.access_decorators import require_app_access, require_role
 from app.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.application.contracts.encryption import EncryptionServiceProtocol
-from app.application.exception import RoleNotFound, UserNotFound
+from app.application.exception import RoleNotFound
 from app.application.mapper import PaginationMapper
 from app.application.sdk.apps.commands import (
     AppConfigurationCommand,
@@ -43,6 +43,7 @@ from app.application.sdk.apps.responses import (
     RotatePlatformSecretResponse,
     UpdateAppResponse,
     UpdatePlatformResponse,
+    VersionControl,
 )
 from app.domain.app.CrmAppEntity import CrmAppEntity
 from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
@@ -231,6 +232,8 @@ class AppService(AppServiceProtocol):
             package_name=command.package_name,
             install_key=command.install_key,
             store_url=command.store_url,
+            current_version=command.current_version,
+            version_policy=command.version_policy,
             status=command.status,
         )
 
@@ -283,6 +286,8 @@ class AppService(AppServiceProtocol):
                 install_key=command.install_key,
                 package_name=command.package_name,
                 store_url=command.store_url,
+                current_version=command.current_version,
+                version_policy=command.version_policy,
                 status=command.status,
             )
             saved_platform = uow.app_platform_repo.save(saved_platform)
@@ -345,4 +350,31 @@ class AppService(AppServiceProtocol):
                 )
             )
 
-        return AppConfigQueryResponse(platform_configurations=configurations)
+        if app_platform.version_policy:
+            version_control_res = (
+                VersionControl(
+                    required=app_platform.version_policy.required,
+                    current_version=app_platform.current_version,
+                    min_version=app_platform.version_policy.min_version,
+                    max_version=app_platform.version_policy.max_version,
+                    allowed_versions=app_platform.version_policy.allowed_versions,
+                    blocked_versions=app_platform.version_policy.blocked_versions,
+                ),
+            )
+
+        else:
+            version_control_res = (
+                VersionControl(
+                    required=False,
+                    current_version=app_platform.current_version,
+                    min_version=None,
+                    max_version=None,
+                    allowed_versions=None,
+                    blocked_versions=None,
+                ),
+            )
+
+        return AppConfigQueryResponse(
+            version_control=version_control_res[0],
+            platform_configurations=configurations,
+        )
