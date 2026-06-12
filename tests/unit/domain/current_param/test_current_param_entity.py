@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.domain.exceptions import DomainError
+from app.domain.exceptions import DomainException
 from tests.unit.builders import build_current_param_entity
 
 
@@ -66,19 +66,19 @@ def test_update_param_stores_boolean_and_datetime_values_in_supported_slots() ->
 def test_update_param_rejects_unsupported_policy() -> None:
     entity = build_current_param_entity()
 
-    with pytest.raises(DomainError, match="Unsupported param update_policy"):
+    with pytest.raises(DomainException, match="Unsupported param update_policy"):
         entity.update_param("prepend", "paid")
 
 
 def test_update_param_rejects_append_for_non_string_or_list_values() -> None:
     entity = build_current_param_entity(value_string=None, value_json={"source": "organic"})
 
-    with pytest.raises(DomainError, match="Append policy supports only string and list values"):
+    with pytest.raises(DomainException, match="Append policy supports only string and list values"):
         entity.update_param("append", {"source": "paid"})
 
 
 def test_update_param_rejects_merge_for_scalar_values() -> None:
     entity = build_current_param_entity(value_string="organic")
 
-    with pytest.raises(DomainError, match="Merge policy supports only dict and list values"):
+    with pytest.raises(DomainException, match="Merge policy supports only dict and list values"):
         entity.update_param("merge", "paid")

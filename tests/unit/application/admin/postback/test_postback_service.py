@@ -14,7 +14,7 @@ from app.domain.click.CrmClickEntity import CrmClickEntity
 from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.domain.event_bus.service_protocol import IAsyncEventBus
 from app.domain.events.CrmEventEntity import EventEntity
-from app.domain.exceptions import DomainError
+from app.domain.exceptions import DomainException
 from app.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.domain.postback_rule.CrmPostbackRuleEntity import CrmPostbackRuleEntity
 from app.domain.postback_rule.template import PostbackTemplateEntity
@@ -332,7 +332,7 @@ def test_create_rule_raises_for_unknown_secret_template(
     service, _ = _build_service(uow, async_event_bus)
     _seed_platform(uow)
 
-    with pytest.raises(DomainError, match="Secret template: missing-secret"):
+    with pytest.raises(DomainException, match="Secret template: missing-secret"):
         service.create_postback(
             build_admin_create_postback_rule_command(
                 auth_params={"Authorization": "missing-secret"},
@@ -350,7 +350,7 @@ def test_create_rule_raises_for_invalid_template_placeholder(
     service, _ = _build_service(uow, async_event_bus)
     _seed_platform(uow)
 
-    with pytest.raises(DomainError):
+    with pytest.raises(DomainException):
         service.create_postback(
             build_admin_create_postback_rule_command(
                 template={"campaign": "current.utm_source"},

@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from app.domain.exceptions import DomainError
+from app.domain.exceptions import DomainException
 from tests.unit.builders import build_param_definition_entity
 
 
@@ -68,12 +68,12 @@ def test_get_param_value_coerces_json_and_list_values() -> None:
 def test_get_param_value_raises_for_invalid_value() -> None:
     definition = build_param_definition_entity(data_type="integer", machine_key="attempts")
 
-    with pytest.raises(DomainError, match="expected integer"):
+    with pytest.raises(DomainException, match="expected integer"):
         definition.get_param_value({"attempts": "4.2"})
 
 
 def test_get_param_value_raises_for_unsupported_data_type() -> None:
     definition = build_param_definition_entity(data_type="xml", machine_key="payload")
 
-    with pytest.raises(DomainError, match="Unsupported param data_type"):
+    with pytest.raises(DomainException, match="Unsupported param data_type"):
         definition.get_param_value({"payload": "<tag />"})

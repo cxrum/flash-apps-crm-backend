@@ -18,7 +18,7 @@ from app.domain.event_bus.entity import DomainEventMessage
 from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
 from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
 from app.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
-from app.domain.exceptions import DomainError
+from app.domain.exceptions import DomainException
 from tests.unit.builders import build_app_entity, build_app_platform_entity, build_click_entity
 from tests.unit.builders.entities import (
     build_conversion_definition_entity,
@@ -35,9 +35,7 @@ def _seed_click_context(
     click_id: str = "click-1",
 ) -> tuple[CrmAppEntity, CrmAppPlatformEntity, CrmClickEntity]:
     app = uow.app_repo.save(build_app_entity(app_id=app_id))
-    platform = uow.app_platform_repo.save(
-        build_app_platform_entity(app_id=app.app_id, platform="ios")
-    )
+    platform = uow.app_platform_repo.save(build_app_platform_entity(app_id=app.app_id, platform="ios"))
     click = uow.click_repo.insert(
         build_click_entity(
             click_id=click_id,
@@ -127,14 +125,7 @@ def _seed_conversion_handler_context(
             build_param_definition_entity(app_id=app.app_id, **definition)
             for definition in (
                 param_definitions
-                or [
-                    {
-                        "display_name": "GEO",
-                        "machine_key": "geo",
-                        "data_type": "string",
-                        "groupable": True
-                    }
-                ]
+                or [{"display_name": "GEO", "machine_key": "geo", "data_type": "string", "groupable": True}]
             )
         ]
     )
@@ -155,7 +146,7 @@ def test_async_metric_handler_accepts_valid_metric_event() -> None:
         uow = StubUnitOfWork()
         handler = AsyncMetricHandler(StubUoWFactory(uow))
         app, _, click = _seed_click_context(uow)
-        
+
         uow.param_definition_repo.save_many(
             [
                 build_param_definition_entity(
@@ -163,18 +154,14 @@ def test_async_metric_handler_accepts_valid_metric_event() -> None:
                     machine_key="first_open",
                     data_type="string",
                     app_id=app.app_id,
-                    groupable=True
+                    groupable=True,
                 ),
                 build_param_definition_entity(
-                    display_name="Geo",
-                    machine_key="geo",
-                    data_type="string",
-                    app_id=app.app_id,
-                    groupable=True
+                    display_name="Geo", machine_key="geo", data_type="string", app_id=app.app_id, groupable=True
                 ),
             ]
         )
-        
+
         uow.metric_definition_repo.save(
             build_metric_definition_entity(
                 app_id=app.app_id,
@@ -223,9 +210,7 @@ def test_async_metric_handler_rejects_missing_app_platform_with_detailed_text() 
     async def scenario() -> None:
         uow = StubUnitOfWork()
         handler = AsyncMetricHandler(StubUoWFactory(uow))
-        click = uow.click_repo.insert(
-            build_click_entity(click_id="click-without-platform", app_platform_id=999)
-        )
+        click = uow.click_repo.insert(build_click_entity(click_id="click-without-platform", app_platform_id=999))
 
         with pytest.raises(
             GeneralException,
@@ -327,7 +312,7 @@ def test_async_conversion_handler_accepts_valid_non_revenue_conversion_event() -
         uow = StubUnitOfWork()
         handler = AsyncConversionHandler(StubUoWFactory(uow))
         _, platform, click = _seed_conversion_handler_context(uow)
-        
+
         await handler.handle(
             _build_conversion_message(
                 click_id=click.click_id,
@@ -360,18 +345,8 @@ def test_async_conversion_handler_accepts_valid_revenue_conversion_event() -> No
             expects_amount=True,
             expects_currency=True,
             param_definitions=[
-                {
-                    "display_name": "GEO",
-                    "machine_key": "geo",
-                    "data_type": "string",
-                    "groupable": True
-                },
-                {
-                    "display_name": "UTM",
-                    "machine_key": "utm_source",
-                    "data_type": "string",
-                    "groupable": True
-                },
+                {"display_name": "GEO", "machine_key": "geo", "data_type": "string", "groupable": True},
+                {"display_name": "UTM", "machine_key": "utm_source", "data_type": "string", "groupable": True},
             ],
         )
 
@@ -414,10 +389,7 @@ def test_async_conversion_handler_accepts_valid_revenue_conversion_event() -> No
 
         aggeregates = uow.statistics_repo.list_by_app_platform_id(platform.platform_id)
         detailed_aggeregates = uow.custom_params_statistics_repo.list_by_app_platform_id(platform.platform_id)
-        detailed_by_key = {
-            item.param_key: item
-            for item in detailed_aggeregates
-        }
+        detailed_by_key = {item.param_key: item for item in detailed_aggeregates}
 
         assert uow.enter_count == 3
         assert uow.commit_count == 3
@@ -442,30 +414,10 @@ def test_async_conversion_handler_accepts_multiple_payload_value_types_and_ignor
         _, platform, click = _seed_conversion_handler_context(
             uow,
             param_definitions=[
-                {
-                    "display_name": "GEO",
-                    "machine_key": "geo",
-                    "data_type": "string",
-                    "groupable": True
-                },
-                {
-                    "display_name": "Attempt",
-                    "machine_key": "attempt",
-                    "data_type": "integer",
-                    "groupable": True
-                },
-                {
-                    "display_name": "Score",
-                    "machine_key": "score",
-                    "data_type": "float",
-                    "groupable": True
-                },
-                {
-                    "display_name": "Premium",
-                    "machine_key": "premium",
-                    "data_type": "boolean",
-                    "groupable": True
-                },
+                {"display_name": "GEO", "machine_key": "geo", "data_type": "string", "groupable": True},
+                {"display_name": "Attempt", "machine_key": "attempt", "data_type": "integer", "groupable": True},
+                {"display_name": "Score", "machine_key": "score", "data_type": "float", "groupable": True},
+                {"display_name": "Premium", "machine_key": "premium", "data_type": "boolean", "groupable": True},
             ],
         )
 
@@ -486,10 +438,7 @@ def test_async_conversion_handler_accepts_multiple_payload_value_types_and_ignor
 
         aggeregates = uow.statistics_repo.list_by_app_platform_id(platform.platform_id)
         detailed_aggeregates = uow.custom_params_statistics_repo.list_by_app_platform_id(platform.platform_id)
-        detailed_by_key = {
-            item.param_key: item
-            for item in detailed_aggeregates
-        }
+        detailed_by_key = {item.param_key: item for item in detailed_aggeregates}
 
         assert len(aggeregates) == 1
         assert aggeregates[0].geo == "DE"
@@ -512,12 +461,7 @@ def test_async_conversion_handler_uses_geo_alias_param_definitions(
         _, platform, click = _seed_conversion_handler_context(
             uow,
             param_definitions=[
-                {
-                    "display_name": geo_key.upper(),
-                    "machine_key": geo_key,
-                    "data_type": "string",
-                    "groupable": True
-                }
+                {"display_name": geo_key.upper(), "machine_key": geo_key, "data_type": "string", "groupable": True}
             ],
         )
 
@@ -549,36 +493,11 @@ def test_async_conversion_handler_tracks_multiple_custom_params_across_repeated_
         _, platform, click = _seed_conversion_handler_context(
             uow,
             param_definitions=[
-                {
-                    "display_name": "GEO",
-                    "machine_key": "geo",
-                    "data_type": "string",
-                    "groupable": True
-                },
-                {
-                    "display_name": "UTM Source",
-                    "machine_key": "utm_source",
-                    "data_type": "string",
-                    "groupable": True
-                },
-                {
-                    "display_name": "Campaign",
-                    "machine_key": "campaign",
-                    "data_type": "string",
-                    "groupable": True
-                },
-                {
-                    "display_name": "Ad Group",
-                    "machine_key": "ad_group",
-                    "data_type": "string",
-                    "groupable": True
-                },
-                {
-                    "display_name": "Premium",
-                    "machine_key": "premium",
-                    "data_type": "boolean",
-                    "groupable": True
-                },
+                {"display_name": "GEO", "machine_key": "geo", "data_type": "string", "groupable": True},
+                {"display_name": "UTM Source", "machine_key": "utm_source", "data_type": "string", "groupable": True},
+                {"display_name": "Campaign", "machine_key": "campaign", "data_type": "string", "groupable": True},
+                {"display_name": "Ad Group", "machine_key": "ad_group", "data_type": "string", "groupable": True},
+                {"display_name": "Premium", "machine_key": "premium", "data_type": "boolean", "groupable": True},
             ],
         )
         payload = {
@@ -606,10 +525,7 @@ def test_async_conversion_handler_tracks_multiple_custom_params_across_repeated_
 
         aggeregates = uow.statistics_repo.list_by_app_platform_id(platform.platform_id)
         detailed_aggeregates = uow.custom_params_statistics_repo.list_by_app_platform_id(platform.platform_id)
-        detailed_by_key = {
-            item.param_key: item
-            for item in detailed_aggeregates
-        }
+        detailed_by_key = {item.param_key: item for item in detailed_aggeregates}
 
         assert len(aggeregates) == 1
         assert aggeregates[0].count == 2
@@ -627,7 +543,7 @@ def test_async_conversion_handler_rejects_invalid_payload_shape() -> None:
         _, _, click = _seed_conversion_handler_context(uow)
 
         with pytest.raises(
-            DomainError,
+            DomainException,
             match="payload\\['payload'\\] must be dict",
         ):
             await handler.handle(
@@ -671,7 +587,7 @@ def test_async_conversion_handler_rejects_invalid_money_value_classes(
         message_kwargs[field_name] = invalid_value
 
         with pytest.raises((TypeError, ValueError)):
-            await handler.handle(_build_conversion_message(**message_kwargs)) # type: ignore
+            await handler.handle(_build_conversion_message(**message_kwargs))  # type: ignore
 
     asyncio.run(scenario())
 
@@ -683,22 +599,12 @@ def test_async_conversion_handler_rejects_invalid_value_for_param_definition() -
         _, _, click = _seed_conversion_handler_context(
             uow,
             param_definitions=[
-                {
-                    "display_name": "GEO",
-                    "machine_key": "geo",
-                    "data_type": "string",
-                    "groupable": True
-                },
-                {
-                    "display_name": "Attempt",
-                    "machine_key": "attempt",
-                    "data_type": "integer",
-                    "groupable": True
-                },
+                {"display_name": "GEO", "machine_key": "geo", "data_type": "string", "groupable": True},
+                {"display_name": "Attempt", "machine_key": "attempt", "data_type": "integer", "groupable": True},
             ],
         )
 
-        with pytest.raises(DomainError, match="Param 'attempt' expected integer"):
+        with pytest.raises(DomainException, match="Param 'attempt' expected integer"):
             await handler.handle(
                 _build_conversion_message(
                     click_id=click.click_id,
@@ -743,9 +649,7 @@ def test_async_conversion_handler_rejects_missing_app_platform_with_detailed_tex
     async def scenario() -> None:
         uow = StubUnitOfWork()
         handler = AsyncConversionHandler(StubUoWFactory(uow))
-        click = uow.click_repo.insert(
-            build_click_entity(click_id="click-without-platform", app_platform_id=999)
-        )
+        click = uow.click_repo.insert(build_click_entity(click_id="click-without-platform", app_platform_id=999))
 
         with pytest.raises(
             GeneralException,
@@ -855,7 +759,7 @@ def test_async_conversion_handler_rejects_missing_required_fields(
             await handler.handle(
                 _build_conversion_message(
                     click_id=click.click_id,
-                    **message_overrides, # type: ignore
+                    **message_overrides,  # type: ignore
                 )
             )
 
@@ -898,7 +802,7 @@ def test_async_conversion_handler_rejects_unexpected_revenue_fields(
             await handler.handle(
                 _build_conversion_message(
                     click_id=click.click_id,
-                    **message_overrides, # type: ignore
+                    **message_overrides,  # type: ignore
                 )
             )
 
@@ -906,10 +810,7 @@ def test_async_conversion_handler_rejects_unexpected_revenue_fields(
 
 
 def test_get_event_subscribers_includes_update_param_metric_conversion_and_audit_handlers() -> None:
-    subscriber_map = {
-        event_name: type(handler)
-        for event_name, handler in get_event_subscribers()
-    }
+    subscriber_map = {event_name: type(handler) for event_name, handler in get_event_subscribers()}
 
     assert subscriber_map == {
         UpdateCurrentParamMessage.EVENT_NAME: AsyncUpdateParamHandler,

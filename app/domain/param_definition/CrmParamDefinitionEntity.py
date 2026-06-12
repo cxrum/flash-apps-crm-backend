@@ -1,21 +1,23 @@
 from __future__ import annotations
 
-from enum import Enum, unique
 import json
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
+from enum import Enum, unique
 from typing import Any
 
-from app.domain.exceptions import DomainError
+from app.domain.exceptions import DomainException
 from app.domain.param_definition.exception import InvalidParamDataType, InvalidParamValue
+
 
 @unique
 class DefaultParamKeys(Enum):
     GEO = "geo"
     LANG = "lang"
     COUNTRY_CODE = "country_code"
-    
+
     UTM_SOURCE = "utm_source"
+
 
 @dataclass
 class CrmParamDefinitionEntity:
@@ -35,7 +37,8 @@ class CrmParamDefinitionEntity:
     updated_at: datetime | None = None
 
     def update(
-        self, *,
+        self,
+        *,
         display_name: str | None = None,
         machine_key: str | None = None,
         data_type: str | None = None,
@@ -57,37 +60,38 @@ class CrmParamDefinitionEntity:
         self.is_active = is_active if is_active is not None else self.is_active
         self.filterable = filterable if filterable is not None else self.filterable
         self.groupable = groupable if groupable is not None else self.groupable
-        
+
         self.updated_at = datetime.now(UTC)
 
         self.validate_data_type()
-    
+
     def validate_data_type(self):
         if self.data_type not in self._data_types():
             raise InvalidParamDataType(self.data_type)
-    
+
     @staticmethod
     def _data_types() -> list[str]:
         return ["integer", "float", "boolean", "date", "datetime", "json", "list"]
-    
-    
+
     @staticmethod
-    def get_params_for_aggregation(*, params: dict[str, Any], params_dictionary: list[CrmParamDefinitionEntity]) ->dict[str, Any]:
+    def get_params_for_aggregation(
+        *, params: dict[str, Any], params_dictionary: list[CrmParamDefinitionEntity]
+    ) -> dict[str, Any]:
         filtered_params = {}
-        
+
         for definiton in params_dictionary:
             if not definiton.groupable:
                 continue
-            
+
             value = definiton.get_param_value(params)
 
             if value is None:
                 continue
 
             filtered_params[definiton.machine_key] = value
-        
+
         return filtered_params
-        
+
     def get_param_value(self, params: dict[str, Any]) -> object | None:
         if self.machine_key not in params:
             return None
@@ -218,17 +222,13 @@ class CrmParamDefinitionEntity:
             try:
                 parsed = json.loads(stripped)
             except json.JSONDecodeError:
-                return [
-                    item.strip()
-                    for item in stripped.split(",")
-                    if item.strip()
-                ]
+                return [item.strip() for item in stripped.split(",") if item.strip()]
             if isinstance(parsed, list):
                 return parsed
             raise self._invalid_value(value)
         raise self._invalid_value(value)
 
-    def _invalid_value(self, value: object) -> DomainError:
+    def _invalid_value(self, value: object) -> DomainException:
         return InvalidParamValue(
             machine_key=self.machine_key,
             data_type=self.data_type,

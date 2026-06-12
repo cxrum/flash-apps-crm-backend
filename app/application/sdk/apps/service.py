@@ -244,8 +244,11 @@ class AppService(AppServiceProtocol):
             role = self._get_user_app_role(uow, crm_user_id=command.crm_user_id, app_id=command.app_id)
             app = uow.app_repo.get_by_id(platform_app.app_id)
 
-            if app is None:
+            if app is None or app.app_id is None:
                 raise SdkAppNotFound(platform_app.app_id)
+
+            platforms = uow.app_platform_repo.list_by_app_id(app.app_id)
+            platform_app.uniq_per_app(platforms)
 
             platform_app.encrypt_secret(self._encryption_service)
             saved_platform_app = uow.app_platform_repo.save(platform_app)

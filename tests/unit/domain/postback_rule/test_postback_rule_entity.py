@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.domain.exceptions import DomainError
+from app.domain.exceptions import DomainException
 from tests.unit.builders import build_postback_rule_entity
 
 
@@ -38,5 +38,5 @@ def test_validate_url_rejects_invalid_urls(
 ) -> None:
     entity = build_postback_rule_entity(endpoint_url=endpoint_url)
 
-    with pytest.raises(DomainError, match=expected_match):
+    with pytest.raises(DomainException, match=expected_match):
         entity.validate_url()

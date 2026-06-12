@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from app.application.contracts.encryption import EncryptionServiceProtocol
-from app.domain.exceptions import PlatformDoestExist, PlatformStatusDoestExist
+from app.domain.exceptions import PlatformDoestExist, PlatformInstallKeyMustBeUniqPerApp, PlatformStatusDoestExist
 from app.domain.hash_protocol import HashProtocol
 from app.domain.role.CrmRoleEntity import CrmRoleEntity, Roles
 
@@ -197,6 +197,11 @@ class CrmAppPlatformEntity:
         self.encrypt_secret(encryption)
         return self.sdk_secret_fallback_encrypted
 
+    def uniq_per_app(self, platforms: list[CrmAppPlatformEntity]):
+        for platform in platforms:
+            if platform.install_key == self.install_key:
+                raise PlatformInstallKeyMustBeUniqPerApp(self.install_key)
+
     @staticmethod
     def create(
         *,
@@ -217,7 +222,7 @@ class CrmAppPlatformEntity:
             raise PlatformDoestExist(platform)
 
         if status not in CrmAppPlatformEntity.__available_statuses():
-            raise PlatformStatusDoestExist(platform)
+            raise PlatformStatusDoestExist(status)
 
         return CrmAppPlatformEntity(
             app_id=app_id,

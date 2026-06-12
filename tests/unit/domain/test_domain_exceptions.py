@@ -9,8 +9,8 @@ from app.domain.current_param.exception import (
     UnsupportedCurrentParamUpdatePolicy,
 )
 from app.domain.event_bus.events.exception import InvalidRawEventPayload
-from app.domain.exceptions import DomainError
-from app.domain.param_definition.exception import InvalidParamValue, InvalidParamDataType
+from app.domain.exceptions import DomainException
+from app.domain.param_definition.exception import InvalidParamDataType, InvalidParamValue
 from app.domain.postback_rule.exception import MissingSecretTemplate, PostbackUrlRequired
 from app.domain.role.exceptions import AdminAccessRequired, ManagerAccessRequired
 
@@ -60,6 +60,6 @@ from app.domain.role.exceptions import AdminAccessRequired, ManagerAccessRequire
         ),
     ],
 )
-def test_domain_exceptions_resolve_messages(exc: DomainError, expected: str) -> None:
-    assert isinstance(exc, DomainError)
+def test_domain_exceptions_resolve_messages(exc: DomainException, expected: str) -> None:
+    assert isinstance(exc, DomainException)
     assert str(exc) == expected

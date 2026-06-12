@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from app.domain.event_bus.events.exception_event import ExceptionEvent
-from app.domain.exceptions import DomainError
+from app.domain.exceptions import DomainException
 
 
 def build_exception_event(**payload_overrides: object) -> ExceptionEvent:
@@ -56,5 +56,5 @@ def test_exception_event_validates_payload_types(
 ) -> None:
     event = build_exception_event(**payload_overrides)
 
-    with pytest.raises(DomainError, match=message):
+    with pytest.raises(DomainException, match=message):
         getattr(event, property_name)

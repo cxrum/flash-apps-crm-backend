@@ -1,18 +1,11 @@
 from typing import Any, Dict
 
-from app.core.exception_resolver import MessageResolver
+from app.core.exception import BaseBoundaryException
 
 
-class DomainError(Exception):
-    pass
-
-
-class DomainException(DomainError):
+class DomainException(BaseBoundaryException):
     def __init__(self, message_key: str = "internal", context: Dict[str, Any] = {}, code: int = 500):
-        self.message_key = message_key
-        self.context = context
-        self.code = code
-        super().__init__(MessageResolver().resolve(message_key, context))
+        super().__init__(message_key, context, code)
 
 
 class AppNotFoundError(DomainException):
@@ -37,3 +30,9 @@ class AppStatusDoestExist(DomainException):
     def __init__(self, status: str | None = None):
         context = {"status": status} if status is not None else {}
         super().__init__("domain.app.status.doesnt_exist", context, 404)
+
+
+class PlatformInstallKeyMustBeUniqPerApp(DomainException):
+    def __init__(self, install_key: str | None = None):
+        context = {"install_key": install_key} if install_key is not None else {}
+        super().__init__("domain.platform.install_key.duplicate", context, 409)
