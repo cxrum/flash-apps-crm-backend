@@ -3,36 +3,36 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from app.domain.app.CrmAppEntity import CrmAppEntity
-from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
-from app.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
-from app.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
-from app.domain.click.CrmClickEntity import CrmClickEntity
-from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
+from app.modules.crm.domain.app.CrmAppEntity import CrmAppEntity
+from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.modules.crm.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
+from app.modules.crm.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
+from app.modules.crm.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
+from app.modules.crm.domain.click.CrmClickEntity import CrmClickEntity
+from app.modules.crm.domain.conversion_definition.CrmConversionDefinitionEntity import (
     CrmConversionDefinitionEntity,
 )
-from app.domain.currency.entity import Money
-from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
-from app.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
+from app.modules.crm.domain.currency.entity import Money
+from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
+from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
     CustomParamsStatisticsAggregateEntity,
 )
-from app.domain.events.CrmEventEntity import EventEntity
-from app.domain.hash_protocol import HashableValue
-from app.domain.install.CrmInstallEntity import CrmInstallEntity
-from app.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
-from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
-from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
-from app.domain.postback_rule.CrmPostbackRuleEntity import CrmPostbackRuleEntity
-from app.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
-from app.domain.push_event.CrmPushEventEntity import CrmPushEventEntity
-from app.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
-from app.domain.role.CrmRoleEntity import CrmRoleEntity
-from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
-from app.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
-from app.domain.user.CrmUserEntity import CrmUserEntity
-from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
-from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
+from app.modules.crm.domain.events.CrmEventEntity import EventEntity
+from app.modules.crm.domain.hash_protocol import HashableValue
+from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
+from app.modules.crm.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
+from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
+from app.modules.crm.domain.permission.CrmPermissionEntity import CrmPermissionEntity
+from app.modules.crm.domain.postback_rule.CrmPostbackRuleEntity import CrmPostbackRuleEntity
+from app.modules.crm.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
+from app.modules.crm.domain.push_event.CrmPushEventEntity import CrmPushEventEntity
+from app.modules.crm.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
+from app.modules.crm.domain.role.CrmRoleEntity import CrmRoleEntity
+from app.modules.crm.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
+from app.modules.crm.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
+from app.modules.crm.domain.user.CrmUserEntity import CrmUserEntity
+from app.modules.crm.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
+from app.modules.crm.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
 
 
 def _merge(base: dict[str, Any], overrides: dict[str, Any]) -> dict[str, Any]:
@@ -208,7 +208,7 @@ def build_param_definition_entity(**overrides: Any) -> CrmParamDefinitionEntity:
                 "machine_key": "utm_source",
                 "data_type": "string",
                 "app_id": 1,
-                "groupable": False
+                "groupable": False,
             },
             overrides,
         )
@@ -325,6 +325,7 @@ def build_user_app_access_entity(**overrides: Any) -> CrmUserAppAccessEntity:
 
 def build_user_role_entity(**overrides: Any) -> CrmUserPermissionEntity:
     return CrmUserPermissionEntity(**_merge({"user_id": 1, "role_id": 1}, overrides))
+
 
 def build_currency_entity(**overrides: Any) -> Money:
     return Money(

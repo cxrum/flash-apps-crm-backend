@@ -2,7 +2,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
+from app.modules.crm.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
 
 
 def test_create_from_diff_builds_audit_logs_for_changed_top_level_entities() -> None:

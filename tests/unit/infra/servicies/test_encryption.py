@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.infra.services.encryption import EncryptionService
+from app.modules.crm.infra.services.encryption import EncryptionService
 
 
 def test_encrypt_and_decrypt_round_trip() -> None:

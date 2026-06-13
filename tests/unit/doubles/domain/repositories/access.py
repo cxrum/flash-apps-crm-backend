@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from app.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
-from app.domain.user_app_access.user_app_access_repository_protocol import (
+from app.modules.crm.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
+from app.modules.crm.domain.user_app_access.user_app_access_repository_protocol import (
     CrmUserAppAccessRepositoryProtocol,
 )
 from tests.unit.doubles.base import CallRecorderMixin, clone

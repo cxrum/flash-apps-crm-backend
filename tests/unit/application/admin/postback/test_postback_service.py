@@ -6,19 +6,19 @@ from urllib.parse import urlencode
 
 import pytest
 
-from app.application.admin.postback.service import PostbackService
-from app.application.exception import GeneralException
-from app.domain.app.CrmAppEntity import CrmAppEntity
-from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.domain.click.CrmClickEntity import CrmClickEntity
-from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
-from app.domain.event_bus.service_protocol import IAsyncEventBus
-from app.domain.events.CrmEventEntity import EventEntity
-from app.domain.exceptions import DomainException
-from app.domain.install.CrmInstallEntity import CrmInstallEntity
-from app.domain.postback_rule.CrmPostbackRuleEntity import CrmPostbackRuleEntity
-from app.domain.postback_rule.template import PostbackTemplateEntity
-from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
+from app.modules.crm.application.admin.postback.service import PostbackService
+from app.modules.crm.application.exception import GeneralException
+from app.modules.crm.domain.app.CrmAppEntity import CrmAppEntity
+from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.modules.crm.domain.click.CrmClickEntity import CrmClickEntity
+from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
+from app.modules.crm.domain.event_bus.service_protocol import IAsyncEventBus
+from app.modules.crm.domain.events.CrmEventEntity import EventEntity
+from app.modules.crm.domain.exceptions import DomainException
+from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
+from app.modules.crm.domain.postback_rule.CrmPostbackRuleEntity import CrmPostbackRuleEntity
+from app.modules.crm.domain.postback_rule.template import PostbackTemplateEntity
+from app.modules.crm.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
 from tests.unit.builders import (
     build_admin_create_postback_rule_command,
     build_admin_evaluate_postback_rule_command,

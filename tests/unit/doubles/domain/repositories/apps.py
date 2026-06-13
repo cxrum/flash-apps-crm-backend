@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from app.domain.app.CrmAppEntity import CrmAppEntity
-from app.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
-from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.domain.app_platform.app_platform_repository_protocol import CrmAppPlatformRepositoryProtocol
-from app.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
-from app.domain.app_user.app_user_repository_protocol import CrmAppUserRepositoryProtocol
-from app.domain.install.CrmInstallEntity import CrmInstallEntity
-from app.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
+from app.modules.crm.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
+from app.modules.crm.domain.app.CrmAppEntity import CrmAppEntity
+from app.modules.crm.domain.app_platform.app_platform_repository_protocol import CrmAppPlatformRepositoryProtocol
+from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.modules.crm.domain.app_user.app_user_repository_protocol import CrmAppUserRepositoryProtocol
+from app.modules.crm.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
+from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
+from app.modules.crm.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
 from tests.unit.doubles.base import (
     CallRecorderMixin,
     IntegerSequence,

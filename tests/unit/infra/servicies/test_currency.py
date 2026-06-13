@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.domain.currency.entity import Money
-from app.infra.services.currency import CurrencyConvertorClient
+from app.modules.crm.domain.currency.entity import Money
+from app.modules.crm.infra.services.currency import CurrencyConvertorClient
 
 
 class _FakeResponse:

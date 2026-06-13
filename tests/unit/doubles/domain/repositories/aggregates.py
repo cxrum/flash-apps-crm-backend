@@ -2,14 +2,16 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from app.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
+from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
     CustomParamsStatisticsAggregateEntity,
 )
-from app.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
+from app.modules.crm.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
     CustomParamsStatisticsRepositoryProtocol,
 )
-from app.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
-from app.domain.statistics_aggregate.statistics_aggregate_repository_protocol import StatisticsRepositoryProtocol
+from app.modules.crm.domain.statistics_aggregate.statistics_aggregate_repository_protocol import (
+    StatisticsRepositoryProtocol,
+)
+from app.modules.crm.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
 from tests.unit.doubles.base import CallRecorderMixin, IntegerSequence, clone, comparable_datetime, evolve, utcnow
 
 

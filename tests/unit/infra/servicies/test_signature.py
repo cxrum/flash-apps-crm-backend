@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from hashlib import sha256
 import hmac
+from hashlib import sha256
 
-from app.domain.hash_protocol import HashableValue
-from app.infra.services.signature import SignatureSHA256
+from app.modules.crm.domain.hash_protocol import HashableValue
+from app.modules.crm.infra.services.signature import SignatureSHA256
 
 
 def test_sign_returns_standard_hmac_sha256_digest() -> None:
@@ -33,8 +33,11 @@ def test_compare_returns_false_for_mismatched_signature() -> None:
     value = HashableValue.from_str("message")
     key = HashableValue.from_str("secret")
 
-    assert service.compare(
-        value=value,
-        signature=HashableValue.from_str("wrong-signature"),
-        key=key,
-    ) is False
+    assert (
+        service.compare(
+            value=value,
+            signature=HashableValue.from_str("wrong-signature"),
+            key=key,
+        )
+        is False
+    )

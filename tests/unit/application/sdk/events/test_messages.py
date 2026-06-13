@@ -4,8 +4,8 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.application.events_bus.factories.raw_event import RawEventMessageFactory, RawEventMessage
-from app.application.exception import GeneralException
+from app.modules.crm.application.events_bus.factories.raw_event import RawEventMessage, RawEventMessageFactory
+from app.modules.crm.application.exception import GeneralException
 from tests.unit.builders import build_event_entity
 
 

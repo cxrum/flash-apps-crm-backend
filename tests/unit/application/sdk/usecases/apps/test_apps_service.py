@@ -4,15 +4,20 @@ from collections.abc import Sequence
 
 import pytest
 
-from app.application.admin.crm_authorization.service import CrmAuthorizationService
-from app.application.sdk.apps.commands import DeleteAppPlatformCommand, UpdateAppCommand, UpdateAppPlatformCommand
-from app.application.sdk.apps.service import AppService
-from app.application.exception import GeneralException
-from app.domain.event_bus.entity import DomainEventMessage
-from app.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
-from app.domain.event_bus.service_protocol import AsyncEventMessageHandler, EventMessageHandler
-from app.domain.role.CrmRoleEntity import Roles
-from app.domain.hash_protocol import HashableValue
+from app.modules.crm.application.admin.crm_authorization.service import CrmAuthorizationService
+from app.modules.crm.application.exception import GeneralException
+from app.modules.crm.application.sdk.apps.commands import (
+    DeleteAppPlatformCommand,
+    UpdateAppCommand,
+    UpdateAppPlatformCommand,
+)
+from app.modules.crm.application.sdk.apps.service import AppService
+from app.modules.crm.domain.event_bus.entity import DomainEventMessage
+from app.modules.crm.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
+from app.modules.crm.domain.event_bus.service_protocol import AsyncEventMessageHandler, EventMessageHandler
+from app.modules.crm.domain.hash_protocol import HashableValue
+from app.modules.crm.domain.role.CrmRoleEntity import Roles
+from tests.unit.base import UnitTestContext
 from tests.unit.builders import (
     build_app_entity,
     build_app_platform_entity,
@@ -24,7 +29,6 @@ from tests.unit.builders import (
     build_secret_template_entity,
     build_user_app_access_entity,
 )
-from tests.unit.base import UnitTestContext
 
 
 class RecordingAsyncEventBus:
@@ -76,25 +80,17 @@ def _seed_manager_access(unit_test_context: UnitTestContext) -> None:
     manager_role = unit_test_context.uow.role_repo.save(
         build_role_entity(code=Roles.MANAGER.value, display_name="Manager")
     )
-    unit_test_context.uow.user_app_access_repo.save(
-        build_user_app_access_entity(role_id=manager_role.role_id)
-    )
+    unit_test_context.uow.user_app_access_repo.save(build_user_app_access_entity(role_id=manager_role.role_id))
 
 
 def _seed_admin_access(unit_test_context: UnitTestContext) -> None:
-    admin_role = unit_test_context.uow.role_repo.save(
-        build_role_entity(code=Roles.ADMIN.value, display_name="Admin")
-    )
-    unit_test_context.uow.user_app_access_repo.save(
-        build_user_app_access_entity(role_id=admin_role.role_id)
-    )
+    admin_role = unit_test_context.uow.role_repo.save(build_role_entity(code=Roles.ADMIN.value, display_name="Admin"))
+    unit_test_context.uow.user_app_access_repo.save(build_user_app_access_entity(role_id=admin_role.role_id))
 
 
 def test_create_app_drafts_and_saves_app(unit_test_context: UnitTestContext) -> None:
     service = unit_test_context.build_app_service()
-    admin_role = unit_test_context.uow.role_repo.save(
-        build_role_entity(code=Roles.ADMIN.value, display_name="Admin")
-    )
+    admin_role = unit_test_context.uow.role_repo.save(build_role_entity(code=Roles.ADMIN.value, display_name="Admin"))
 
     response = service.create_app(build_sdk_create_app_command())
     assert response.app.app_id is not None
@@ -120,9 +116,7 @@ def test_create_app_platform_rejects_missing_app(unit_test_context: UnitTestCont
     manager_role = unit_test_context.uow.role_repo.save(
         build_role_entity(code=Roles.MANAGER.value, display_name="Manager")
     )
-    unit_test_context.uow.user_app_access_repo.save(
-        build_user_app_access_entity(role_id=manager_role.role_id)
-    )
+    unit_test_context.uow.user_app_access_repo.save(build_user_app_access_entity(role_id=manager_role.role_id))
 
     with pytest.raises(GeneralException, match="App with id 1 doesn't exist"):
         service.create_app_platform(build_sdk_create_app_platform_command())
@@ -131,12 +125,8 @@ def test_create_app_platform_rejects_missing_app(unit_test_context: UnitTestCont
 def test_create_app_platform_saves_valid_platform(unit_test_context: UnitTestContext) -> None:
     service = unit_test_context.build_app_service()
     unit_test_context.uow.app_repo.save(build_app_entity(app_id=1))
-    admin_role = unit_test_context.uow.role_repo.save(
-        build_role_entity(code=Roles.ADMIN.value, display_name="Admin")
-    )
-    unit_test_context.uow.user_app_access_repo.save(
-        build_user_app_access_entity(role_id=admin_role.role_id)
-    )
+    admin_role = unit_test_context.uow.role_repo.save(build_role_entity(code=Roles.ADMIN.value, display_name="Admin"))
+    unit_test_context.uow.user_app_access_repo.save(build_user_app_access_entity(role_id=admin_role.role_id))
 
     response = service.create_app_platform(build_sdk_create_app_platform_command())
 
@@ -162,9 +152,7 @@ def test_create_app_platform_hides_secret_for_manager(unit_test_context: UnitTes
     manager_role = unit_test_context.uow.role_repo.save(
         build_role_entity(code=Roles.MANAGER.value, display_name="Manager")
     )
-    unit_test_context.uow.user_app_access_repo.save(
-        build_user_app_access_entity(role_id=manager_role.role_id)
-    )
+    unit_test_context.uow.user_app_access_repo.save(build_user_app_access_entity(role_id=manager_role.role_id))
 
     response = service.create_app_platform(build_sdk_create_app_platform_command())
 
@@ -175,9 +163,7 @@ def test_create_app_platform_hides_secret_for_manager(unit_test_context: UnitTes
 def test_update_app_publishes_value_changed_event(unit_test_context: UnitTestContext) -> None:
     event_bus = RecordingAsyncEventBus()
     service = _build_app_service_with_bus(unit_test_context, event_bus)
-    unit_test_context.uow.app_repo.save(
-        build_app_entity(app_id=1, name="Old App", status="active")
-    )
+    unit_test_context.uow.app_repo.save(build_app_entity(app_id=1, name="Old App", status="active"))
     _seed_manager_access(unit_test_context)
 
     service.update_app(
@@ -251,9 +237,7 @@ def test_delete_app_platform_deletes_by_platform_id(
         hash_service=unit_test_context.hash_service,
     )
     unit_test_context.uow.app_repo.save(build_app_entity(app_id=1))
-    saved_platform = unit_test_context.uow.app_platform_repo.save(
-        build_app_platform_entity(app_id=1, platform_id=7)
-    )
+    saved_platform = unit_test_context.uow.app_platform_repo.save(build_app_platform_entity(app_id=1, platform_id=7))
     _seed_admin_access(unit_test_context)
 
     response = service.delete_app_platform(
@@ -266,11 +250,7 @@ def test_delete_app_platform_deletes_by_platform_id(
 
     assert response.app_platform.platform_id == 7
     assert unit_test_context.uow.app_platform_repo.get_by_id(7) is None
-    delete_calls = [
-        call
-        for call in unit_test_context.uow.app_platform_repo.calls
-        if call.method == "delete"
-    ]
+    delete_calls = [call for call in unit_test_context.uow.app_platform_repo.calls if call.method == "delete"]
     assert delete_calls[-1].args == (7,)
 
 
@@ -279,9 +259,7 @@ def test_get_app_config_secrets_merges_templates_with_platform_values(
 ) -> None:
     service = unit_test_context.build_app_service()
     unit_test_context.uow.app_repo.save(build_app_entity(app_id=1))
-    saved_platform = unit_test_context.uow.app_platform_repo.save(
-        build_app_platform_entity(app_id=1, platform="ios")
-    )
+    saved_platform = unit_test_context.uow.app_platform_repo.save(build_app_platform_entity(app_id=1, platform="ios"))
     other_platform = unit_test_context.uow.app_platform_repo.save(
         build_app_platform_entity(
             app_id=1,
@@ -291,29 +269,15 @@ def test_get_app_config_secrets_merges_templates_with_platform_values(
     )
 
     template_with_value = unit_test_context.uow.secret_template_repo.save(
-        build_secret_template_entity(
-            template_id=1, 
-            code="api_key", 
-            value_type="text",
-            scope="client_public"
-        )
+        build_secret_template_entity(template_id=1, code="api_key", value_type="text", scope="client_public")
     )
-    
+
     template_withot_value = unit_test_context.uow.secret_template_repo.save(
-        build_secret_template_entity(
-            template_id=2, 
-            code="something_key", 
-            scope="client_public"
-        )
+        build_secret_template_entity(template_id=2, code="something_key", scope="client_public")
     )
-    
+
     template_seacret = unit_test_context.uow.secret_template_repo.save(
-        build_secret_template_entity(
-            template_id=3, 
-            code="feature_flag", 
-            value_type="text",
-            scope="server_private"
-        )
+        build_secret_template_entity(template_id=3, code="feature_flag", value_type="text", scope="server_private")
     )
 
     unit_test_context.uow.app_secret_repo.save(
@@ -345,7 +309,7 @@ def test_get_app_config_secrets_merges_templates_with_platform_values(
             active_flag=True,
             version=1,
         )
-    )    
+    )
     unit_test_context.uow.app_secret_repo.save(
         build_app_secret_entity(
             secret_id=13,
@@ -361,9 +325,6 @@ def test_get_app_config_secrets_merges_templates_with_platform_values(
         build_sdk_application_configuration_command(install_key=saved_platform.install_key)
     )
 
-    by_code = {
-        item.code: item.value
-        for item in response.platform_configurations
-    }
+    by_code = {item.code: item.value for item in response.platform_configurations}
     assert by_code == {"api_key": "real-secret"}
     assert [call.method for call in unit_test_context.encryption_service.calls] == ["decrypt"]

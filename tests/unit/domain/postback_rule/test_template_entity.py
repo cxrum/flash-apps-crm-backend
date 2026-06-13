@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.domain.exceptions import DomainException
-from app.domain.postback_rule.template import PostbackTemplateEntity
+from app.modules.crm.domain.exceptions import DomainException
+from app.modules.crm.domain.postback_rule.template import PostbackTemplateEntity
 
 
 def test_postback_template_supports_dictionary_access() -> None:

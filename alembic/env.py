@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from app.core.config import settings
-from app.infra.db.base import Base
-from app.infra.db import models
-from app.infra.db.crm import models as crm_models
+from alembic import context
+from app.modules.crm.core.config import settings
+from app.modules.crm.infra.db import models
+from app.modules.crm.infra.db.base import Base
+from app.modules.crm.infra.db.crm import models as crm_models
 
 config = context.config
 

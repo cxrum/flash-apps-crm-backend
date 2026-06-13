@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from app.application.contracts.ip2location import IpLocation
-from app.application.exception import GeneralException
-from app.application.sdk.s2s.service import ClickService
-from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.modules.crm.application.contracts.ip2location import IpLocation
+from app.modules.crm.application.exception import GeneralException
+from app.modules.crm.application.sdk.s2s.service import ClickService
+from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from tests.unit.builders import (
     build_app_entity,
     build_app_platform_entity,
@@ -101,41 +101,39 @@ def test_process_s2s_click_inserts_duplicate_click_with_s2s_metadata() -> None:
     service, signature_service, ip2location_gateway = _build_service(uow)
     platform = _seed_platform(uow)
 
-    uow.param_definition_repo.save(
-        build_param_definition_entity()
-    )
-    
+    uow.param_definition_repo.save(build_param_definition_entity())
+
     existing_click = uow.click_repo.insert(
         build_click_entity(
             click_id="partner-click-1",
             app_platform_id=platform.platform_id or 0,
         )
     )
-    
+
     response = service.process_s2s_click(
         build_s2s_click_command(
             click_id="partner-click-1",
-            params={"campaign": "spring", "utm_source":"anton"},
+            params={"campaign": "spring", "utm_source": "anton"},
             ip="203.0.113.10",
             user_agent="PartnerBot/1.0",
             redirect_url="https://example.com/landing",
             raw_params="campaign=spring&utm_source=anton",
         )
     )
-    
+
     saved_click = uow.click_repo.get_by_id(response.click_id)
 
     assert response.click_id != existing_click.click_id
     assert saved_click is not None
     assert saved_click.app_platform_id == platform.platform_id
-    assert saved_click.raw_query == {"campaign": "spring", "utm_source":"anton"}
-    assert saved_click.normalized_params == {"utm_source":"anton"}
+    assert saved_click.raw_query == {"campaign": "spring", "utm_source": "anton"}
+    assert saved_click.normalized_params == {"utm_source": "anton"}
     assert saved_click.redirect_target == "https://example.com/landing"
     assert saved_click.city == "Paris"
     assert saved_click.country_code == "FR"
     assert saved_click.language == "fr"
     assert saved_click.region == "Ile-de-France"
-    assert saved_click.status == 'duplicate'
+    assert saved_click.status == "duplicate"
     assert [call.method for call in signature_service.calls] == ["compare"]
     assert [call.method for call in ip2location_gateway.calls] == ["resolve"]
 
@@ -145,10 +143,8 @@ def test_process_redirect_click_creates_accepted_click_with_location_metadata() 
     service, _, ip2location_gateway = _build_service(uow)
     platform = _seed_platform(uow)
 
-    uow.param_definition_repo.save(
-        build_param_definition_entity()
-    )
-    
+    uow.param_definition_repo.save(build_param_definition_entity())
+
     response = service.process_redirect_click(
         build_tracking_redirect_command(
             app_code="test-app",
@@ -157,7 +153,7 @@ def test_process_redirect_click_creates_accepted_click_with_location_metadata() 
             params={"campaign": "spring", "utm_source": "anton"},
         )
     )
-    
+
     saved_click = uow.click_repo.get_by_id(response.click_id)
 
     assert saved_click is not None

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from app.domain.install.CrmInstallEntity import CrmInstallEntity
-from app.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
-from app.domain.push_campaign.push_campaign_repository_protocol import CrmPushCampaignRepositoryProtocol
-from app.domain.push_event.CrmPushEventEntity import CrmPushEventEntity
-from app.domain.push_event.push_event_repository_protocol import CrmPushEventRepositoryProtocol
-from app.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
-from app.domain.push_token.push_token_repository_protocol import CrmPushTokenRepositoryProtocol
+from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
+from app.modules.crm.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
+from app.modules.crm.domain.push_campaign.push_campaign_repository_protocol import CrmPushCampaignRepositoryProtocol
+from app.modules.crm.domain.push_event.CrmPushEventEntity import CrmPushEventEntity
+from app.modules.crm.domain.push_event.push_event_repository_protocol import CrmPushEventRepositoryProtocol
+from app.modules.crm.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
+from app.modules.crm.domain.push_token.push_token_repository_protocol import CrmPushTokenRepositoryProtocol
 from tests.unit.doubles.base import (
     CallRecorderMixin,
     IntegerSequence,

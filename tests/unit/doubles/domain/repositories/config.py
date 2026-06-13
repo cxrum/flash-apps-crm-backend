@@ -3,27 +3,27 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime
 
-from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
-from app.domain.app_secret.app_secret_repository_protocol import CrmAppSecretRepositoryProtocol
-from app.domain.conversion_definition.CrmConversionDefinitionEntity import (
-    CrmConversionDefinitionEntity,
-)
-from app.domain.conversion_definition.conversion_definition_repository_protocol import (
+from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.modules.crm.domain.app_secret.app_secret_repository_protocol import CrmAppSecretRepositoryProtocol
+from app.modules.crm.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
+from app.modules.crm.domain.conversion_definition.conversion_definition_repository_protocol import (
     CrmConversionDefinitionRepositoryProtocol,
 )
-from app.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
-from app.domain.metric_definition.metric_definition_repository_protocol import (
+from app.modules.crm.domain.conversion_definition.CrmConversionDefinitionEntity import (
+    CrmConversionDefinitionEntity,
+)
+from app.modules.crm.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
+from app.modules.crm.domain.metric_definition.metric_definition_repository_protocol import (
     CrmMetricDefinitionRepositoryProtocol,
 )
-from app.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
-from app.domain.param_definition.param_definition_repository_protocol import (
+from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
+from app.modules.crm.domain.param_definition.param_definition_repository_protocol import (
     CrmParamDefinitionRepositoryProtocol,
 )
-from app.domain.postback_rule.CrmPostbackRuleEntity import CrmPostbackRuleEntity
-from app.domain.postback_rule.postback_rule_repository_protocol import CrmPostbackRuleRepositoryProtocol
-from app.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
-from app.domain.secret_template.secret_template_repository_protocol import (
+from app.modules.crm.domain.postback_rule.CrmPostbackRuleEntity import CrmPostbackRuleEntity
+from app.modules.crm.domain.postback_rule.postback_rule_repository_protocol import CrmPostbackRuleRepositoryProtocol
+from app.modules.crm.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
+from app.modules.crm.domain.secret_template.secret_template_repository_protocol import (
     CrmSecretTemplateRepositoryProtocol,
 )
 from tests.unit.doubles.base import CallRecorderMixin, IntegerSequence, clone, evolve, utcnow
@@ -91,7 +91,9 @@ class InMemoryCrmConversionDefinitionRepository(CallRecorderMixin, CrmConversion
 
     def save(self, entity: CrmConversionDefinitionEntity) -> CrmConversionDefinitionEntity:
         self._record("save", clone(entity))
-        existing = self._items.get(entity.conversion_definition_id) if entity.conversion_definition_id is not None else None
+        existing = (
+            self._items.get(entity.conversion_definition_id) if entity.conversion_definition_id is not None else None
+        )
         if existing is None:
             existing = next(
                 (
@@ -300,9 +302,7 @@ class InMemoryCrmPostbackRuleRepository(CallRecorderMixin, CrmPostbackRuleReposi
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
     ) -> list[CrmPostbackRuleEntity]:
-        effective_platform_app_id = (
-            platform_app_id if platform_app_id is not None else platfrom_app_id
-        )
+        effective_platform_app_id = platform_app_id if platform_app_id is not None else platfrom_app_id
         filters = {
             "rule_id": rule_id,
             "platform_app_id": effective_platform_app_id,
@@ -323,11 +323,7 @@ class InMemoryCrmPostbackRuleRepository(CallRecorderMixin, CrmPostbackRuleReposi
         return [
             item
             for item in self._items.values()
-            if all(
-                getattr(item, field_name) == value
-                for field_name, value in filters.items()
-                if value is not None
-            )
+            if all(getattr(item, field_name) == value for field_name, value in filters.items() if value is not None)
         ]
 
     def list_by_filters(
@@ -351,9 +347,7 @@ class InMemoryCrmPostbackRuleRepository(CallRecorderMixin, CrmPostbackRuleReposi
         created_at: datetime | None = None,
         limit: int = 100,
     ) -> list[CrmPostbackRuleEntity]:
-        effective_platform_app_id = (
-            platform_app_id if platform_app_id is not None else platfrom_app_id
-        )
+        effective_platform_app_id = platform_app_id if platform_app_id is not None else platfrom_app_id
         self._record(
             "list_by_filters",
             rule_id=rule_id,
@@ -483,8 +477,4 @@ class InMemoryCrmAppSecretRepository(CallRecorderMixin, CrmAppSecretRepositoryPr
         platform_id: int | None = None,
     ) -> list[CrmAppSecretEntity]:
         self._record("list_active_by_app", app_id, platform_id=platform_id)
-        return [
-            clone(item)
-            for item in self.list_by_app_id(app_id, platform_id=platform_id)
-            if item.active_flag
-        ]
+        return [clone(item) for item in self.list_by_app_id(app_id, platform_id=platform_id) if item.active_flag]

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.domain.role.CrmRoleEntity import Roles
+from app.modules.crm.domain.role.CrmRoleEntity import Roles
 from tests.unit.builders import build_app_platform_entity
 
 

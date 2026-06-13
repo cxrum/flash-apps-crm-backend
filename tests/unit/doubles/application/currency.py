@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from copy import copy
 
-from app.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
-from app.domain.currency.entity import Money
+from app.modules.crm.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
+from app.modules.crm.domain.currency.entity import Money
 from tests.unit.doubles.base import CallRecorderMixin
 
 

@@ -5,18 +5,18 @@ import json
 import logging
 
 import pytest
+from app.core.bus.exception.stub import AsyncStubExceptionHandler
+from app.core.bus.exception_event import ExceptionEvent
 from fastapi import FastAPI, Request
 
-from app.core.config import settings
 from app.core.exception import BaseBoundaryException
-from app.di.exception_bus import (
+from app.modules.crm.core.config import settings
+from app.modules.crm.di.exception_bus import (
     get_exception_event_subscribers,
     register_fastapi_exception_handlers,
 )
-from app.domain.event_bus.entity import DomainEventMessage
-from app.domain.event_bus.events.exception_event import ExceptionEvent
-from app.infra.exception import BaseInfraException
-from app.infra.exception_bus.handlers.stub import AsyncStubExceptionHandler
+from app.modules.crm.domain.event_bus.entity import DomainEventMessage
+from app.modules.crm.infra.exception import BaseInfraException
 
 
 def build_exception_event(**payload_overrides: object) -> ExceptionEvent:

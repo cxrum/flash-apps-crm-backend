@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from hashlib import sha256
 import hmac
+from hashlib import sha256
 
-from app.domain.hash_protocol import HashableValue
-from app.domain.signature_protocol import SignatureProtocol, SignatureValue
+from app.modules.crm.domain.hash_protocol import HashableValue
+from app.modules.crm.domain.signature_protocol import SignatureProtocol, SignatureValue
 from tests.unit.doubles.base import CallRecorderMixin
 
 

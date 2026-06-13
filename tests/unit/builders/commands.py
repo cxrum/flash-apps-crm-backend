@@ -3,24 +3,58 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, TypeVar
 
-from app.application.admin.crm_authorization.commands import CreateRoleCommand, ListRolesCommand
-from app.application.admin.definitions.commands import CreateConversionDefinitionCommand, CreateMetricDefinitionCommand, CreateParamDefinitionCommand, ListConversionDefinitionsCommand, ListMetricDefinitionsCommand, ListParamDefinitionsCommand, UpdateConversionDefinitionCommand, UpdateMetricDefinitionCommand, UpdateParamDefinitionCommand
-
-from app.application.admin.logs.commands import ListAuditLogCommand, ListClickLogsCommand, ListEventLogsCommand
-from app.application.admin.postback.commands import CreatePostbackRuleCommand, EvaluatePostbackRuleCommand, ExecutePostbackRuleCommand, ListPostbackRulesCommand
-from app.application.admin.push.commands import CreatePushCampaignCommand, ListPushCampaignsCommand, PushDeviceRegisterCommand
-from app.application.admin.secrets.commands import AppSecretValueCommand, CreateSecretTemplateCommand, ListAppSecretsCommand, ListSecretTemplatesCommand, UpsertAppSecretsCommand
-from app.application.base import FlexibleCommand
-from app.application.sdk.s2s.commands import S2SClickCommand
-from app.application.sdk.apps.commands import CreateAppCommand, CreateAppPlatformCommand, ListAppPlatformsCommand, ListAppsCommand, AppConfigurationCommand
-from app.application.sdk.ingestion.commands import (
+from app.modules.crm.application.admin.crm_authorization.commands import CreateRoleCommand, ListRolesCommand
+from app.modules.crm.application.admin.definitions.commands import (
+    CreateConversionDefinitionCommand,
+    CreateMetricDefinitionCommand,
+    CreateParamDefinitionCommand,
+    ListConversionDefinitionsCommand,
+    ListMetricDefinitionsCommand,
+    ListParamDefinitionsCommand,
+    UpdateConversionDefinitionCommand,
+    UpdateMetricDefinitionCommand,
+    UpdateParamDefinitionCommand,
+)
+from app.modules.crm.application.admin.logs.commands import (
+    ListAuditLogCommand,
+    ListClickLogsCommand,
+    ListEventLogsCommand,
+)
+from app.modules.crm.application.admin.postback.commands import (
+    CreatePostbackRuleCommand,
+    EvaluatePostbackRuleCommand,
+    ExecutePostbackRuleCommand,
+    ListPostbackRulesCommand,
+)
+from app.modules.crm.application.admin.push.commands import (
+    CreatePushCampaignCommand,
+    ListPushCampaignsCommand,
+    PushDeviceRegisterCommand,
+)
+from app.modules.crm.application.admin.secrets.commands import (
+    AppSecretValueCommand,
+    CreateSecretTemplateCommand,
+    ListAppSecretsCommand,
+    ListSecretTemplatesCommand,
+    UpsertAppSecretsCommand,
+)
+from app.modules.crm.application.base import FlexibleCommand
+from app.modules.crm.application.sdk.apps.commands import (
+    AppConfigurationCommand,
+    CreateAppCommand,
+    CreateAppPlatformCommand,
+    ListAppPlatformsCommand,
+    ListAppsCommand,
+)
+from app.modules.crm.application.sdk.ingestion.commands import (
     SdkDeviceValueCommand,
     SdkEventCommand,
     SdkEventsCommand,
     SdkInstallCommand,
     SdkParamsUpdateCommand,
 )
-from app.application.tracking.entities import TrackingRedirectCommand
+from app.modules.crm.application.sdk.s2s.commands import S2SClickCommand
+from app.modules.crm.application.tracking.entities import TrackingRedirectCommand
 
 CommandT = TypeVar("CommandT", bound=FlexibleCommand)
 

@@ -7,3 +7,8 @@ class BaseBoundaryException(Exception):
         self.context = context
         self.code = code
         super().__init__(f"Key: {message_key}, Context: {context}")
+
+
+class BusException(Exception):
+    def __init__(self, message: str, context: Dict[str, Any] = {}):
+        super().__init__(message)

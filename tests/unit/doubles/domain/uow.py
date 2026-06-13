@@ -3,11 +3,9 @@ from __future__ import annotations
 from types import TracebackType
 from typing import Any
 
-from app.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
+from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 from tests.unit.doubles.base import CallRecorderMixin
 from tests.unit.doubles.domain.repositories import (
-    InMemoryCustomParamsStatisticsRepository,
-    InMemoryStatisticsRepository,
     InMemoryCrmAppPlatformRepository,
     InMemoryCrmAppRepository,
     InMemoryCrmAppSecretRepository,
@@ -28,8 +26,10 @@ from tests.unit.doubles.domain.repositories import (
     InMemoryCrmRoleRepository,
     InMemoryCrmSecretTemplateRepository,
     InMemoryCrmUserAppAccessRepository,
-    InMemoryCrmUserRepository,
     InMemoryCrmUserPermissionsRepository,
+    InMemoryCrmUserRepository,
+    InMemoryCustomParamsStatisticsRepository,
+    InMemoryStatisticsRepository,
 )
 
 
@@ -47,10 +47,10 @@ class StubUnitOfWork(CallRecorderMixin, UnitOfWorkProtocol):
         self.user_repo = overrides.get("user_repo", InMemoryCrmUserRepository())
         self.role_repo = overrides.get("role_repo", InMemoryCrmRoleRepository())
         self.permission_repo = overrides.get("permission_repo", InMemoryCrmPermissionRepository())
-        
+
         _crmUserPermissionsRepository = InMemoryCrmUserPermissionsRepository()
         _crmUserPermissionsRepository.set_permissions(self.permission_repo)
-        
+
         self.user_permissions_repo = overrides.get("user_permissions_repo", _crmUserPermissionsRepository)
         self.user_app_access_repo = overrides.get(
             "user_app_access_repo",
@@ -228,6 +228,7 @@ class StubRepositoryFactory(CallRecorderMixin):
 
     def audit_log_repo(self, session: object) -> object:
         return self._repo("audit_log_repo", session)
+
 
 class StubUoWFactory(UnitOfWorkFactoryProtocol):
     def __init__(self, stub_uow: StubUnitOfWork | None = None) -> None:

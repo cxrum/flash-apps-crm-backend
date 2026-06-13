@@ -4,15 +4,15 @@ import asyncio
 from datetime import UTC, datetime
 
 import pytest
+from app.modules.crm.domain.event_bus.entity import DomainEventMessage
 
-from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
-from app.application.exception import GeneralException
-from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.domain.currency.entity import Money
-from app.domain.event_bus.entity import DomainEventMessage
-from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
-from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
-from app.domain.exceptions import DomainException
+from app.modules.analytics.handlers.event.event import ConversionEventMessage, MetricEventMessage
+from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
+from app.modules.analytics.handlers.update_param.update_param import AsyncUpdateParamHandler
+from app.modules.crm.application.exception import GeneralException
+from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.modules.crm.domain.currency.entity import Money
+from app.modules.crm.domain.exceptions import DomainException
 from tests.unit.application.sdk.events.test_async_bus import AsyncRecordingHandler, RecordingHandler
 from tests.unit.base import UnitTestContext
 from tests.unit.builders import (

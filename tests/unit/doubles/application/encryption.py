@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.application.contracts.encryption import EncryptionServiceProtocol
+from app.modules.crm.application.contracts.encryption import EncryptionServiceProtocol
 from tests.unit.doubles.base import CallRecorderMixin
 
 

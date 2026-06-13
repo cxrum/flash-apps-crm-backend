@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.domain.hash_protocol import HashableValue
-from app.infra.services.hashing import ServerHash
+from app.modules.crm.domain.hash_protocol import HashableValue
+from app.modules.crm.infra.services.hashing import ServerHash
 
 
 def test_hash_value_returns_distinct_hash_and_compare_accepts_match() -> None:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from app.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
-from app.domain.audit_log.audit_log_repository_protocol import CrmAuditLogRepositoryProtocol
+from app.modules.crm.domain.audit_log.audit_log_repository_protocol import CrmAuditLogRepositoryProtocol
+from app.modules.crm.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
 from tests.unit.doubles.base import (
     CallRecorderMixin,
     IntegerSequence,

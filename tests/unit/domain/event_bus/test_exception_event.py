@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import pytest
+from app.core.bus.exception_event import ExceptionEvent
 
-from app.domain.event_bus.events.exception_event import ExceptionEvent
-from app.domain.exceptions import DomainException
+from app.modules.crm.domain.exceptions import DomainException
 
 
 def build_exception_event(**payload_overrides: object) -> ExceptionEvent:

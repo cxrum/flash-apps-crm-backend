@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.domain.role.CrmRoleEntity import Roles
+from app.modules.crm.domain.role.CrmRoleEntity import Roles
 from tests.unit.builders import build_role_entity
 
 

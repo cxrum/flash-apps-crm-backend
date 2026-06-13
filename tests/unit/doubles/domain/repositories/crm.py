@@ -1,13 +1,15 @@
 from __future__ import annotations
 
-from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
-from app.domain.permission.permission_repository_protocol import CrmPermissionRepositoryProtocol
-from app.domain.role.CrmRoleEntity import CrmRoleEntity
-from app.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
-from app.domain.user.CrmUserEntity import CrmUserEntity
-from app.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
-from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
-from app.domain.user_permissions.user_permissions_repository_protocol import CrmUserPermissionsRepositoryProtocol
+from app.modules.crm.domain.permission.CrmPermissionEntity import CrmPermissionEntity
+from app.modules.crm.domain.permission.permission_repository_protocol import CrmPermissionRepositoryProtocol
+from app.modules.crm.domain.role.CrmRoleEntity import CrmRoleEntity
+from app.modules.crm.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
+from app.modules.crm.domain.user.CrmUserEntity import CrmUserEntity
+from app.modules.crm.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
+from app.modules.crm.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
+from app.modules.crm.domain.user_permissions.user_permissions_repository_protocol import (
+    CrmUserPermissionsRepositoryProtocol,
+)
 from tests.unit.doubles.base import CallRecorderMixin, IntegerSequence, clone, evolve, utcnow
 
 
@@ -151,7 +153,7 @@ class InMemoryCrmUserPermissionsRepository(CallRecorderMixin, CrmUserPermissions
 
     def set_permissions(self, permisions_repo: CrmPermissionRepositoryProtocol):
         self._permisions_repo = permisions_repo
-    
+
     def save(self, entity: CrmUserPermissionEntity) -> CrmUserPermissionEntity:
         self._record("save", clone(entity))
         self._items[(entity.user_id, entity.permission_id)] = clone(entity)
@@ -183,12 +185,12 @@ class InMemoryCrmUserPermissionsRepository(CallRecorderMixin, CrmUserPermissions
             (item for item in self._items.values() if item.app_id == app_id and item.user_id == user_id),
             key=lambda item: item.user_id,
         )
-        
+
         permission_items = []
         for item in items:
             _t = self._permisions_repo.get_by_id(item.permission_id)
             if _t is None:
                 continue
             permission_items.append(_t)
-                
+
         return [clone(item) for item in permission_items]

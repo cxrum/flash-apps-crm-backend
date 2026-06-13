@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi.routing import APIRoute
 
-from app.api.v1.crm.router import router as crm_router
+from app.modules.crm.api.v1.crm.router import router as crm_router
 
 
 def _route_counts() -> dict[tuple[str, str], int]:

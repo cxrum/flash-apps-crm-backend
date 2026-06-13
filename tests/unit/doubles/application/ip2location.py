@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.application.contracts.ip2location import IP2LocationGatewayProtocol, IpLocation
+from app.modules.crm.application.contracts.ip2location import IP2LocationGatewayProtocol, IpLocation
 from tests.unit.doubles.base import CallRecorderMixin
 
 

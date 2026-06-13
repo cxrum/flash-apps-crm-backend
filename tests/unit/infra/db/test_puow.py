@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.domain.uow import UnitOfWorkProtocol
-from app.infra.db.puow import SqlAlchemyUnitOfWork
+from app.modules.crm.domain.uow import UnitOfWorkProtocol
+from app.modules.crm.infra.db.puow import SqlAlchemyUnitOfWork
 from tests.unit.doubles import StubSession
 from tests.unit.doubles.domain.uow import StubRepositoryFactory, StubUnitOfWork
 

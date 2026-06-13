@@ -3,12 +3,12 @@ from __future__ import annotations
 import asyncio
 
 import pytest
+from app.core.bus.exception_event import ExceptionEvent
+from app.modules.crm.infra.exception_bus.exception_bus import AsyncExceptionBusAdapter
 
-from app.infra.exception import BaseInfraException
-from app.infra.exception_bus.exception_bus import AsyncExceptionBusAdapter
-from app.application.exception import GeneralException
-from app.domain.event_bus.entity import DomainEventMessage
-from app.domain.event_bus.events.exception_event import ExceptionEvent
+from app.modules.crm.application.exception import GeneralException
+from app.modules.crm.domain.event_bus.entity import DomainEventMessage
+from app.modules.crm.infra.exception import BaseInfraException
 
 
 class RecordingHandler:

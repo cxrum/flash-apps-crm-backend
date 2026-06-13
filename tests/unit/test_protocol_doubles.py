@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from app.domain.uow import UnitOfWorkProtocol
+from app.modules.crm.domain.uow import UnitOfWorkProtocol
 from tests.unit.doubles.application.encryption import StubEncryptionService
-from tests.unit.doubles.registry import PROTOCOL_DOUBLE_REGISTRY
 from tests.unit.doubles.domain.uow import StubUnitOfWork
+from tests.unit.doubles.registry import PROTOCOL_DOUBLE_REGISTRY
 
 
 def _discover_protocol_types() -> set[type]:

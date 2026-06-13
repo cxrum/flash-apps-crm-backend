@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from app.domain.hash_protocol import HashProtocol, HashableValue
+from app.modules.crm.domain.hash_protocol import HashableValue, HashProtocol
 from tests.unit.doubles.base import CallRecorderMixin
 
 

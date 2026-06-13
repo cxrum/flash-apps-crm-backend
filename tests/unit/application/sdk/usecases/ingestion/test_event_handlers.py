@@ -4,21 +4,21 @@ import asyncio
 from datetime import UTC, datetime
 
 import pytest
+from app.modules.crm.app import CrmAppEntity
+from app.modules.crm.click import CrmClickEntity
+from app.modules.crm.domain.event_bus.entity import DomainEventMessage
 
-from app.application.events_bus.handlers.conversion import AsyncConversionHandler
-from app.application.events_bus.handlers.metric import AsyncMetricHandler
-from app.application.events_bus.handlers.update_param import AsyncUpdateParamHandler
-from app.application.events_bus.handlers.value_update import AsyncAuditValueHandler
-from app.application.exception import GeneralException
-from app.di.event_bus import get_event_subscribers
-from app.domain.app import CrmAppEntity
-from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.domain.click import CrmClickEntity
-from app.domain.event_bus.entity import DomainEventMessage
-from app.domain.event_bus.events.crm_events import ConversionEventMessage, MetricEventMessage
-from app.domain.event_bus.events.crm_update_params import UpdateCurrentParamMessage
-from app.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
-from app.domain.exceptions import DomainException
+from app.modules.analytics.handlers.event.conversion import AsyncConversionHandler
+from app.modules.analytics.handlers.event.event import ConversionEventMessage, MetricEventMessage
+from app.modules.analytics.handlers.event.metric import AsyncMetricHandler
+from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
+from app.modules.analytics.handlers.update_param.update_param import AsyncUpdateParamHandler
+from app.modules.crm.application.events_bus.handlers.audit import AsyncAuditValueHandler
+from app.modules.crm.application.exception import GeneralException
+from app.modules.crm.di.event_bus import get_event_subscribers
+from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.modules.crm.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
+from app.modules.crm.domain.exceptions import DomainException
 from tests.unit.builders import build_app_entity, build_app_platform_entity, build_click_entity
 from tests.unit.builders.entities import (
     build_conversion_definition_entity,

@@ -4,13 +4,13 @@ from dataclasses import dataclass
 
 import pytest
 
-from app.application.access_decorators import require_app_access, require_permission, require_role
-from app.application.admin.crm_authorization.exceptions import AuthorizationException
-from app.application.admin.crm_authorization.service import CrmAuthorizationService
-from app.domain.permission.CrmPermissionEntity import CrmPermissionEntity
-from app.domain.role.CrmRoleEntity import Roles
-from app.domain.role.exceptions import ManagerAccessRequired
-from app.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
+from app.modules.crm.application.access_decorators import require_app_access, require_permission, require_role
+from app.modules.crm.application.admin.crm_authorization.exceptions import AuthorizationException
+from app.modules.crm.application.admin.crm_authorization.service import CrmAuthorizationService
+from app.modules.crm.domain.permission.CrmPermissionEntity import CrmPermissionEntity
+from app.modules.crm.domain.role.CrmRoleEntity import Roles
+from app.modules.crm.domain.role.exceptions import ManagerAccessRequired
+from app.modules.crm.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
 from tests.unit.builders import (
     build_permission_entity,
     build_role_entity,
@@ -89,12 +89,8 @@ def test_require_role_rejects_insufficient_role() -> None:
 
 def test_require_permission_calls_wrapped_method_after_check() -> None:
     uow = StubUnitOfWork()
-    manager_role = uow.role_repo.save(
-        build_role_entity(code=Roles.MANAGER.value, display_name="Manager")
-    )
-    permission = uow.permission_repo.save(
-        build_permission_entity(code=CrmPermissionEntity.manage_push_permission())
-    )
+    manager_role = uow.role_repo.save(build_role_entity(code=Roles.MANAGER.value, display_name="Manager"))
+    permission = uow.permission_repo.save(build_permission_entity(code=CrmPermissionEntity.manage_push_permission()))
     assert permission.permission_id is not None
     uow.user_app_access_repo.save(build_user_app_access_entity(role_id=manager_role.role_id))
     uow.user_permissions_repo.save(
@@ -116,9 +112,7 @@ def test_require_permission_calls_wrapped_method_after_check() -> None:
 
 def test_require_permission_rejects_missing_permission() -> None:
     uow = StubUnitOfWork()
-    manager_role = uow.role_repo.save(
-        build_role_entity(code=Roles.MANAGER.value, display_name="Manager")
-    )
+    manager_role = uow.role_repo.save(build_role_entity(code=Roles.MANAGER.value, display_name="Manager"))
     uow.user_app_access_repo.save(build_user_app_access_entity(role_id=manager_role.role_id))
     service = _DecoratedService(uow)
 
@@ -130,12 +124,8 @@ def test_require_permission_rejects_missing_permission() -> None:
 
 def test_require_permission_supports_context_resolver() -> None:
     uow = StubUnitOfWork()
-    manager_role = uow.role_repo.save(
-        build_role_entity(code=Roles.MANAGER.value, display_name="Manager")
-    )
-    permission = uow.permission_repo.save(
-        build_permission_entity(code=CrmPermissionEntity.manage_push_permission())
-    )
+    manager_role = uow.role_repo.save(build_role_entity(code=Roles.MANAGER.value, display_name="Manager"))
+    permission = uow.permission_repo.save(build_permission_entity(code=CrmPermissionEntity.manage_push_permission()))
     assert permission.permission_id is not None
     uow.user_app_access_repo.save(build_user_app_access_entity(role_id=manager_role.role_id))
     uow.user_permissions_repo.save(

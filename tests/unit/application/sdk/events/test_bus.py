@@ -4,13 +4,13 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.application.exception import GeneralException
-from app.domain.event_bus.entity import DomainEventMessage
-from app.infra.event_bus.in_memory import (
+from app.modules.crm.application.exception import GeneralException
+from app.modules.crm.domain.event_bus.entity import DomainEventMessage
+from app.modules.crm.infra.event_bus.in_memory import (
     InMemoryEventBus,
     InMemoryMessageQueue,
 )
-from app.infra.exception import BaseInfraException
+from app.modules.crm.infra.exception import BaseInfraException
 
 
 class RecordingHandler:

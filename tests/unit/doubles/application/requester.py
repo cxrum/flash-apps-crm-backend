@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from urllib.parse import urlencode
 
-from app.application.contracts.requester import S2SRequesterProtocol, S2SResponse
+from app.modules.crm.application.contracts.requester import S2SRequesterProtocol, S2SResponse
 from tests.unit.doubles.base import CallRecorderMixin
 
 

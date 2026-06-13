@@ -4,14 +4,14 @@ import asyncio
 from datetime import UTC, datetime
 
 import pytest
-
-from app.application.exception import GeneralException
-from app.domain.event_bus.entity import DomainEventMessage
-from app.domain.event_bus.events.exception_event import ExceptionEvent
-from app.infra.event_bus.async_bus.in_memory import (
+from app.core.bus.exception_event import ExceptionEvent
+from app.modules.crm.infra.event_bus.async_bus.in_memory import (
     InMemoryAsyncEventBus,
     InMemoryAsyncMessageQueue,
 )
+
+from app.modules.crm.application.exception import GeneralException
+from app.modules.crm.domain.event_bus.entity import DomainEventMessage
 
 
 class RecordingHandler:

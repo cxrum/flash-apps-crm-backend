@@ -4,23 +4,23 @@ import asyncio
 from datetime import UTC, datetime
 
 import pytest
+from app.modules.crm.domain.event_bus.entity import DomainEventMessage
 
-from app.application.events_bus.factories.value_update_event import (
+from app.modules.crm.application.events_bus.factories.value_update_event import (
+    AuditEventValue,
     ValueChangedEventFactory,
-    ValueChangedEventValue,
 )
-from app.application.events_bus.handlers.value_update import AsyncAuditValueHandler
-from app.application.exception import GeneralException
-from app.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
-from app.domain.event_bus.entity import DomainEventMessage
-from app.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
+from app.modules.crm.application.events_bus.handlers.audit import AsyncAuditValueHandler
+from app.modules.crm.application.exception import GeneralException
+from app.modules.crm.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
+from app.modules.crm.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
 from tests.unit.doubles.domain.uow import StubUnitOfWork, StubUoWFactory
 
 
 def _build_value_changed_message() -> ValueChangedEvent:
     updated_at = datetime(2026, 6, 10, 12, 30, tzinfo=UTC)
     message = ValueChangedEventFactory.from_raw_payload(
-        ValueChangedEventValue(
+        AuditEventValue(
             crm_user_id=1,
             app_id=2,
             entity_id=3,

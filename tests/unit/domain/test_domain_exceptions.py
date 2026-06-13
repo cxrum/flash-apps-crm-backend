@@ -2,17 +2,17 @@ from __future__ import annotations
 
 import pytest
 
-from app.domain.click.exception import IncorrectClickPlatform, IncorrectClickStatus
-from app.domain.current_param.exception import (
+from app.modules.crm.domain.click.exception import IncorrectClickPlatform, IncorrectClickStatus
+from app.modules.crm.domain.current_param.exception import (
     AppendPolicyNotSupported,
     MergePolicyNotSupported,
     UnsupportedCurrentParamUpdatePolicy,
 )
-from app.domain.event_bus.events.exception import InvalidRawEventPayload
-from app.domain.exceptions import DomainException
-from app.domain.param_definition.exception import InvalidParamDataType, InvalidParamValue
-from app.domain.postback_rule.exception import MissingSecretTemplate, PostbackUrlRequired
-from app.domain.role.exceptions import AdminAccessRequired, ManagerAccessRequired
+from app.modules.crm.domain.event_bus.events.exception import InvalidRawEventPayload
+from app.modules.crm.domain.exceptions import DomainException
+from app.modules.crm.domain.param_definition.exception import InvalidParamDataType, InvalidParamValue
+from app.modules.crm.domain.postback_rule.exception import MissingSecretTemplate, PostbackUrlRequired
+from app.modules.crm.domain.role.exceptions import AdminAccessRequired, ManagerAccessRequired
 
 
 @pytest.mark.parametrize(

@@ -1,17 +1,17 @@
 from datetime import UTC, datetime
 
-from app.application.events_bus.factories.value_update_event import (
+from app.modules.crm.application.events_bus.factories.value_update_event import (
+    AuditEventValue,
     ValueChangedEventFactory,
-    ValueChangedEventValue,
 )
-from app.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
+from app.modules.crm.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
 
 
 def test_value_changed_event_factory_builds_typed_message() -> None:
     updated_at = datetime(2026, 6, 10, tzinfo=UTC)
 
     message = ValueChangedEventFactory.from_raw_payload(
-        ValueChangedEventValue(
+        AuditEventValue(
             crm_user_id=1,
             app_id=2,
             entity_id=3,
@@ -38,7 +38,7 @@ def test_value_changed_event_factory_builds_typed_message() -> None:
 
 def test_value_changed_event_factory_builds_batch() -> None:
     updated_at = datetime(2026, 6, 10, tzinfo=UTC)
-    value = ValueChangedEventValue(
+    value = AuditEventValue(
         crm_user_id=1,
         old_value={"crm_apps": {"name": "old"}},
         new_value={"crm_apps": {"name": "new"}},

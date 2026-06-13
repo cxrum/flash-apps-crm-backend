@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from app.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.domain.click.CrmClickEntity import CrmClickEntity
-from app.domain.click.click_repository_protocol import CrmClickRepositoryProtocol
-from app.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
-from app.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
-from app.domain.events.CrmEventEntity import EventEntity
-from app.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
+from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.modules.crm.domain.click.click_repository_protocol import CrmClickRepositoryProtocol
+from app.modules.crm.domain.click.CrmClickEntity import CrmClickEntity
+from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
+from app.modules.crm.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
+from app.modules.crm.domain.events.CrmEventEntity import EventEntity
+from app.modules.crm.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
 from tests.unit.doubles.base import (
     CallRecorderMixin,
     IntegerSequence,
@@ -28,15 +28,15 @@ class InMemoryCrmClickRepository(CallRecorderMixin, CrmClickRepositoryProtocol):
     def insert(self, entity: CrmClickEntity) -> CrmClickEntity:
         self._record("insert", clone(entity))
         saved = clone(entity)
-        
+
         if entity.click_id in self._items:
             inner_id = self._inner_ids.next()
-        
+
         if saved.created_at is None:
             saved = evolve(saved, created_at=utcnow())
-        
+
         self._items[saved.click_id] = clone(saved)
-        
+
         return clone(saved)
 
     def insert_many(self, entities: list[CrmClickEntity]) -> list[CrmClickEntity]:
@@ -50,9 +50,7 @@ class InMemoryCrmClickRepository(CallRecorderMixin, CrmClickRepositoryProtocol):
 
     def list_by_platform_id(self, app_platform_id: int, *, limit: int = 100) -> list[CrmClickEntity]:
         self._record("list_by_platform_id", app_platform_id, limit=limit)
-        items = [
-            item for item in self._items.values() if item.app_platform_id == app_platform_id
-        ]
+        items = [item for item in self._items.values() if item.app_platform_id == app_platform_id]
         items.sort(
             key=lambda item: (comparable_datetime(item.created_at), item.click_id),
             reverse=True,
@@ -148,7 +146,7 @@ class InMemoryCrmEventRepository(CallRecorderMixin, CrmEventRepositoryProtocol):
             reverse=True,
         )
         return [clone(item) for item in items[:limit]]
-    
+
     def list_by_click_id(self, click_id: str, *, limit: int = 100) -> list[EventEntity]:
         self._record("list_by_click_id", click_id, limit=limit)
         items: list[EventEntity] = []

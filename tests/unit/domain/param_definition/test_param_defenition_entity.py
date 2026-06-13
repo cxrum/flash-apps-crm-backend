@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from app.domain.exceptions import DomainException
+from app.modules.crm.domain.exceptions import DomainException
 from tests.unit.builders import build_param_definition_entity
 
 
