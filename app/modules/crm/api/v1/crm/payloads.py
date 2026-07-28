@@ -232,22 +232,22 @@ class StatsQueryPayload(TransportPayload):
 
 
 class AuditLogQueryPayload(TransportPayload):
-    app_id: int | None = None
+    app_id: int
     actor_id: int | None = None
     entity_type: str | None = None
     entity_id: int | None = None
 
 
 class ClickLogsQueryPayload(TransportPayload):
-    app_id: int | None = None
+    app_id: int
     click_id: str | None = None
 
 
 class EventLogsQueryPayload(TransportPayload):
-    app_id: int | None = None
+    app_id: int
     click_id: str | None = None
     event_key: str | None = None
 
 
 class RolesQueryPayload(TransportPayload):
-    app_id: int | None = None
+    app_id: int

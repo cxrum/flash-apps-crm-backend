@@ -1,7 +1,7 @@
 import hmac
 from hashlib import sha256
 
-from app.modules.crm.core.config import settings
+from app.core.config import settings
 
 
 class SignatureVerifier:

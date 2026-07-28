@@ -85,7 +85,7 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
                     f"for app_id='{app_platform.app_id}' and click_id='{message.click_id}'"
                 )
 
-            params = self._update_params(
+            self._update_params(
                 uow,
                 click_id=message.click_id,
                 params=message.params,

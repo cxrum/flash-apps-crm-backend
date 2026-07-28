@@ -47,8 +47,14 @@ class StatisticAggregates:
 
         geo = filtered_payload[DefaultParamKeys.GEO.value]
 
+        aggregate_date = message.event_time_utc.date()
+
         current_conversion_statistic = uow.statistics_repo.list_by_filters(
-            event_type=message.event_type, event_key=message.event_key, ddate=datetime.now(UTC).date(), geo=geo
+            app_platform_id=app_platform.platform_id,
+            event_type=message.event_type,
+            event_key=message.event_key,
+            ddate=aggregate_date,
+            geo=geo,
         )
 
         if len(current_conversion_statistic) > 1:
@@ -60,7 +66,7 @@ class StatisticAggregates:
                     StatisticsAggregateEntity(
                         app_platform_id=app_platform.platform_id,
                         geo=geo,
-                        ddate=datetime.now(UTC).date(),
+                        ddate=aggregate_date,
                         event_type=message.event_type,
                         event_key=message.event_key,
                         count=0,
@@ -80,9 +86,10 @@ class StatisticAggregates:
             current_conversion_detailed_statistic = uow.custom_params_statistics_repo.list_by_filters(
                 event_type=message.event_type,
                 event_key=message.event_key,
+                app_platform_id=app_platform.platform_id,
                 param_key=param_key,
                 param_value=serialized_param_value,
-                ddate=datetime.now(UTC).date(),
+                ddate=aggregate_date,
                 geo=geo,
             )
 
@@ -95,7 +102,7 @@ class StatisticAggregates:
                         CustomParamsStatisticsAggregateEntity(
                             app_platform_id=app_platform.platform_id,
                             geo=geo,
-                            ddate=datetime.now(UTC).date(),
+                            ddate=aggregate_date,
                             event_type=message.event_type,
                             event_key=message.event_key,
                             param_key=param_key,

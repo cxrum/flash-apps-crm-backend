@@ -3,10 +3,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from app.core.config import Settings
 from app.modules.analytics.application.ingestion.service import IngestionService
 from app.modules.crm.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.modules.crm.application.sdk.apps.service import AppService
-from app.modules.crm.core.config import Settings
 from app.modules.crm.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.modules.crm.domain.event_bus.service_protocol import IAsyncEventBus
 from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol

@@ -4,13 +4,13 @@ from functools import lru_cache
 from app.core.bus.contract import AsyncEventMessageHandler, IAsyncEventBus
 from app.core.bus.di import AsyncHandlerSubscription
 from app.core.bus.event.bus import InMemoryAsyncEventBus
+from app.modules.analytics.di.infra import get_analytics_uow_factory
+from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol
 from app.modules.analytics.handlers.event.conversion import AsyncConversionHandler
 from app.modules.analytics.handlers.event.event import ConversionEventMessage, MetricEventMessage
 from app.modules.analytics.handlers.event.metric import AsyncMetricHandler
 from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
 from app.modules.analytics.handlers.update_param.update_param import AsyncUpdateParamHandler
-from app.modules.crm.di.dependencies import get_uow_factory
-from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol
 
 SHARED_ANALYTICS_MEMORY_BUS = InMemoryAsyncEventBus()
 
@@ -20,26 +20,26 @@ def get_analytics_event_bus() -> IAsyncEventBus:
 
 
 def build_update_param_handler(
-    uow_factory: UnitOfWorkFactoryProtocol,
+    uow_factory: AnalyticsUnitOfWorkFactoryProtocol,
 ) -> AsyncEventMessageHandler:
     return AsyncUpdateParamHandler(uow_factory)
 
 
 def build_metric_handler(
-    uow_factory: UnitOfWorkFactoryProtocol,
+    uow_factory: AnalyticsUnitOfWorkFactoryProtocol,
 ) -> AsyncEventMessageHandler:
     return AsyncMetricHandler(uow_factory)
 
 
 def build_conversion_handler(
-    uow_factory: UnitOfWorkFactoryProtocol,
+    uow_factory: AnalyticsUnitOfWorkFactoryProtocol,
 ) -> AsyncEventMessageHandler:
     return AsyncConversionHandler(uow_factory)
 
 
 @lru_cache
 def get_event_subscribers() -> tuple[AsyncHandlerSubscription, ...]:
-    uow_factory = get_uow_factory()
+    uow_factory = get_analytics_uow_factory()
 
     return (
         (

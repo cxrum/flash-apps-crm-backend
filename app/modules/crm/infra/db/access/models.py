@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, PrimaryKeyConstraint, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.modules.crm.infra.db.base import Base
+from app.core.db.base import Base
 
 
 class CrmUserAppAccess(Base):

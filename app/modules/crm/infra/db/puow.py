@@ -48,7 +48,7 @@ from app.modules.crm.domain.user_permissions.user_permissions_repository_protoco
     CrmUserPermissionsRepositoryProtocol,
 )
 from app.modules.crm.infra.db.repositories.factory import CrmSqlAlchemyRepositoryFactory
-from app.modules.crm.infra.db.session import SessionFactory
+from app.core.db.session import SessionFactory
 
 # FIXME: Temporary decision. Divide this class to smaller ones for each application service.
 

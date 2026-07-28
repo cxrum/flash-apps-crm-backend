@@ -15,7 +15,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.modules.crm.infra.db.base import Base
+from app.core.db.base import Base
 
 
 class Click(Base):
@@ -24,6 +24,7 @@ class Click(Base):
         CheckConstraint(
             "status IN ('accepted', 'redirected', 'duplicate', 'rejected', 'test')", name="ck_crm_clicks_status"
         ),
+        {"extend_existing": True},
     )
 
     click_id: Mapped[str] = mapped_column(String(64), primary_key=True)
@@ -55,14 +56,18 @@ class Click(Base):
 
 class CurrentParam(Base):
     __tablename__ = "crm_current_params"
-    __table_args__ = (PrimaryKeyConstraint("click_id", "param_key", name="pk_crm_current_params"),)
+    __table_args__ = (
+        PrimaryKeyConstraint("click_id", "param_key", name="pk_crm_current_params"),
+        {"extend_existing": True},
+    )
 
     click_id: Mapped[str] = mapped_column(
         String(64),
         ForeignKey("crm_clicks.click_id", ondelete="CASCADE"),
+        primary_key=True,
         nullable=False,
     )
-    param_key: Mapped[str] = mapped_column(String(120), nullable=False)
+    param_key: Mapped[str] = mapped_column(String(120), primary_key=True, nullable=False)
     value_string: Mapped[str | None] = mapped_column(Text, nullable=True)
     value_number: Mapped[float | None] = mapped_column(Numeric(18, 6), nullable=True)
     value_bool: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
@@ -82,6 +87,7 @@ class Event(Base):
             "event_type IN ('metric', 'conversion', 'param_update', 'system')",
             name="ck_crm_events_type",
         ),
+        {"extend_existing": True},
     )
 
     event_id: Mapped[str] = mapped_column(String(64), primary_key=True)

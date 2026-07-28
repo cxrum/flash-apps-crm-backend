@@ -19,7 +19,7 @@ class EncryptionService(EncryptionServiceProtocol):
 
     def __init__(self, secret: str | None = None) -> None:
         if secret is None:
-            from app.modules.crm.core.config import settings
+            from app.core.config import settings
 
             secret = settings.app_secret
 

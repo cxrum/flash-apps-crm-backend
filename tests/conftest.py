@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.crm.core.config import Settings
-from app.modules.crm.core.config import settings as app_settings
+from app.core.config import Settings
+from app.core.config import settings as app_settings
 from app.modules.crm.domain.event_bus.service_protocol import IAsyncEventBus, IEventBus
 from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol
 from app.modules.crm.infra.event_bus.async_bus.in_memory import InMemoryAsyncEventBus

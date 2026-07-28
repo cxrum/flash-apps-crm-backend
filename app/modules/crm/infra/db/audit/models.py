@@ -4,7 +4,7 @@ from sqlalchemy import BigInteger, DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.modules.crm.infra.db.base import Base
+from app.core.db.base import Base
 
 
 class AuditLog(Base):

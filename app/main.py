@@ -6,11 +6,11 @@ from app.core.bus.di import (
     get_in_memory_exception_event_bus,
     register_exception_event_handlers,
 )
+from app.core.config import settings
 from app.modules.analytics.api.router import api_router as analytics_api_router
 from app.modules.analytics.api.v1.admin.stats import router as analytics_stats_router
 from app.modules.analytics.di.event_bus import get_analytics_event_bus, register_analytics_event_handlers
 from app.modules.crm.api.router import api_router
-from app.modules.crm.core.config import settings
 from app.modules.crm.di.event_bus import register_event_handlers
 from app.modules.crm.di.exception_bus import (
     register_fastapi_exception_handlers,

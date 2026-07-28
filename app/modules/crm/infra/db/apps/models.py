@@ -13,7 +13,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.modules.crm.infra.db.base import Base
+from app.core.db.base import Base
 
 
 class AppUser(Base):
@@ -100,7 +100,10 @@ class AppPlatform(Base):
 
 class Install(Base):
     __tablename__ = "crm_installs"
-    __table_args__ = (UniqueConstraint("app_platform_id", "app_user_id", name="uq_crm_installs_app_user"),)
+    __table_args__ = (
+        UniqueConstraint("app_platform_id", "app_user_id", name="uq_crm_installs_app_user"),
+        {"extend_existing": True},
+    )
 
     install_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     click_id: Mapped[str] = mapped_column(

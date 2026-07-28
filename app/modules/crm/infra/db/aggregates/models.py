@@ -15,7 +15,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.modules.crm.infra.db.base import Base
+from app.core.db.base import Base
 
 
 class StatisticsAggregate(Base):
@@ -25,6 +25,7 @@ class StatisticsAggregate(Base):
             "event_type IN ('metric', 'conversion')",
             name="ck_crm_statistics_aggregate_event_type",
         ),
+        {"extend_existing": True},
     )
     aggregate_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     app_platform_id: Mapped[int] = mapped_column(
@@ -60,6 +61,7 @@ class CustomParamsStatisticsAggregate(Base):
             "event_type IN ('metric', 'conversion')",
             name="ck_crm_params_agg_event_type",
         ),
+        {"extend_existing": True},
     )
 
     aggregate_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)

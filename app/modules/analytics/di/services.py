@@ -8,16 +8,16 @@ from app.modules.analytics.application.ingestion.service import IngestionService
 from app.modules.analytics.application.s2s.protocol import ClickServiceProtocol
 from app.modules.analytics.application.s2s.service import ClickService
 from app.modules.analytics.di.event_bus import get_analytics_event_bus
+from app.modules.analytics.di.infra import get_analytics_uow_factory
+from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol
 from app.modules.crm.application.contracts.ip2location import IP2LocationGatewayProtocol
+from app.modules.crm.di.services import get_currency_client, get_ip2location_gateway, get_signature_sha256_service
 from app.modules.crm.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.modules.crm.domain.signature_protocol import SignatureProtocol
-from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol
-from app.modules.crm.di.infra import get_uow_factory
-from app.modules.crm.di.services import get_currency_client, get_ip2location_gateway, get_signature_sha256_service
 
 
 def get_analytics_click_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
+    uow_factory: AnalyticsUnitOfWorkFactoryProtocol = Depends(get_analytics_uow_factory),
     signature_service: SignatureProtocol = Depends(get_signature_sha256_service),
     ip2location_gateway: IP2LocationGatewayProtocol = Depends(get_ip2location_gateway),
 ) -> ClickServiceProtocol:
@@ -25,7 +25,7 @@ def get_analytics_click_service(
 
 
 def get_analytics_ingestion_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
+    uow_factory: AnalyticsUnitOfWorkFactoryProtocol = Depends(get_analytics_uow_factory),
     event_bus: IAsyncEventBus = Depends(get_analytics_event_bus),
     currency_service: CurrencyConvertorClientProtocol = Depends(get_currency_client),
 ) -> IngestionServiceProtocol:
@@ -33,6 +33,6 @@ def get_analytics_ingestion_service(
 
 
 def get_analytics_logs_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
+    uow_factory: AnalyticsUnitOfWorkFactoryProtocol = Depends(get_analytics_uow_factory),
 ) -> AnalyticsLogsServiceProtocol:
     return AnalyticsLogsService(uow_factory)

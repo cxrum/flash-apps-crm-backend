@@ -5,11 +5,11 @@ import json
 import logging
 
 import pytest
-from app.core.bus.exception_event import ExceptionEvent
 from fastapi import FastAPI, Request
 
+from app.core.bus.exception_event import ExceptionEvent
+from app.core.config import settings
 from app.core.exception import BaseBoundaryException
-from app.modules.crm.core.config import settings
 from app.modules.crm.di.exception_bus import (
     build_boundary_exception_handler,
     get_exception_event_subscribers,

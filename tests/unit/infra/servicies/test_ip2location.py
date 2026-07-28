@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.modules.crm.core.config import Settings
+from app.core.config import Settings
 from app.modules.crm.infra.services import ip2location as ip2location_module
 
 

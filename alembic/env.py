@@ -5,9 +5,10 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-from app.modules.crm.core.config import settings
+from app.core.config import settings
+from app.core.db.base import Base
+from app.modules.analytics.infra.db import models as analytics_models
 from app.modules.crm.infra.db import models
-from app.modules.crm.infra.db.base import Base
 from app.modules.crm.infra.db.crm import models as crm_models
 
 config = context.config

@@ -1,5 +1,8 @@
 from fastapi import Depends
 
+from app.core.bus.contract import IAsyncEventBus
+from app.core.bus.di import get_in_memory_event_bus
+from app.core.config import settings
 from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.modules.crm.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.modules.crm.application.admin.definitions.protocol import DefinitionsServiceProtocol
@@ -22,9 +25,6 @@ from app.modules.crm.application.sdk.ingestion.protocol import IngestionServiceP
 from app.modules.crm.application.sdk.ingestion.service import IngestionService
 from app.modules.crm.application.sdk.s2s.protocol import ClickServiceProtocol
 from app.modules.crm.application.sdk.s2s.service import ClickService
-from app.modules.crm.core.config import settings
-from app.core.bus.contract import IAsyncEventBus
-from app.core.bus.di import get_in_memory_event_bus
 from app.modules.crm.di.infra import get_uow_factory
 from app.modules.crm.domain.currency.currency_convertor_protocol import (
     CurrencyConvertorClientProtocol,

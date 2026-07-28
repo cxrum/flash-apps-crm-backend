@@ -8,11 +8,11 @@ from fastapi.responses import JSONResponse
 from app.core.bus.contract import IAsyncExceptionBus
 from app.core.bus.di import get_in_memory_exception_event_bus
 from app.core.bus.exception_event import ExceptionEventFactory
+from app.core.config import settings
 from app.core.exception import BaseBoundaryException
-from app.modules.crm.core.config import settings
 from app.modules.crm.core.exception_resolver import MessageResolver
-from app.modules.crm.infra.exception_bus.stub import AsyncStubExceptionHandler
 from app.modules.crm.infra.exception import BaseInfraException
+from app.modules.crm.infra.exception_bus.stub import AsyncStubExceptionHandler
 
 logger = logging.getLogger(__name__)
 FastAPIExceptionHandler = Callable[[Request, Any], Awaitable[JSONResponse]]

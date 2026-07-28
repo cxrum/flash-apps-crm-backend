@@ -15,4 +15,3 @@ class S2SClickCommand(FlexibleCommand):
     ip: str | None = None
     user_agent: str | None = None
     params: JsonDict = Field(default_factory=dict)
-    raw_params: str
