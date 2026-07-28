@@ -1,0 +1,806 @@
+# Analytics API Specification And Load Testing Plan
+
+## Scope
+
+This document describes the current analytics API surface mounted by `app.main.app` and a load testing plan for validating ingestion, tracking, S2S click, and admin log-read behavior.
+
+Current mounted analytics routes:
+
+| Method | Path | Owner | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/ingestion/v1/install` | Analytics public API | Create or link an install and emit the install metric event. |
+| `POST` | `/ingestion/v1/events` | Analytics public API | Ingest a batch of metric/conversion SDK events. |
+| `POST` | `/ingestion/v1/params/update` | Analytics public API | Publish an async current-params update for a click. |
+| `GET` | `/ingestion/v1/config` | Analytics public API with CRM app-config port | Return public platform config/secrets by install key. |
+| `POST` | `/ingestion/v1/click` | Analytics S2S API | Accept partner/server click callbacks with signature validation. |
+| `GET` | `/r/{app_code}/{platform}` | Analytics tracking API | Track a redirect click and redirect to the supplied target. |
+| `GET` | `/api/v1/admin/stats` | Analytics admin API | Current stubbed stats endpoint. |
+| `GET` | `/api/v1/admin/stats/logs/clicks` | Analytics admin API | List raw click logs. |
+| `GET` | `/api/v1/admin/stats/logs/events` | Analytics admin API | List raw event logs. |
+
+CRM admin routes remain under `/api/v1/admin/*`.
+
+## Common API Rules
+
+- Request and response content type is JSON except for redirect responses.
+- Public ingestion/S2S payload models allow extra fields. Several command fields are currently required by application commands even when not declared on transport payload classes; clients should send them explicitly.
+- Datetimes are ISO 8601 strings with timezone offsets, for example `2026-07-28T12:00:00+00:00`.
+- Public ingestion endpoints are asynchronous acceptance endpoints. They should be treated as at-least-once requests by clients.
+- Error responses are produced by the shared FastAPI exception handler with the shape:
+
+```json
+{
+  "detail": "Human readable error"
+}
+```
+
+In debug mode, the response can also include exception event fields such as `exception_type`, `exception_message`, and `context`.
+
+## Public Ingestion API
+
+### POST `/ingestion/v1/install`
+
+Creates or links a click/install and stores an `install` metric event. Emits the saved event to the analytics async event bus after persistence.
+
+Status: `202 Accepted`
+
+Request body:
+
+```json
+{
+  "install_key": "ios-install-key",
+  "idempotency_key": "install-evt-001",
+  "click_id": "optional-existing-click-id",
+  "params": {
+    "utm_source": "newsletter",
+    "campaign": "summer"
+  },
+  "device": {
+    "os_name": "iOS",
+    "os_version": "18.5",
+    "device_brand": "Apple",
+    "device_model": "iPhone",
+    "app_version": "1.2.3",
+    "sdk_version": "0.9.0"
+  }
+}
+```
+
+Required fields:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `install_key` | string | Resolves CRM app platform. |
+| `idempotency_key` | string | Used as install event id. Transport accepts this as an extra field. |
+| `device` | object | Device metadata object. |
+
+Optional fields:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `click_id` | string/null | Existing click to link. If absent, a synthetic click is created. |
+| `params` | object | Raw click/install params. Defaults to `{}`. |
+
+Response body:
+
+Current implementation returns a JSON-encoded string containing:
+
+```json
+{
+  "click_id": "generated-or-linked-click-id",
+  "app_user_id": 123
+}
+```
+
+Failure cases:
+
+| Status | Condition |
+| --- | --- |
+| `400` | Invalid `install_key`; invalid event values. |
+| `404` | Referenced click not found in dependent flows. |
+| `422` | Pydantic transport validation failure. |
+
+### POST `/ingestion/v1/events`
+
+Ingests one or more SDK metric/conversion events for an existing click.
+
+Status: `202 Accepted`
+
+Request body:
+
+```json
+{
+  "install_key": "ios-install-key",
+  "click_id": "clk_123",
+  "idempotency_key": "batch-001",
+  "events": [
+    {
+      "idempotency_key": "evt-001",
+      "type": "metric",
+      "key": "signup",
+      "event_time": "2026-07-28T12:00:00+00:00",
+      "params": {
+        "screen": "onboarding"
+      }
+    },
+    {
+      "idempotency_key": "evt-002",
+      "type": "conversion",
+      "key": "purchase",
+      "event_time": "2026-07-28T12:00:05+00:00",
+      "amount": 9.99,
+      "currency": "USD",
+      "params": {
+        "sku": "starter_pack"
+      }
+    }
+  ]
+}
+```
+
+Required fields:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `install_key` | string | Resolves CRM app platform. |
+| `click_id` | string | Must reference an existing click for that platform. |
+| `idempotency_key` | string | Required by command model. |
+| `events` | array | Minimum length `1`. |
+| `events[].idempotency_key` | string | Required by command model and used as event id. |
+| `events[].type` | `"metric"` or `"conversion"` | Selects event builder. |
+| `events[].key` | string | Metric or conversion key. |
+
+Optional event fields:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `events[].event_time` | datetime/null | Defaults to server time. |
+| `events[].amount` | number/null | When set on conversion, creates revenue event. |
+| `events[].currency` | string/null | Required with revenue amount. |
+| `events[].params` | object | Defaults to `{}`. |
+
+Response body: empty.
+
+Failure cases:
+
+| Status | Condition |
+| --- | --- |
+| `400` | Unsupported event type; missing revenue amount/currency; invalid event payload. |
+| `404` | Click not found or app/platform not found. |
+| `422` | Pydantic transport validation failure. |
+
+### POST `/ingestion/v1/params/update`
+
+Publishes an async current-params update event for an existing click.
+
+Status: `202 Accepted`
+
+Request body:
+
+```json
+{
+  "click_id": "clk_123",
+  "idempotency_key": "params-001",
+  "params": {
+    "utm_source": "newsletter",
+    "level": 7
+  },
+  "event_time": "2026-07-28T12:05:00+00:00"
+}
+```
+
+Required fields:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `click_id` | string | Must reference an existing click. |
+| `idempotency_key` | string | Required by command model. |
+
+Optional fields:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `params` | object | Defaults to `{}`. |
+| `event_time` | datetime/null | Defaults to server time. |
+
+Response body: empty.
+
+### GET `/ingestion/v1/config`
+
+Returns public app platform configuration by install key.
+
+Query parameters:
+
+| Name | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `install_key` | string | No in transport, yes in command | Current command model requires it. |
+
+Example:
+
+```http
+GET /ingestion/v1/config?install_key=ios-install-key
+```
+
+Status: `200 OK`
+
+Response body:
+
+Current implementation returns a JSON-encoded string containing:
+
+```json
+{
+  "version_control": {
+    "required": false,
+    "current_version": "1.2.3",
+    "min_version": null,
+    "max_version": null,
+    "allowed_versions": null,
+    "blocked_versions": null
+  },
+  "platform_configurations": [
+    {
+      "code": "public_key",
+      "value": "..."
+    }
+  ]
+}
+```
+
+## S2S Click API
+
+### POST `/ingestion/v1/click`
+
+Accepts signed partner/server click callbacks. The service validates the supplied signature against `raw_params` and the platform SDK secret.
+
+Status: `202 Accepted`
+
+Request body:
+
+```json
+{
+  "app_code": "demo-app",
+  "platform": "ios",
+  "signature": "hex-encoded-hmac",
+  "raw_params": "campaign=summer&utm_source=partner",
+  "click_id": "partner-click-id",
+  "redirect_url": "https://example.com/landing",
+  "params": {
+    "campaign": "summer",
+    "utm_source": "partner"
+  }
+}
+```
+
+Required fields:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `app_code` | string | Resolves CRM app by slug. |
+| `platform` | string | Resolves app platform. |
+| `signature` | string | Hex signature. Transport accepts this as an extra field. |
+| `raw_params` | string | Exact raw signed parameter string. Transport accepts this as an extra field. |
+
+Optional fields:
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `click_id` | string/null | Source click id used to mark duplicate/accepted status. |
+| `redirect_url` | string/null | Stored as click redirect target. |
+| `params` | object | Stored as raw query and normalized against param definitions. |
+| `ip` | string/null | Body accepts it, but endpoint overwrites with request client IP when available. |
+| `user_agent` | string/null | Body accepts it, but endpoint overwrites with `User-Agent` header when available. |
+
+Response body:
+
+Current implementation returns a JSON-encoded string containing:
+
+```json
+{
+  "click_id": "generated-click-id"
+}
+```
+
+Failure cases:
+
+| Status | Condition |
+| --- | --- |
+| `401` | Signature mismatch. |
+| `404` | Unknown app code or platform not configured. |
+| `422` | Pydantic transport validation failure. |
+
+## Tracking Redirect API
+
+### GET `/r/{app_code}/{platform}`
+
+Tracks a click and redirects to the supplied target URL.
+
+Path parameters:
+
+| Name | Type | Notes |
+| --- | --- | --- |
+| `app_code` | string | Resolves CRM app by slug. |
+| `platform` | string | Resolves app platform. |
+
+Query parameters:
+
+| Name | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `redirect_url` | string | Yes | Destination URL returned in the redirect response. |
+| `idempotency_key` | string | No | Accepted by command, not currently used in click persistence. |
+| Any other query param | string | No | Stored as click raw query and normalized against param definitions. |
+
+Example:
+
+```http
+GET /r/demo-app/ios?redirect_url=https%3A%2F%2Fexample.com%2Flanding&utm_source=ad
+```
+
+Status: `308 Permanent Redirect`
+
+Response headers:
+
+| Header | Notes |
+| --- | --- |
+| `Location` | Equal to the supplied `redirect_url`. |
+
+Failure cases:
+
+| Status | Condition |
+| --- | --- |
+| `404` | Unknown app code or platform not configured. |
+| `422` | Missing required `redirect_url`. |
+
+## Admin Stats And Logs API
+
+Admin endpoints require CRM user resolution through `resolve_user` and permission checks for raw logs.
+
+### GET `/api/v1/admin/stats`
+
+Current behavior: builds a command from query params and returns a stub response.
+
+Query parameters:
+
+| Name | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `app_id` | integer | No | Filter scope. |
+| `platform` | string | No | Filter scope. |
+| `group_by` | string | No | Intended aggregation grouping. |
+| `limit` | integer | No | `1..1000`. |
+| `offset` | integer | No | `>=0`. |
+| `search` | string | No | Generic search. |
+| `start_at` | datetime | No | Time filter. |
+| `end_at` | datetime | No | Time filter. |
+
+### GET `/api/v1/admin/stats/logs/clicks`
+
+Lists click logs.
+
+Query parameters:
+
+| Name | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `app_id` | integer | Yes in command | Transport allows null, command requires it. |
+| `click_id` | string | No | Exact click filter. |
+| `limit` | integer | No | `1..1000`. |
+| `offset` | integer | No | `>=0`. |
+| `search` | string | No | Generic search. |
+| `start_at` | datetime | No | Time filter. |
+| `end_at` | datetime | No | Time filter. |
+
+Response body:
+
+```json
+{
+  "clicks": [
+    {
+      "click_id": "clk_123",
+      "app_platform_id": 10,
+      "status": "accepted",
+      "raw_query": {
+        "utm_source": "partner"
+      },
+      "ip_address": "203.0.113.10",
+      "user_agent": "Mozilla/5.0",
+      "geo": null,
+      "referrer": null,
+      "source": null,
+      "redirect_target": "https://example.com/landing",
+      "normalized_params": {
+        "utm_source": "partner"
+      },
+      "created_at": "2026-07-28T12:00:00+00:00"
+    }
+  ]
+}
+```
+
+### GET `/api/v1/admin/stats/logs/events`
+
+Lists raw event logs.
+
+Query parameters:
+
+| Name | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `app_id` | integer | Yes in command | Transport allows null, command requires it. |
+| `click_id` | string | No | Exact click filter. |
+| `event_key` | string | No | Exact event-key filter. |
+| `limit` | integer | No | `1..1000`. |
+| `offset` | integer | No | `>=0`. |
+| `search` | string | No | Generic search. |
+| `start_at` | datetime | No | Time filter. |
+| `end_at` | datetime | No | Time filter. |
+
+Response body:
+
+```json
+{
+  "events": [
+    {
+      "event_id": "evt_123",
+      "click_id": "clk_123",
+      "event_type": "metric",
+      "event_key": "signup",
+      "event_time_utc": "2026-07-28T12:00:00+00:00",
+      "app_user_id": 42,
+      "amount": null,
+      "currency": null,
+      "amount_usd": null,
+      "payload": {
+        "screen": "onboarding"
+      },
+      "created_at": "2026-07-28T12:00:01+00:00"
+    }
+  ]
+}
+```
+
+## Compatibility Notes And Known Contract Edges
+
+- `POST /ingestion/v1/install`, `GET /ingestion/v1/config`, and `POST /ingestion/v1/click` currently return JSON strings from endpoint handlers instead of returning response models directly. Public behavior should be preserved until a separate API cleanup is planned.
+- `idempotency_key`, `signature`, and `raw_params` are currently accepted through `extra="allow"` transport models in some routes. API clients should still treat them as required where the command model requires them.
+- `GET /api/v1/admin/stats` is stubbed. Load tests should include it only as a smoke route until real aggregation behavior is implemented.
+- Redirect tracking uses `308 Permanent Redirect`. Load clients must not automatically follow redirects when measuring API latency unless a separate end-to-end landing-page test is intended.
+
+## Load Testing Goals
+
+Primary goals:
+
+- Validate ingestion throughput for install, event batch, params update, S2S click, and redirect click flows.
+- Validate that async bus queueing and downstream handlers keep up under expected burst traffic.
+- Establish baseline latency and database write capacity before production traffic.
+- Confirm admin raw-log reads remain usable while ingestion writes are active.
+- Detect duplicate, idempotency, and signature-validation edge cases under concurrency.
+
+Non-goals for the first pass:
+
+- Testing third-party landing pages after redirect.
+- Testing external currency-rate or IP-location provider capacity beyond configured mocks/stubs or agreed sandbox endpoints.
+- Proving table rename/data-migration capacity.
+
+## Test Environment Requirements
+
+- Run against an isolated staging stack with production-like PostgreSQL and the same async worker count intended for deployment.
+- Disable destructive cleanup against shared environments. Seed dedicated app/platform/test users with unique prefixes.
+- Use realistic indexes and migrations.
+- Set logging level and sampling so request logs do not become the bottleneck.
+- Ensure currency conversion and IP geolocation dependencies are stable. Prefer deterministic sandbox responses or local fakes for baseline load.
+- Capture application, database, and host metrics for every run.
+
+## Test Data
+
+Minimum seed data:
+
+| Data | Volume | Notes |
+| --- | ---: | --- |
+| Apps | 3 | Distinct `code_slug` values. |
+| Platforms per app | 2 | Example: `ios`, `android`; each needs `install_key` and SDK secret. |
+| Param definitions | 20 per app | Mix of string, integer, float, boolean, date, groupable/filterable. |
+| Existing clicks | 1,000,000 optional for high-volume runs | Needed for event and params-update flows. |
+| Existing installs | 500,000 optional | Needed for app-user enrichment. |
+| Existing events | 10,000,000 optional | Needed for admin raw-log pagination tests. |
+| CRM admin users | 5 | Include user with raw-log permission. |
+
+Synthetic data constraints:
+
+- Use deterministic IDs: `lt-click-{run_id}-{n}`, `lt-event-{run_id}-{n}`, `lt-install-{run_id}-{n}`.
+- Keep event keys distributed across at least 10 metric keys and 5 conversion keys.
+- Mix event batch sizes: 1, 5, 10, 25, and 50 events.
+- Use a realistic params payload size distribution: p50 5 keys, p95 25 keys, p99 100 keys.
+
+## Workload Mix
+
+Baseline mixed workload:
+
+| Flow | Share |
+| --- | ---: |
+| Redirect click `GET /r/{app_code}/{platform}` | 35% |
+| S2S click `POST /ingestion/v1/click` | 20% |
+| Install `POST /ingestion/v1/install` | 15% |
+| Events `POST /ingestion/v1/events` | 20% |
+| Params update `POST /ingestion/v1/params/update` | 5% |
+| Config `GET /ingestion/v1/config` | 3% |
+| Admin logs reads | 2% |
+
+Event-type mix inside `/events`:
+
+| Event Type | Share |
+| --- | ---: |
+| Metric | 70% |
+| Non-revenue conversion | 20% |
+| Revenue conversion | 10% |
+
+Negative traffic mix for resilience runs:
+
+| Case | Share of total traffic |
+| --- | ---: |
+| Invalid S2S signature | 1% |
+| Unknown app/platform | 0.25% |
+| Missing/invalid payload fields | 0.25% |
+| Duplicate idempotency keys | 2% of event requests |
+
+## Load Profiles
+
+### 1. Smoke
+
+- Duration: 5 minutes.
+- Rate: 1 RPS per public route, 1 admin request every 10 seconds.
+- Purpose: validate credentials, seed data, signatures, redirect handling, and metrics collection.
+- Success: no unexpected 5xx, route-level p95 below 250 ms excluding admin logs.
+
+### 2. Baseline
+
+- Duration: 30 minutes.
+- Rate: expected average production traffic.
+- Ramp: 5 minutes up, 20 minutes steady, 5 minutes down.
+- Purpose: establish normal latency, DB write rate, bus queue depth, and CPU/memory baseline.
+- Success: p95 public route latency below 300 ms, p99 below 750 ms, error rate below 0.1%.
+
+### 3. Peak
+
+- Duration: 45 minutes.
+- Rate: 3x expected average production traffic.
+- Ramp: 10 minutes up, 30 minutes steady, 5 minutes down.
+- Purpose: validate planned peak capacity.
+- Success: p95 public route latency below 500 ms, p99 below 1.5 s, error rate below 0.5%, async backlog drains within 5 minutes after ramp down.
+
+### 4. Spike
+
+- Duration: 15 minutes.
+- Rate: jump from baseline to 10x baseline for 2 minutes, then back to baseline.
+- Purpose: validate burst handling and queue recovery.
+- Success: no process restarts, no unbounded queue growth, backlog drains within 10 minutes.
+
+### 5. Soak
+
+- Duration: 4 to 8 hours.
+- Rate: expected average production traffic.
+- Purpose: detect memory leaks, connection pool exhaustion, slow query accumulation, and log/storage pressure.
+- Success: stable memory after warmup, no connection leaks, no progressive latency drift.
+
+### 6. Admin Read Contention
+
+- Duration: 30 minutes.
+- Rate: baseline ingestion plus admin logs at 1, 5, and 10 RPS.
+- Purpose: verify raw log queries do not starve ingestion writes.
+- Success: ingestion p95 increases by less than 20% from baseline and admin log p95 remains below 1.5 s for indexed filters.
+
+## Scenario Details
+
+### Redirect Click Scenario
+
+Request:
+
+```http
+GET /r/{app_code}/{platform}?redirect_url={encoded_url}&utm_source={source}&campaign={campaign}
+```
+
+Client behavior:
+
+- Disable automatic redirect following.
+- Treat `308` as success.
+- Record `Location` header.
+- Vary user agent and source IP headers only if the deployed stack trusts forwarded headers.
+
+Assertions:
+
+- Status is `308`.
+- `Location` equals the supplied target.
+- Click appears in raw click logs after eventual consistency window.
+
+### S2S Click Scenario
+
+Request:
+
+```http
+POST /ingestion/v1/click
+```
+
+Generate:
+
+- Canonical `raw_params` string.
+- Matching `params` object.
+- Hex signature using the seeded platform SDK secret and the same signing algorithm as the service.
+
+Assertions:
+
+- Status is `202`.
+- Response JSON string contains `click_id`.
+- Invalid-signature requests return `401` and do not write accepted clicks.
+
+### Install Scenario
+
+Request:
+
+```http
+POST /ingestion/v1/install
+```
+
+Assertions:
+
+- Status is `202`.
+- Response JSON string contains `click_id`.
+- Install metric event is visible in raw event logs after async/event processing.
+
+### Batch Events Scenario
+
+Request:
+
+```http
+POST /ingestion/v1/events
+```
+
+Assertions:
+
+- Status is `202`.
+- Duplicate event ids are not inserted twice.
+- Revenue events store `amount`, `currency`, and USD conversion fields.
+- Metrics and conversions update aggregate tables after handler processing.
+
+### Params Update Scenario
+
+Request:
+
+```http
+POST /ingestion/v1/params/update
+```
+
+Assertions:
+
+- Status is `202`.
+- Current params reflect the update after async handler processing.
+- Invalid param values raise expected domain/application errors.
+
+### Admin Logs Scenario
+
+Requests:
+
+```http
+GET /api/v1/admin/stats/logs/clicks?app_id={app_id}&limit=100&offset={offset}
+GET /api/v1/admin/stats/logs/events?app_id={app_id}&event_key={key}&limit=100&offset={offset}
+```
+
+Assertions:
+
+- Status is `200`.
+- Response shape contains `clicks` or `events`.
+- Pagination does not duplicate rows across adjacent offsets in a stable dataset.
+
+## Metrics To Capture
+
+Application:
+
+- Request count, latency p50/p90/p95/p99, status codes, and route-level throughput.
+- Exception count by exception type and route.
+- Async event bus queue depth, publish rate, handler success/failure count, and backlog drain time.
+- Worker count, worker restarts, and handler latency.
+
+Database:
+
+- Inserts/sec by analytics tables: clicks, installs, events, current params, aggregates.
+- Query latency for raw click/event logs.
+- Connection pool active/idle/wait counts.
+- Lock waits, deadlocks, slow queries, and transaction duration.
+- CPU, memory, disk I/O, WAL volume, and replication lag if applicable.
+
+Host/container:
+
+- CPU, memory, network I/O, restart count, file descriptors.
+- Application log throughput and dropped logs.
+
+Client:
+
+- Generated RPS, successful RPS, failed RPS.
+- Client-side latency and timeout count.
+- Payload size distribution.
+
+## Success Criteria
+
+Recommended initial gates:
+
+| Metric | Gate |
+| --- | --- |
+| Public ingestion p95 | `< 300 ms` baseline, `< 500 ms` peak |
+| Public ingestion p99 | `< 750 ms` baseline, `< 1.5 s` peak |
+| Redirect p95 | `< 150 ms` baseline, `< 300 ms` peak, measured without following redirect |
+| Admin logs p95 | `< 1.5 s` with indexed filters |
+| 5xx rate | `< 0.1%` baseline, `< 0.5%` peak |
+| Async backlog | Stable during baseline; drains within agreed window after spike |
+| DB connection waits | Near zero during baseline |
+| Data correctness | No missing accepted writes in sampled reconciliation |
+
+## Tooling Recommendation
+
+Use `k6` for HTTP load because it handles mixed scenarios, thresholds, staged traffic, and redirect behavior cleanly. Use a small Python seeding/reconciliation script for database fixtures and post-run correctness checks.
+
+Suggested repository layout:
+
+```text
+tests/load/
+  analytics.k6.js
+  fixtures/
+    seed_analytics_load_data.py
+    reconcile_analytics_load_run.py
+  README.md
+```
+
+Suggested k6 options:
+
+```javascript
+export const options = {
+  scenarios: {
+    mixed_baseline: {
+      executor: "ramping-arrival-rate",
+      startRate: 10,
+      timeUnit: "1s",
+      preAllocatedVUs: 200,
+      maxVUs: 1000,
+      stages: [
+        { duration: "5m", target: 100 },
+        { duration: "20m", target: 100 },
+        { duration: "5m", target: 0 }
+      ]
+    }
+  },
+  thresholds: {
+    http_req_failed: ["rate<0.001"],
+    "http_req_duration{route:redirect}": ["p(95)<150"],
+    "http_req_duration{route:ingestion}": ["p(95)<300"],
+    "http_req_duration{route:admin_logs}": ["p(95)<1500"]
+  }
+};
+```
+
+## Execution Checklist
+
+Before test:
+
+- Confirm test target base URL and environment isolation.
+- Apply latest migrations.
+- Seed app/platform/install keys, SDK secrets, admin users, param definitions, clicks, installs, and events.
+- Verify S2S signature generation against one known-good request.
+- Verify redirects are not followed by the load client.
+- Confirm metrics dashboards and log filters are active.
+
+During test:
+
+- Watch p95/p99 latency by route.
+- Watch DB pool wait time, slow queries, and lock waits.
+- Watch async bus queue depth and handler failures.
+- Record deployment version, worker count, DB size, and test profile.
+
+After test:
+
+- Run sampled reconciliation for clicks, installs, events, current params, and aggregates.
+- Compare route latency and error budgets to gates.
+- Identify top slow SQL queries and routes.
+- Save k6 summary, app metrics snapshot, DB metrics snapshot, and reconciliation report.
+- File follow-up issues for bottlenecks with route, profile, observed limit, and proposed fix.
+
+## Open Questions Before Finalizing Load Numbers
+
+- Expected average and peak production RPS per route.
+- Expected event batch-size distribution from SDK clients.
+- Whether IP geolocation and currency conversion will use real external services, sandbox services, or deterministic local fakes under load.
+- Exact signing algorithm and canonicalization rules for S2S `raw_params`.
+- Required retention and pagination strategy for raw log queries at production table sizes.

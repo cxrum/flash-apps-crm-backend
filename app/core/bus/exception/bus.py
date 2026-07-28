@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from app.core.bus.contract import AsyncEventMessageHandler, EventMessageHandler, IAsyncEventBus, IAsyncExceptionBus
-from app.core.bus.type import ExceptionEvent
+from app.core.bus.exception_event import ExceptionEvent
 from app.core.exception import BusException
 
 

@@ -7,7 +7,7 @@ from typing import Any, AsyncContextManager, Protocol
 from app.core.bus.contract import AsyncEventMessageHandler, IAsyncEventBus, IAsyncExceptionBus
 from app.core.bus.event.bus import InMemoryAsyncEventBus
 from app.core.bus.exception.bus import AsyncExceptionBusAdapter
-from app.core.bus.type import ExceptionEvent
+from app.core.bus.exception_event import ExceptionEvent
 from app.core.logger.handler import AsyncLoggerExceptionHandler
 
 
@@ -93,10 +93,7 @@ def build_application_lifespan(
             event_handlers_registrar=event_handlers_registrar,
             exception_handlers_registrar=exception_handlers_registrar,
         )
-        extra_buses = [
-            registrar(async_memory_bus=factory())
-            for factory, registrar in extra_event_buses
-        ]
+        extra_buses = [registrar(async_memory_bus=factory()) for factory, registrar in extra_event_buses]
 
         await exception_bus.start()
         await event_bus.start()

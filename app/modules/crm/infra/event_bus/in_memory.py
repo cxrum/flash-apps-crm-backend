@@ -2,7 +2,7 @@ from collections.abc import Sequence
 
 from app.core.bus.contract import EventMessageHandler, IEventBus, IMessageQueue
 from app.core.bus.type import EventMessage
-from app.core.exception import BusException
+from app.modules.crm.infra.exception import BaseInfraException
 
 
 class InMemoryMessageQueue(IMessageQueue):
@@ -12,7 +12,7 @@ class InMemoryMessageQueue(IMessageQueue):
 
     def enqueue(self, message: EventMessage) -> None:
         if len(self._messages) >= self._maxsize:
-            raise BusException("Message queue is full")
+            raise BaseInfraException("Message queue is full")
         self._messages.append(message)
 
     def dequeue(self) -> EventMessage | None:
@@ -44,7 +44,7 @@ class InMemoryEventBus(IEventBus):
         normalized_event_name = self._normalize_event_name(event_name)
         handlers = self._subscribers.get(normalized_event_name)
         if handlers is None or handler not in handlers:
-            raise BusException("Handler is not registered for this event")
+            raise BaseInfraException("Handler is not registered for this event")
         handlers.remove(handler)
         if not handlers:
             del self._subscribers[normalized_event_name]
@@ -52,22 +52,21 @@ class InMemoryEventBus(IEventBus):
     def publish(self, message: EventMessage) -> None:
         normalized_message = self._normalize_message(message)
         self._message_queue.enqueue(normalized_message)
-        self._dispatch()
+        self._dispatch(self._normalize_message(normalized_message))
 
     def publish_many(self, messages: Sequence[EventMessage]) -> None:
         for message in messages:
             self.publish(message)
 
-    def _dispatch(self) -> None:
-        for event in self._message_queue.drain():
-            for handler in tuple(self._subscribers.get(event.name, ())):
-                handler.handle(event)
+    def _dispatch(self, event: EventMessage) -> None:
+        for handler in tuple(self._subscribers.get(event.name, ())):
+            handler.handle(event)
 
     @staticmethod
     def _normalize_event_name(event_name: str) -> str:
         normalized_event_name = event_name.strip()
         if not normalized_event_name:
-            raise BusException("Event name is required")
+            raise BaseInfraException("Event name is required")
         return normalized_event_name
 
     def _normalize_message(self, message: EventMessage) -> EventMessage:

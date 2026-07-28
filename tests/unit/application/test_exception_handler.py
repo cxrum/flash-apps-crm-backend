@@ -5,7 +5,6 @@ import json
 import logging
 
 import pytest
-from app.core.bus.exception.stub import AsyncStubExceptionHandler
 from app.core.bus.exception_event import ExceptionEvent
 from fastapi import FastAPI, Request
 
@@ -18,6 +17,7 @@ from app.modules.crm.di.exception_bus import (
 )
 from app.modules.crm.domain.event_bus.entity import DomainEventMessage
 from app.modules.crm.infra.exception import BaseInfraException
+from app.modules.crm.infra.exception_bus.stub import AsyncStubExceptionHandler
 
 
 def build_exception_event(**payload_overrides: object) -> ExceptionEvent:

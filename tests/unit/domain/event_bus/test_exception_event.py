@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from app.core.bus.exception_event import ExceptionEvent
 
-from app.modules.crm.domain.exceptions import DomainException
+from app.core.exception import BaseBoundaryException
 
 
 def build_exception_event(**payload_overrides: object) -> ExceptionEvent:
@@ -38,23 +38,38 @@ def test_exception_event_context_returns_copy() -> None:
 
 
 @pytest.mark.parametrize(
-    ("payload_overrides", "property_name", "message"),
+    ("payload_overrides", "property_name", "message", "message_key"),
     [
-        ({"exception_type": 123}, "exception_type", "ExceptionEvent.exception_type must be str"),
+        (
+            {"exception_type": 123},
+            "exception_type",
+            "ExceptionEvent.exception_type must be str",
+            "domain.event_bus.exception_event.type.invalid",
+        ),
         (
             {"exception_message": ["boom"]},
             "exception_message",
             "ExceptionEvent.exception_message must be str",
+            "domain.event_bus.exception_event.message.invalid",
         ),
-        ({"context": ["sdk"]}, "context", "ExceptionEvent.context must be dict"),
+        (
+            {"context": ["sdk"]},
+            "context",
+            "ExceptionEvent.context must be dict",
+            "domain.event_bus.exception_event.context.invalid",
+        ),
     ],
 )
 def test_exception_event_validates_payload_types(
     payload_overrides: dict[str, object],
     property_name: str,
     message: str,
+    message_key: str,
 ) -> None:
     event = build_exception_event(**payload_overrides)
 
-    with pytest.raises(DomainException, match=message):
+    with pytest.raises(BaseBoundaryException, match=message) as exc_info:
         getattr(event, property_name)
+
+    assert exc_info.value.code == 400
+    assert exc_info.value.message_key == message_key

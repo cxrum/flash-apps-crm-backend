@@ -3,7 +3,7 @@ import logging
 from app.core.bus.contract import AsyncEventMessageHandler
 from app.core.bus.exception_event import ExceptionEvent
 from app.core.bus.type import EventMessage
-from app.modules.crm.infra.exception import BaseInfraException
+from app.core.exception import BusException
 
 logger = logging.getLogger("app.application.exception_bus.handlers.stub")
 
@@ -11,9 +11,7 @@ logger = logging.getLogger("app.application.exception_bus.handlers.stub")
 class AsyncStubExceptionHandler(AsyncEventMessageHandler):
     async def handle(self, message: EventMessage) -> None:
         if not isinstance(message, ExceptionEvent):
-            raise BaseInfraException(
-                f"AsyncStubExceptionHandler expected ExceptionEvent, got {type(message).__name__}"
-            )
+            raise BusException(f"AsyncStubExceptionHandler expected ExceptionEvent, got {type(message).__name__}")
 
         logger.error(
             "Stub exception handler received %s: %s",

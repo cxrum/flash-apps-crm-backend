@@ -1,11 +1,13 @@
 from typing import Any, Dict
 
 from app.core.exception import BaseBoundaryException
+from app.modules.crm.core.exception_resolver import MessageResolver
 
 
 class DomainException(BaseBoundaryException):
     def __init__(self, message_key: str = "internal", context: Dict[str, Any] = {}, code: int = 500):
         super().__init__(message_key, context, code)
+        self.args = (MessageResolver().resolve(message_key, context),)
 
 
 class AppNotFoundError(DomainException):

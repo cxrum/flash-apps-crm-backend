@@ -602,7 +602,7 @@ def test_async_conversion_handler_rejects_invalid_value_for_param_definition() -
             ],
         )
 
-        with pytest.raises(DomainException, match="domain.param_definition.value.invalid"):
+        with pytest.raises(DomainException, match="Param 'attempt' expected integer, got 'not-an-integer'"):
             await handler.handle(
                 _build_conversion_message(
                     click_id=click.click_id,

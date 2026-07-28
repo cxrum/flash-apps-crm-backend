@@ -3,7 +3,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Protocol
 
-from app.core.bus.type import EventMessage, ExceptionEvent
+from app.core.bus.exception_event import ExceptionEvent
+from app.core.bus.type import EventMessage
 
 
 class EventMessageHandler(Protocol):

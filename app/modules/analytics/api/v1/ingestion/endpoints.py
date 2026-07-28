@@ -11,9 +11,9 @@ from app.modules.analytics.api.v1.ingestion.payloads import (
 )
 from app.modules.analytics.application.ingestion.mappers import SdkIngestionCommandMapper
 from app.modules.analytics.application.ingestion.protocol import IngestionServiceProtocol
+from app.modules.analytics.di.services import get_analytics_ingestion_service
 from app.modules.crm.application.sdk.apps.protocol import AppServiceProtocol
 from app.modules.crm.core.utils.general_mapper import GeneralMapper
-from app.modules.analytics.di.services import get_analytics_ingestion_service
 from app.modules.crm.di.services import get_sdk_app_service
 
 router = APIRouter()

@@ -1,7 +1,8 @@
 import logging
 
 from app.core.bus.contract import AsyncEventMessageHandler
-from app.core.bus.type import EventMessage, ExceptionEvent
+from app.core.bus.exception_event import ExceptionEvent
+from app.core.bus.type import EventMessage
 from app.core.exception import BusException
 
 logger = logging.getLogger(__name__)
