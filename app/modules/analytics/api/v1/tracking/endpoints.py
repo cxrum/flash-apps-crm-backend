@@ -1,16 +1,15 @@
 from __future__ import annotations
 
-from typing import Annotated, Any
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import RedirectResponse
 
 from app.modules.analytics.api.v1.tracking.payloads import TrackingRedirectQueries
-from app.modules.crm.api.v1.stubs import build_stub_response
-from app.modules.crm.application.sdk.s2s.protocol import ClickServiceProtocol
-from app.modules.crm.application.tracking.mappers import TrackingCommandMapper
+from app.modules.analytics.application.s2s.protocol import ClickServiceProtocol
+from app.modules.analytics.application.tracking.mappers import TrackingCommandMapper
 from app.modules.crm.core.utils.general_mapper import GeneralMapper as GeneralMapper
-from app.modules.crm.di.services import get_s2s_service
+from app.modules.analytics.di.services import get_analytics_click_service
 
 router = APIRouter()
 
@@ -22,7 +21,7 @@ async def tracking_redirect(
     platform: str,
     redirect_url: Annotated[str, Query()],
     idempotency_key: Annotated[str | None, Query()] = None,
-    s2s_service: ClickServiceProtocol = Depends(get_s2s_service),
+    s2s_service: ClickServiceProtocol = Depends(get_analytics_click_service),
 ) -> RedirectResponse:
 
     user_agent = request.headers.get("user-agent")

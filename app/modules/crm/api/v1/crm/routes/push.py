@@ -2,10 +2,10 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends, Query, status
 
-from app.modules.analytics.api.v1.ingestion.payloads import SdkPushRegisterPayload
 from app.modules.crm.api.v1.crm.payloads import (
     AppFilterQueryPayload,
     CreatePushCampaignPayload,
+    SdkPushRegisterPayload,
     UpdatePushCampaignPayload,
 )
 from app.modules.crm.api.v1.stubs import build_stub_response

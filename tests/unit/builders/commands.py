@@ -46,15 +46,15 @@ from app.modules.crm.application.sdk.apps.commands import (
     ListAppPlatformsCommand,
     ListAppsCommand,
 )
-from app.modules.crm.application.sdk.ingestion.commands import (
+from app.modules.analytics.application.ingestion.commands import (
     SdkDeviceValueCommand,
     SdkEventCommand,
     SdkEventsCommand,
     SdkInstallCommand,
     SdkParamsUpdateCommand,
 )
-from app.modules.crm.application.sdk.s2s.commands import S2SClickCommand
-from app.modules.crm.application.tracking.entities import TrackingRedirectCommand
+from app.modules.analytics.application.s2s.commands import S2SClickCommand
+from app.modules.analytics.application.tracking.entities import TrackingRedirectCommand
 
 CommandT = TypeVar("CommandT", bound=FlexibleCommand)
 

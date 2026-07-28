@@ -52,6 +52,25 @@ class UpdateAppPlatformPayload(TransportPayload):
     is_active: bool | None = None
 
 
+class SdkDevicePayload(TransportPayload):
+    os_name: str | None = None
+    os_version: str | None = None
+    device_brand: str | None = None
+    device_model: str | None = None
+    app_version: str | None = None
+    sdk_version: str | None = None
+
+
+class SdkPushRegisterPayload(TransportPayload):
+    install_key: str
+    token: str
+    provider: str | None = None
+    click_id: str | None = None
+    crm_user_id: str | None = None
+    device: SdkDevicePayload | None = None
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
 class UpdateMetricDefinitionPayload(TransportPayload):
     key: str | None = None
     name: str | None = None

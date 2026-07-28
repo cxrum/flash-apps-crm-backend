@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Sequence
 
+from app.core.bus.event.events.analytics import UpdateCurrentParamMessage
 from app.core.bus.type import EventMessage
-from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
 from app.modules.crm.application.base import JsonDict
 
 

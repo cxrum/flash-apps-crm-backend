@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from app.modules.crm.user_app_access import CrmUserAppAccessEntity
-
 from app.modules.crm.application.access_decorators import require_app_access, require_role
 from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.modules.crm.application.contracts.encryption import EncryptionServiceProtocol
@@ -53,6 +51,7 @@ from app.modules.crm.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEnt
 from app.modules.crm.domain.hash_protocol import HashProtocol
 from app.modules.crm.domain.role.CrmRoleEntity import CrmRoleEntity, Roles
 from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
+from app.modules.crm.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
 
 
 class AppService(AppServiceProtocol):

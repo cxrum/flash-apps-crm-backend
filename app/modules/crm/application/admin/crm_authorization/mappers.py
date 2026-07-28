@@ -1,7 +1,5 @@
 from typing import Mapping
 
-from app.modules.crm.user import CrmUserEntity
-
 from app.modules.crm.application.admin.crm_authorization.commands import (
     CreateRoleCommand,
     DeleteAppAccessCommand,
@@ -17,6 +15,7 @@ from app.modules.crm.application.admin.crm_authorization.responses import (
 from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.modules.crm.domain.role.CrmRoleEntity import CrmRoleEntity
+from app.modules.crm.domain.user.CrmUserEntity import CrmUserEntity
 
 
 class AuthenticationResponseMapper:

@@ -2,9 +2,7 @@ import json
 from datetime import UTC, date, datetime
 from typing import Any
 
-from app.modules.crm.statistics_aggregate import StatisticsAggregateEntity
-
-from app.modules.analytics.handlers.event.event import RawEventMessage
+from app.core.bus.event.events.analytics import RawEventMessage
 from app.modules.crm.application.exception import GeneralException
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.modules.crm.domain.currency.entity import Money
@@ -12,6 +10,7 @@ from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStati
     CustomParamsStatisticsAggregateEntity,
 )
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity, DefaultParamKeys
+from app.modules.crm.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
 from app.modules.crm.domain.uow import UnitOfWorkProtocol
 
 

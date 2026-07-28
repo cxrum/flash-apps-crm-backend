@@ -2,9 +2,8 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from app.modules.crm.user import CrmUserEntity
-
 from app.modules.crm.domain.pagination import Pagination
+from app.modules.crm.domain.user.CrmUserEntity import CrmUserEntity
 from app.modules.crm.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
 
 

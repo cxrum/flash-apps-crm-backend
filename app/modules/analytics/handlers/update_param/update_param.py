@@ -2,20 +2,20 @@ from datetime import UTC, datetime
 
 from app.core.bus.contract import AsyncEventMessageHandler
 from app.core.bus.type import EventMessage
+from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
 from app.modules.crm.application.exception import GeneralException
 from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
-from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 
 class AsyncUpdateParamHandler(AsyncEventMessageHandler):
-    def __init__(self, uow_factory: UnitOfWorkFactoryProtocol) -> None:
+    def __init__(self, uow_factory: AnalyticsUnitOfWorkFactoryProtocol) -> None:
         self.__uow_factory = uow_factory
 
     @staticmethod
     def _update_params(
-        uow: UnitOfWorkProtocol,
+        uow: AnalyticsUnitOfWorkProtocol,
         *,
         params: dict,
         click_id: str,

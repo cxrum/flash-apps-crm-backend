@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, TypeVar
 
-from app.modules.analytics.handlers.event.event import RawEventMessage
+from app.core.bus.event.events.analytics import RawEventMessage
 from app.modules.crm.application.exception import GeneralException
 from app.modules.crm.domain.events.CrmEventEntity import EventEntity
 

@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from app.modules.crm.push_token import CrmPushTokenEntity
-
 from app.modules.crm.application.access_decorators import require_permission
 from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.modules.crm.application.admin.exception import ClickNotFound, InstallNotFound
@@ -36,6 +34,7 @@ from app.modules.crm.application.mapper import PaginationMapper
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity, DefaultParamKeys
 from app.modules.crm.domain.permission.CrmPermissionEntity import CrmPermissionEntity
 from app.modules.crm.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
+from app.modules.crm.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
 from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 
 

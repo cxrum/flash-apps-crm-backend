@@ -46,7 +46,7 @@ def _now() -> datetime:
 
 
 def build_app_entity(**overrides: Any) -> CrmAppEntity:
-    return CrmAppEntity(**_merge({"name": "Test App", "code_slug": "test-app"}, overrides))
+    return CrmAppEntity(**_merge({"name": "Test App", "code_slug": "test-app", "status": "active"}, overrides))
 
 
 def build_app_platform_entity(**overrides: Any) -> CrmAppPlatformEntity:

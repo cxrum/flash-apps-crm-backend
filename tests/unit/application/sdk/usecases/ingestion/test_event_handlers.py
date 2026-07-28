@@ -4,8 +4,6 @@ import asyncio
 from datetime import UTC, datetime
 
 import pytest
-from app.modules.crm.app import CrmAppEntity
-from app.modules.crm.click import CrmClickEntity
 from app.modules.crm.domain.event_bus.entity import DomainEventMessage
 
 from app.modules.analytics.handlers.event.conversion import AsyncConversionHandler
@@ -15,8 +13,11 @@ from app.modules.analytics.handlers.update_param.event import UpdateCurrentParam
 from app.modules.analytics.handlers.update_param.update_param import AsyncUpdateParamHandler
 from app.modules.crm.application.events_bus.handlers.audit import AsyncAuditValueHandler
 from app.modules.crm.application.exception import GeneralException
-from app.modules.crm.di.event_bus import get_event_subscribers
+from app.modules.analytics.di.event_bus import get_event_subscribers as get_analytics_event_subscribers
+from app.modules.crm.di.event_bus import get_event_subscribers as get_crm_event_subscribers
+from app.modules.crm.domain.app.CrmAppEntity import CrmAppEntity
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.modules.crm.domain.click.CrmClickEntity import CrmClickEntity
 from app.modules.crm.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
 from app.modules.crm.domain.exceptions import DomainException
 from tests.unit.builders import build_app_entity, build_app_platform_entity, build_click_entity
@@ -542,10 +543,7 @@ def test_async_conversion_handler_rejects_invalid_payload_shape() -> None:
         handler = AsyncConversionHandler(StubUoWFactory(uow))
         _, _, click = _seed_conversion_handler_context(uow)
 
-        with pytest.raises(
-            DomainException,
-            match="payload\\['payload'\\] must be dict",
-        ):
+        with pytest.raises(TypeError, match="payload must be a dict"):
             await handler.handle(
                 _build_conversion_message(
                     click_id=click.click_id,
@@ -604,7 +602,7 @@ def test_async_conversion_handler_rejects_invalid_value_for_param_definition() -
             ],
         )
 
-        with pytest.raises(DomainException, match="Param 'attempt' expected integer"):
+        with pytest.raises(DomainException, match="domain.param_definition.value.invalid"):
             await handler.handle(
                 _build_conversion_message(
                     click_id=click.click_id,
@@ -809,12 +807,17 @@ def test_async_conversion_handler_rejects_unexpected_revenue_fields(
     asyncio.run(scenario())
 
 
-def test_get_event_subscribers_includes_update_param_metric_conversion_and_audit_handlers() -> None:
-    subscriber_map = {event_name: type(handler) for event_name, handler in get_event_subscribers()}
+def test_event_subscribers_are_split_between_crm_and_analytics_buses() -> None:
+    crm_subscriber_map = {event_name: type(handler) for event_name, handler in get_crm_event_subscribers()}
+    analytics_subscriber_map = {
+        event_name: type(handler) for event_name, handler in get_analytics_event_subscribers()
+    }
 
-    assert subscriber_map == {
+    assert analytics_subscriber_map == {
         UpdateCurrentParamMessage.EVENT_NAME: AsyncUpdateParamHandler,
         MetricEventMessage.EVENT_NAME: AsyncMetricHandler,
         ConversionEventMessage.EVENT_NAME: AsyncConversionHandler,
+    }
+    assert crm_subscriber_map == {
         ValueChangedEvent.EVENT_NAME: AsyncAuditValueHandler,
     }

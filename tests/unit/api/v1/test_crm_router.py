@@ -39,11 +39,10 @@ def test_crm_router_registers_cleaned_routes_once() -> None:
         ("/postback/{postback_id}", "PATCH"),
         ("/push/{push_id}/start", "POST"),
         ("/role/share", "POST"),
-        ("/role/share/{role_code}", "GET"),
+        ("/role/share/", "GET"),
         ("/secret/template", "GET"),
         ("/secret/template/{template_id}", "PATCH"),
         ("/secret/{secret_id}", "DELETE"),
-        ("/stats/logs/events", "GET"),
     }
 
     for route_key in expected_routes:

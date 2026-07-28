@@ -4,11 +4,10 @@ import asyncio
 from datetime import UTC, datetime
 
 import pytest
-from app.modules.crm.domain.event_bus.entity import DomainEventMessage
-
 from app.modules.analytics.handlers.event.event import ConversionEventMessage, MetricEventMessage
 from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
 from app.modules.analytics.handlers.update_param.update_param import AsyncUpdateParamHandler
+from app.modules.crm.domain.event_bus.entity import DomainEventMessage
 from app.modules.crm.application.exception import GeneralException
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.modules.crm.domain.currency.entity import Money

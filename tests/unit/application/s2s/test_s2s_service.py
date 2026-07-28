@@ -4,7 +4,7 @@ import pytest
 
 from app.modules.crm.application.contracts.ip2location import IpLocation
 from app.modules.crm.application.exception import GeneralException
-from app.modules.crm.application.sdk.s2s.service import ClickService
+from app.modules.analytics.application.s2s.service import ClickService
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from tests.unit.builders import (
     build_app_entity,

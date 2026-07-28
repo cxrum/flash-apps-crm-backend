@@ -5,10 +5,10 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Body, Depends, Request, status
 
 from app.modules.analytics.api.v1.s2s.payloads import S2SClickPayload
-from app.modules.crm.application.sdk.s2s.mappers import S2SCommandMapper
-from app.modules.crm.application.sdk.s2s.protocol import ClickServiceProtocol
+from app.modules.analytics.application.ingestion.mappers import S2SCommandMapper
+from app.modules.analytics.application.s2s.protocol import ClickServiceProtocol
 from app.modules.crm.core.utils.general_mapper import GeneralMapper
-from app.modules.crm.di.services import get_s2s_service
+from app.modules.analytics.di.services import get_analytics_click_service
 
 router = APIRouter()
 
@@ -17,7 +17,7 @@ router = APIRouter()
 async def ingest_s2s_click(
     request: Request,
     payload: Annotated[S2SClickPayload, Body()],
-    s2s_service: ClickServiceProtocol = Depends(get_s2s_service),
+    s2s_service: ClickServiceProtocol = Depends(get_analytics_click_service),
 ) -> str:
 
     user_agent = request.headers.get("user-agent")

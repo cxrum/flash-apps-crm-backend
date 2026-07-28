@@ -23,7 +23,6 @@ from app.modules.crm.application.sdk.ingestion.service import IngestionService
 from app.modules.crm.application.sdk.s2s.protocol import ClickServiceProtocol
 from app.modules.crm.application.sdk.s2s.service import ClickService
 from app.modules.crm.core.config import settings
-from app.modules.analytics.di.event_bus import get_analytics_event_bus
 from app.core.bus.contract import IAsyncEventBus
 from app.core.bus.di import get_in_memory_event_bus
 from app.modules.crm.di.infra import get_uow_factory
@@ -115,7 +114,7 @@ def get_currency_client() -> CurrencyConvertorClientProtocol:
 
 def get_sdk_ingestion_service(
     uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
-    event_bus: IAsyncEventBus = Depends(get_analytics_event_bus),
+    event_bus: IAsyncEventBus = Depends(get_in_memory_event_bus),
     currency_service: CurrencyConvertorClientProtocol = Depends(get_currency_client),
 ) -> IngestionServiceProtocol:
     return IngestionService(uow_factory, event_bus, currency_service)

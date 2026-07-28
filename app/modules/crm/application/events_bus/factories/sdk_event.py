@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Any, Protocol
 
-from app.modules.analytics.handlers.event.event import (
+from app.core.bus.event.events.analytics import (
     ConversionEventMessage,
     MetricEventMessage,
     RawEventMessage,

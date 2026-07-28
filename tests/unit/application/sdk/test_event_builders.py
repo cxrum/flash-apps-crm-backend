@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 import pytest
 
 from app.modules.crm.application.exception import GeneralException
-from app.modules.crm.application.sdk.ingestion.event_builder import (
+from app.modules.analytics.application.ingestion.event_builder import (
     ConversionEventBuilder,
     MetricsEventBuilder,
     RevenueEventBuilder,
