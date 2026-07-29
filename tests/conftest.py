@@ -12,6 +12,7 @@ from tests.unit.base import UnitTestContext
 from tests.unit.doubles.application.currency import StubCurrencyConvertorClient
 from tests.unit.doubles.application.encryption import StubEncryptionService
 from tests.unit.doubles.application.hash import StubHashService
+from tests.unit.doubles.application.idempotency import StubIdempotencyKeyRepository
 from tests.unit.doubles.domain.uow import StubRepositoryFactory, StubUnitOfWork, StubUoWFactory
 
 
@@ -41,6 +42,11 @@ def stub_hash_service() -> StubHashService:
 
 
 @pytest.fixture
+def idempotency_repository() -> StubIdempotencyKeyRepository:
+    return StubIdempotencyKeyRepository()
+
+
+@pytest.fixture
 def event_bus() -> IEventBus:
     return InMemoryEventBus()
 
@@ -67,6 +73,7 @@ def unit_test_context(
     stub_encryption_service: StubEncryptionService,
     stub_hash_service: StubHashService,
     async_event_bus: IAsyncEventBus,
+    idempotency_repository: StubIdempotencyKeyRepository,
     currency_service: StubCurrencyConvertorClient,
     settings: Settings,
 ) -> UnitTestContext:
@@ -76,6 +83,7 @@ def unit_test_context(
         encryption_service=stub_encryption_service,
         hash_service=stub_hash_service,
         async_event_bus=async_event_bus,
+        idempotency_repository=idempotency_repository,
         currency_service=currency_service,
         settings=settings,
     )

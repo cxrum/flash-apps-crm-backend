@@ -38,6 +38,11 @@ from tests.unit.doubles.application import StubS2SRequester
 from tests.unit.doubles.domain.uow import StubUnitOfWork, StubUoWFactory
 
 
+class _AllowPostbackAuthorization:
+    def required_user_permission(self, **_: object) -> None:
+        return None
+
+
 def _seed_platform(
     uow: StubUnitOfWork,
     *,
@@ -130,7 +135,12 @@ def _build_service(
     async_event_bus: IAsyncEventBus,
 ) -> tuple[PostbackService, StubS2SRequester]:
     requester = StubS2SRequester()
-    service = PostbackService(StubUoWFactory(uow), async_event_bus, requester)
+    service = PostbackService(
+        StubUoWFactory(uow),
+        async_event_bus,
+        requester,
+        authorization_service=_AllowPostbackAuthorization(),
+    )
     return service, requester
 
 
@@ -258,7 +268,8 @@ def test_create_rule_creates_rules_for_all_app_platforms(
 
     assert [rule.platform_app_id for rule in saved_rules] == [ios.platform_id, android.platform_id]
     assert len(uow.postback_rule_repo.list_by_app_id(2)) == 0
-    assert uow.commit_count == 1
+    # Permission authorization runs in its own, read-only UoW before creation.
+    assert uow.commit_count == 2
     assert uow.rollback_count == 0
 
     _assert_saved_rule(saved_rules[0], platform_id=ios.platform_id or 0)
@@ -289,7 +300,7 @@ def test_create_rule_creates_rule_for_selected_platform_only(
     assert saved_rules[0].platform_app_id == android.platform_id
     assert saved_rules[0].name == "Install Rule"
     assert saved_rules[0].trigger_type == "install"
-    assert uow.commit_count == 1
+    assert uow.commit_count == 2
     assert uow.rollback_count == 0
 
 
@@ -302,7 +313,7 @@ def test_create_rule_raises_when_app_has_no_platforms(
     with pytest.raises(GeneralException):
         service.create_postback(build_admin_create_postback_rule_command(app_id=1))
 
-    assert uow.commit_count == 0
+    assert uow.commit_count == 1
     assert uow.rollback_count == 1
     assert uow.postback_rule_repo.list_by_app_id(1) == []
 
@@ -321,7 +332,7 @@ def test_create_rule_raises_when_selected_platform_does_not_exist(
             )
         )
 
-    assert uow.commit_count == 0
+    assert uow.commit_count == 1
     assert uow.rollback_count == 1
 
 
@@ -339,7 +350,7 @@ def test_create_rule_raises_for_unknown_secret_template(
             )
         )
 
-    assert uow.commit_count == 0
+    assert uow.commit_count == 1
     assert uow.rollback_count == 1
 
 
@@ -357,7 +368,7 @@ def test_create_rule_raises_for_invalid_template_placeholder(
             )
         )
 
-    assert uow.commit_count == 0
+    assert uow.commit_count == 1
     assert uow.rollback_count == 1
 
 

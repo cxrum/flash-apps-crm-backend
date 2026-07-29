@@ -14,10 +14,11 @@ from tests.unit.doubles.registry import PROTOCOL_DOUBLE_REGISTRY
 
 def _discover_protocol_types() -> set[type]:
     repo_root = Path(__file__).resolve().parents[2]
-    module_paths = list((repo_root / "app" / "domain").glob("*_protocol.py"))
-    module_paths.extend((repo_root / "app" / "domain").glob("*/*_protocol.py"))
-    module_paths.append(repo_root / "app" / "domain" / "uow.py")
-    module_paths.extend((repo_root / "app" / "application" / "contracts").glob("*.py"))
+    crm_root = repo_root / "app" / "modules" / "crm"
+    module_paths = list((crm_root / "domain").glob("*_protocol.py"))
+    module_paths.extend((crm_root / "domain").glob("*/*_protocol.py"))
+    module_paths.append(crm_root / "domain" / "uow.py")
+    module_paths.extend((crm_root / "application" / "contracts").glob("*.py"))
 
     protocols: set[type] = set()
     for path in module_paths:

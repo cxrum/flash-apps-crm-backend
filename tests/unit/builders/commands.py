@@ -192,6 +192,7 @@ def build_sdk_create_app_command(**overrides: Any) -> CreateAppCommand:
         {
             "crm_user_id": 1,
             "name": "Test App",
+            "status": "active",
             "code_slug": "test-app",
             "screenshots": ["https://cdn.example.com/shot-1.png"],
             "logo_url": "https://cdn.example.com/logo.png",

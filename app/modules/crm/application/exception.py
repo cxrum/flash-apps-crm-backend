@@ -23,6 +23,11 @@ class PlatformNotFound(GeneralException):
         super().__init__("general.platform.not_found", {}, 404)
 
 
+class DuplicateRequest(GeneralException):
+    def __init__(self):
+        super().__init__("general.platform.not_found", {}, 404)
+
+
 class RoleNotFound(GeneralException):
     def __init__(self):
         super().__init__("general.role.not_found", {}, 404)

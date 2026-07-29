@@ -8,7 +8,8 @@ from app.modules.analytics.application.ingestion.service import IngestionService
 from app.modules.analytics.application.s2s.protocol import ClickServiceProtocol
 from app.modules.analytics.application.s2s.service import ClickService
 from app.modules.analytics.di.event_bus import get_analytics_event_bus
-from app.modules.analytics.di.infra import get_analytics_uow_factory
+from app.modules.analytics.di.infra import get_analytics_uow_factory, get_idempotency_repository
+from app.modules.analytics.domain.redis.repo import IdempotencyKeyRepositoryProtocol
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol
 from app.modules.crm.application.contracts.ip2location import IP2LocationGatewayProtocol
 from app.modules.crm.di.services import get_currency_client, get_ip2location_gateway, get_signature_sha256_service
@@ -28,8 +29,9 @@ def get_analytics_ingestion_service(
     uow_factory: AnalyticsUnitOfWorkFactoryProtocol = Depends(get_analytics_uow_factory),
     event_bus: IAsyncEventBus = Depends(get_analytics_event_bus),
     currency_service: CurrencyConvertorClientProtocol = Depends(get_currency_client),
+    idempotency_repo: IdempotencyKeyRepositoryProtocol = Depends(get_idempotency_repository),
 ) -> IngestionServiceProtocol:
-    return IngestionService(uow_factory, event_bus, currency_service)
+    return IngestionService(uow_factory, event_bus, currency_service, idempotency_repo)
 
 
 def get_analytics_logs_service(

@@ -18,8 +18,8 @@ class SdkDeviceValueCommand(FlexibleCommand):
 
 
 class SdkInstallCommand(FlexibleCommand):
-    install_key: str
     idempotency_key: str
+    install_key: str
     click_id: str | None = None
     params: JsonDict = Field(default_factory=dict)
     device: SdkDeviceValueCommand
@@ -36,9 +36,9 @@ class SdkEventCommand(FlexibleCommand):
 
 
 class SdkEventsCommand(FlexibleCommand):
+    idempotency_key: str
     install_key: str
     click_id: str
-    idempotency_key: str
     events: list[SdkEventCommand] = Field(min_length=1)
 
 

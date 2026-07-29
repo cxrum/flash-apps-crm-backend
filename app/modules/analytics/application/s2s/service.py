@@ -12,7 +12,7 @@ from app.modules.analytics.application.tracking.responses import TrackingRedirec
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.crm.application.contracts.ip2location import IP2LocationGatewayProtocol, IpLocation
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.modules.crm.domain.click.CrmClickEntity import CrmClickEntity
+from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
 from app.modules.crm.domain.hash_protocol import HashableValue
 from app.modules.crm.domain.signature_protocol import SignatureProtocol
 
@@ -49,10 +49,10 @@ class ClickService(ClickServiceProtocol):
         self,
         uow: AnalyticsUnitOfWorkProtocol,
         *,
-        click: CrmClickEntity,
+        click: AnalyticsClickEntity,
         platform: CrmAppPlatformEntity,
         source_click_id: str | None = None,
-    ) -> CrmClickEntity:
+    ) -> AnalyticsClickEntity:
 
         param_definitions = uow.param_definition_repo.list_by_app_id(platform.app_id)
 
@@ -95,8 +95,8 @@ class ClickService(ClickServiceProtocol):
             if not is_signature_correct:
                 raise SignatureMismatch()
 
-            click = CrmClickEntity(
-                click_id=CrmClickEntity.generate_click_id(),
+            click = AnalyticsClickEntity(
+                click_id=AnalyticsClickEntity.generate_click_id(),
                 app_platform_id=platform.platform_id,
                 ip_address=command.ip,
                 user_agent=command.user_agent,
@@ -129,8 +129,8 @@ class ClickService(ClickServiceProtocol):
             if platform is None or platform.platform_id is None:
                 raise PlatformNotConfigured(command.platform, command.app_code)
 
-            click = CrmClickEntity(
-                click_id=CrmClickEntity.generate_click_id(),
+            click = AnalyticsClickEntity(
+                click_id=AnalyticsClickEntity.generate_click_id(),
                 app_platform_id=platform.platform_id,
                 ip_address=command.ip,
                 user_agent=command.user_agent,

@@ -19,35 +19,43 @@ from app.modules.crm.di.services import get_sdk_app_service
 router = APIRouter()
 
 
-@router.post("/install", status_code=status.HTTP_202_ACCEPTED, tags=["sdk"])
+@router.post("/install", status_code=status.HTTP_202_ACCEPTED, response_model=None, tags=["sdk"])
 async def create_or_link_install(
-    idempotency_key: Annotated[str, Query()],
+    idempotency_key: Annotated[str, Query(alias="Idempotency-Key")],
     payload: Annotated[SdkInstallPayload, Body()],
     ingestion_service: IngestionServiceProtocol = Depends(get_analytics_ingestion_service),
-) -> str:
-    command = SdkIngestionCommandMapper.install_from_transport(GeneralMapper.to_dict(payload))
+) -> str | Response:
+    command = SdkIngestionCommandMapper.install_from_transport(
+        GeneralMapper.to_dict(payload, idempotency_key=idempotency_key)
+    )
     response = await ingestion_service.process_install(command)
+    if response is None:
+        return Response(status_code=status.HTTP_202_ACCEPTED)
     return response.model_dump_json()
 
 
 @router.post("/events", status_code=status.HTTP_202_ACCEPTED, tags=["sdk"])
 async def ingest_sdk_events(
-    idempotency_key: Annotated[str, Query()],
+    idempotency_key: Annotated[str, Query(alias="Idempotency-Key")],
     payload: Annotated[SdkEventsPayload, Body()],
     ingestion_service: IngestionServiceProtocol = Depends(get_analytics_ingestion_service),
 ) -> Response:
-    command = SdkIngestionCommandMapper.events_from_transport(GeneralMapper.to_dict(payload))
+    command = SdkIngestionCommandMapper.events_from_transport(
+        GeneralMapper.to_dict(payload, idempotency_key=idempotency_key)
+    )
     await ingestion_service.process_batch_events(command)
     return Response(status_code=status.HTTP_202_ACCEPTED)
 
 
 @router.post("/params/update", status_code=status.HTTP_202_ACCEPTED, tags=["sdk"])
 async def update_sdk_params(
-    idempotency_key: Annotated[str, Query()],
+    idempotency_key: Annotated[str, Query(alias="Idempotency-Key")],
     payload: Annotated[SdkParamsUpdatePayload, Body()],
     ingestion_service: IngestionServiceProtocol = Depends(get_analytics_ingestion_service),
 ) -> Response:
-    command = SdkIngestionCommandMapper.params_update_from_transport(GeneralMapper.to_dict(payload))
+    command = SdkIngestionCommandMapper.params_update_from_transport(
+        GeneralMapper.to_dict(payload, idempotency_key=idempotency_key)
+    )
     await ingestion_service.update_params(command)
     return Response(status_code=status.HTTP_202_ACCEPTED)
 

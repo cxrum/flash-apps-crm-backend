@@ -16,7 +16,7 @@ from app.modules.analytics.application.ingestion.exception import (
     RevenueCurrencyRequired,
 )
 from app.modules.crm.application.sdk.exception import ConversionMoneyValueException, MetricMoneyValueException
-from app.modules.crm.domain.events.CrmEventEntity import EventEntity
+from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
 
 
 class _BaseSdkEventBuilder:
@@ -120,9 +120,9 @@ class _BaseSdkEventBuilder:
     def _validate_money_fields(self) -> None:
         raise NotImplementedError
 
-    def build(self) -> EventEntity:
+    def build(self) -> AnalyticsEventEntity:
         self._validate_money_fields()
-        return EventEntity(
+        return AnalyticsEventEntity(
             event_id=self._event_id,
             click_id=self._click_id,
             app_user_id=self._app_user_id,

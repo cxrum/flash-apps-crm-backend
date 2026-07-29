@@ -15,8 +15,8 @@ from app.modules.analytics.infra.db.models import (
     AnalyticsInstall,
     AnalyticsStatisticsAggregate,
 )
-from app.modules.crm.domain.click.CrmClickEntity import CrmClickEntity
-from app.modules.crm.domain.click.click_repository_protocol import CrmClickRepositoryProtocol
+from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
+from app.modules.analytics.domain.click.click_repository_protocol import AnalyticsClickRepositoryProtocol
 from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.modules.crm.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
 from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
@@ -25,10 +25,10 @@ from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStati
 from app.modules.crm.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
     CustomParamsStatisticsRepositoryProtocol,
 )
-from app.modules.crm.domain.events.CrmEventEntity import EventEntity
-from app.modules.crm.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
-from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
-from app.modules.crm.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
+from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
+from app.modules.analytics.domain.events.event_repository_protocol import AnalyticsEventRepositoryProtocol
+from app.modules.analytics.domain.install.AnalyticsInstallEntity import AnalyticsInstallEntity
+from app.modules.analytics.domain.install.install_repository_protocol import AnalyticsInstallRepositoryProtocol
 from app.modules.crm.domain.pagination import Pagination
 from app.modules.crm.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
 from app.modules.crm.domain.statistics_aggregate.statistics_aggregate_repository_protocol import (
@@ -46,12 +46,12 @@ def _apply_pagination(stmt, pagination: Pagination | None):
     return stmt
 
 
-class SqlAlchemyAnalyticsClickRepository(CrmClickRepositoryProtocol):
+class SqlAlchemyAnalyticsClickRepository(AnalyticsClickRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def _to_domain(self, row: AnalyticsClick) -> CrmClickEntity:
-        return CrmClickEntity(
+    def _to_domain(self, row: AnalyticsClick) -> AnalyticsClickEntity:
+        return AnalyticsClickEntity(
             click_id=row.click_id,
             app_platform_id=row.app_platform_id,
             status=row.status,
@@ -69,7 +69,7 @@ class SqlAlchemyAnalyticsClickRepository(CrmClickRepositoryProtocol):
             created_at=row.created_at,
         )
 
-    def _to_row(self, entity: CrmClickEntity) -> AnalyticsClick:
+    def _to_row(self, entity: AnalyticsClickEntity) -> AnalyticsClick:
         kwargs: dict[str, object] = {
             "click_id": entity.click_id,
             "app_platform_id": entity.app_platform_id,
@@ -90,23 +90,23 @@ class SqlAlchemyAnalyticsClickRepository(CrmClickRepositoryProtocol):
             kwargs["created_at"] = entity.created_at
         return AnalyticsClick(**kwargs)
 
-    def insert(self, entity: CrmClickEntity) -> CrmClickEntity:
+    def insert(self, entity: AnalyticsClickEntity) -> AnalyticsClickEntity:
         row = self._to_row(entity)
         self.session.add(row)
         self.session.flush()
         return self._to_domain(row)
 
-    def insert_many(self, entities: list[CrmClickEntity]) -> list[CrmClickEntity]:
+    def insert_many(self, entities: list[AnalyticsClickEntity]) -> list[AnalyticsClickEntity]:
         rows = [self._to_row(entity) for entity in entities]
         self.session.add_all(rows)
         self.session.flush()
         return [self._to_domain(row) for row in rows]
 
-    def get_by_id(self, click_id: str) -> CrmClickEntity | None:
+    def get_by_id(self, click_id: str) -> AnalyticsClickEntity | None:
         row = self.session.get(AnalyticsClick, click_id)
         return self._to_domain(row) if row is not None else None
 
-    def delete(self, click_id: str) -> CrmClickEntity:
+    def delete(self, click_id: str) -> AnalyticsClickEntity:
         row = self.session.get(AnalyticsClick, click_id)
         if row is None:
             raise BaseInfraException()
@@ -122,7 +122,7 @@ class SqlAlchemyAnalyticsClickRepository(CrmClickRepositoryProtocol):
         *,
         click_id: str | None = None,
         pagination: Pagination | None = None,
-    ) -> list[CrmClickEntity]:
+    ) -> list[AnalyticsClickEntity]:
         start_at_value = None if pagination is None else pagination.start_at
         end_at_value = None if pagination is None else pagination.end_at
 
@@ -147,7 +147,7 @@ class SqlAlchemyAnalyticsClickRepository(CrmClickRepositoryProtocol):
         *,
         click_id: str | None = None,
         pagination: Pagination | None = None,
-    ) -> list[CrmClickEntity]:
+    ) -> list[AnalyticsClickEntity]:
         stmt = (
             select(AnalyticsClick)
             .join(AppPlatform, AnalyticsClick.app_platform_id == AppPlatform.platform_id)
@@ -161,17 +161,17 @@ class SqlAlchemyAnalyticsClickRepository(CrmClickRepositoryProtocol):
         *,
         click_id: str | None = None,
         pagination: Pagination | None = None,
-    ) -> list[CrmClickEntity]:
+    ) -> list[AnalyticsClickEntity]:
         stmt = select(AnalyticsClick).where(AnalyticsClick.app_platform_id == app_platform_id)
         return self._list_clicks(stmt, click_id=click_id, pagination=pagination)
 
 
-class SqlAlchemyAnalyticsInstallRepository(CrmInstallRepositoryProtocol):
+class SqlAlchemyAnalyticsInstallRepository(AnalyticsInstallRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def _to_domain(self, row: AnalyticsInstall) -> CrmInstallEntity:
-        return CrmInstallEntity(
+    def _to_domain(self, row: AnalyticsInstall) -> AnalyticsInstallEntity:
+        return AnalyticsInstallEntity(
             install_id=row.install_id,
             click_id=row.click_id,
             app_user_id=row.app_user_id,
@@ -180,7 +180,7 @@ class SqlAlchemyAnalyticsInstallRepository(CrmInstallRepositoryProtocol):
             installed_at=row.installed_at,
         )
 
-    def _to_row(self, entity: CrmInstallEntity) -> AnalyticsInstall:
+    def _to_row(self, entity: AnalyticsInstallEntity) -> AnalyticsInstall:
         kwargs: dict[str, object] = {
             "click_id": entity.click_id,
             "app_user_id": entity.app_user_id,
@@ -193,21 +193,21 @@ class SqlAlchemyAnalyticsInstallRepository(CrmInstallRepositoryProtocol):
             kwargs["installed_at"] = entity.installed_at
         return AnalyticsInstall(**kwargs)
 
-    def save(self, entity: CrmInstallEntity) -> CrmInstallEntity:
+    def save(self, entity: AnalyticsInstallEntity) -> AnalyticsInstallEntity:
         row = self.session.merge(self._to_row(entity))
         self.session.flush()
         return self._to_domain(row)
 
-    def save_many(self, entities: list[CrmInstallEntity]) -> list[CrmInstallEntity]:
+    def save_many(self, entities: list[AnalyticsInstallEntity]) -> list[AnalyticsInstallEntity]:
         rows = [self.session.merge(self._to_row(entity)) for entity in entities]
         self.session.flush()
         return [self._to_domain(row) for row in rows]
 
-    def get_by_id(self, install_id: int) -> CrmInstallEntity | None:
+    def get_by_id(self, install_id: int) -> AnalyticsInstallEntity | None:
         row = self.session.get(AnalyticsInstall, install_id)
         return self._to_domain(row) if row is not None else None
 
-    def delete(self, install_id: int) -> CrmInstallEntity:
+    def delete(self, install_id: int) -> AnalyticsInstallEntity:
         row = self.session.get(AnalyticsInstall, install_id)
         if row is None:
             raise BaseInfraException()
@@ -217,7 +217,7 @@ class SqlAlchemyAnalyticsInstallRepository(CrmInstallRepositoryProtocol):
         self.session.flush()
         return install
 
-    def get_by_app_user_id(self, app_user_id: int) -> CrmInstallEntity | None:
+    def get_by_app_user_id(self, app_user_id: int) -> AnalyticsInstallEntity | None:
         row = self.session.scalars(
             select(AnalyticsInstall)
             .where(AnalyticsInstall.app_user_id == app_user_id)
@@ -225,7 +225,7 @@ class SqlAlchemyAnalyticsInstallRepository(CrmInstallRepositoryProtocol):
         ).first()
         return self._to_domain(row) if row is not None else None
 
-    def get_by_click_id(self, click_id: str) -> CrmInstallEntity | None:
+    def get_by_click_id(self, click_id: str) -> AnalyticsInstallEntity | None:
         row = self.session.scalars(
             select(AnalyticsInstall)
             .where(AnalyticsInstall.click_id == click_id)
@@ -234,12 +234,12 @@ class SqlAlchemyAnalyticsInstallRepository(CrmInstallRepositoryProtocol):
         return self._to_domain(row) if row is not None else None
 
 
-class SqlAlchemyAnalyticsEventRepository(CrmEventRepositoryProtocol):
+class SqlAlchemyAnalyticsEventRepository(AnalyticsEventRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def _to_domain(self, row: AnalyticsEvent) -> EventEntity:
-        return EventEntity(
+    def _to_domain(self, row: AnalyticsEvent) -> AnalyticsEventEntity:
+        return AnalyticsEventEntity(
             event_id=row.event_id,
             click_id=row.click_id,
             app_user_id=row.app_user_id,
@@ -253,8 +253,8 @@ class SqlAlchemyAnalyticsEventRepository(CrmEventRepositoryProtocol):
             created_at=row.created_at,
         )
 
-    def _mapping_to_domain(self, row: Mapping[str, Any]) -> EventEntity:
-        return EventEntity(
+    def _mapping_to_domain(self, row: Mapping[str, Any]) -> AnalyticsEventEntity:
+        return AnalyticsEventEntity(
             event_id=row["event_id"],
             click_id=row["click_id"],
             app_user_id=row["app_user_id"],
@@ -268,10 +268,10 @@ class SqlAlchemyAnalyticsEventRepository(CrmEventRepositoryProtocol):
             created_at=row["created_at"],
         )
 
-    def _to_row(self, entity: EventEntity) -> AnalyticsEvent:
+    def _to_row(self, entity: AnalyticsEventEntity) -> AnalyticsEvent:
         return AnalyticsEvent(**self._to_values(entity))
 
-    def _to_values(self, entity: EventEntity) -> dict[str, object]:
+    def _to_values(self, entity: AnalyticsEventEntity) -> dict[str, object]:
         values: dict[str, object] = {
             "event_id": entity.event_id,
             "click_id": entity.click_id,
@@ -288,13 +288,13 @@ class SqlAlchemyAnalyticsEventRepository(CrmEventRepositoryProtocol):
             values["created_at"] = entity.created_at
         return values
 
-    def insert(self, entity: EventEntity) -> EventEntity:
+    def insert(self, entity: AnalyticsEventEntity) -> AnalyticsEventEntity:
         row = self._to_row(entity)
         self.session.add(row)
         self.session.flush()
         return self._to_domain(row)
 
-    def insert_many(self, entities: list[EventEntity]) -> list[EventEntity]:
+    def insert_many(self, entities: list[AnalyticsEventEntity]) -> list[AnalyticsEventEntity]:
         if not entities:
             return []
 
@@ -320,11 +320,11 @@ class SqlAlchemyAnalyticsEventRepository(CrmEventRepositoryProtocol):
         self.session.flush()
         return [self._mapping_to_domain(row) for row in rows]
 
-    def get_by_id(self, event_id: str) -> EventEntity | None:
+    def get_by_id(self, event_id: str) -> AnalyticsEventEntity | None:
         row = self.session.get(AnalyticsEvent, event_id)
         return self._to_domain(row) if row is not None else None
 
-    def delete(self, event_id: str) -> EventEntity:
+    def delete(self, event_id: str) -> AnalyticsEventEntity:
         row = self.session.get(AnalyticsEvent, event_id)
         if row is None:
             raise BaseInfraException()
@@ -341,7 +341,7 @@ class SqlAlchemyAnalyticsEventRepository(CrmEventRepositoryProtocol):
         click_id: str | None = None,
         event_key: str | None = None,
         pagination: Pagination | None = None,
-    ) -> list[EventEntity]:
+    ) -> list[AnalyticsEventEntity]:
         start_at_value = None if pagination is None else pagination.start_at
         end_at_value = None if pagination is None else pagination.end_at
 
@@ -369,7 +369,7 @@ class SqlAlchemyAnalyticsEventRepository(CrmEventRepositoryProtocol):
         click_id: str | None = None,
         event_key: str | None = None,
         pagination: Pagination | None = None,
-    ) -> list[EventEntity]:
+    ) -> list[AnalyticsEventEntity]:
         stmt = (
             select(AnalyticsEvent)
             .join(AnalyticsClick, AnalyticsEvent.click_id == AnalyticsClick.click_id)
@@ -385,7 +385,7 @@ class SqlAlchemyAnalyticsEventRepository(CrmEventRepositoryProtocol):
         app_id: int | None = None,
         event_key: str | None = None,
         pagination: Pagination | None = None,
-    ) -> list[EventEntity]:
+    ) -> list[AnalyticsEventEntity]:
         stmt = select(AnalyticsEvent)
         if app_id is not None:
             stmt = (

@@ -24,6 +24,8 @@ class MessageResolver:
         "sdk.app.platform.repository.empty": "App platform repository returned empty entity",
         "sdk.app.platform.by_install_key.not_found": "Install key '{install_key}' does not match any app platform",
         "sdk.ingestion.install_key.invalid": "Install key '{install_key}' is invalid",
+        "sdk.idempotency.processing": "Request with idempotency key '{idempotency_key}' is still processing",
+        "sdk.idempotency.state_lost": "Idempotency state for key '{idempotency_key}' was lost",
         "sdk.ingestion.event.type.unsupported": "Unsupported event type: {event_type}",
         "sdk.ingestion.revenue.data.required": "Revenue events require both amount and currency",
         "sdk.event.id.required": "Event id is required",

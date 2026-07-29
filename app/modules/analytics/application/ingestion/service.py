@@ -20,21 +20,24 @@ from app.modules.analytics.application.ingestion.event_builder import (
     RevenueEventBuilder,
 )
 from app.modules.analytics.application.ingestion.exception import (
+    IdempotencyKeyProcessing,
+    IdempotencyStateLost,
     InvalidInstallKey,
     RevenueDataRequired,
     UnsupportedEventType,
 )
 from app.modules.analytics.application.ingestion.protocol import IngestionServiceProtocol
 from app.modules.analytics.application.ingestion.responses import SdkInstallResponse
+from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
+from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
+from app.modules.analytics.domain.install.AnalyticsInstallEntity import AnalyticsInstallEntity
+from app.modules.analytics.domain.redis.repo import IdempotencyKeyRepositoryProtocol, IdempotencyKeyStatus
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.crm.application.exception import PlatformNotFound
 from app.modules.crm.application.sdk.exception import ClickNotFound
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.modules.crm.domain.click.CrmClickEntity import CrmClickEntity
 from app.modules.crm.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.modules.crm.domain.currency.entity import Money
-from app.modules.crm.domain.events.CrmEventEntity import EventEntity
-from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
 
 
 class IngestionService(IngestionServiceProtocol):
@@ -43,10 +46,12 @@ class IngestionService(IngestionServiceProtocol):
         uow_factory: AnalyticsUnitOfWorkFactoryProtocol,
         async_event_bus: IAsyncEventBus,
         currency_service: CurrencyConvertorClientProtocol,
+        idempotency_repo: IdempotencyKeyRepositoryProtocol,
     ) -> None:
         self._uow_factory = uow_factory
         self._async_event_bus = async_event_bus
         self._currency_service = currency_service
+        self._idempotency_repo = idempotency_repo
 
     def _resolve_platform(
         self,
@@ -65,8 +70,8 @@ class IngestionService(IngestionServiceProtocol):
         command: SdkInstallCommand,
         app_platform_id: int,
         uow: AnalyticsUnitOfWorkProtocol,
-    ) -> CrmClickEntity:
-        click_id = command.click_id or CrmClickEntity.generate_click_id()
+    ) -> AnalyticsClickEntity:
+        click_id = command.click_id or AnalyticsClickEntity.generate_click_id()
         existing = uow.click_repo.get_by_id(click_id)
 
         if existing is not None:
@@ -74,10 +79,42 @@ class IngestionService(IngestionServiceProtocol):
             return existing
 
         return uow.click_repo.insert(
-            CrmClickEntity.create_synthetic(app_platform_id=app_platform_id, params=command.params)
+            AnalyticsClickEntity.create_synthetic(app_platform_id=app_platform_id, params=command.params)
         )
 
-    async def process_install(self, command: SdkInstallCommand) -> SdkInstallResponse:
+    @staticmethod
+    def _scope(operation: str, context: str, idempotency_key: str) -> str:
+        return f"{operation}:{context}:{idempotency_key}"
+
+    async def _start_idempotent_request(self, key: str) -> str | None:
+        claim = await self._idempotency_repo.acquire(key)
+        if claim.status is IdempotencyKeyStatus.COMPLETED:
+            return None
+        if not claim.is_owner:
+            raise IdempotencyKeyProcessing(key)
+
+        return claim.owner_token
+
+    async def _finish_idempotent_request(self, key: str, owner_token: str) -> None:
+        if not await self._idempotency_repo.complete(key, owner_token):
+            raise IdempotencyStateLost(key)
+
+    async def process_install(self, command: SdkInstallCommand) -> SdkInstallResponse | None:
+        key = self._scope("install", command.install_key, command.idempotency_key)
+        owner_token = await self._start_idempotent_request(key)
+        if owner_token is None:
+            return None
+
+        try:
+            response = await self._process_install(command)
+        except BaseException:
+            await self._idempotency_repo.release(key, owner_token)
+            raise
+
+        await self._finish_idempotent_request(key, owner_token)
+        return response
+
+    async def _process_install(self, command: SdkInstallCommand) -> SdkInstallResponse:
 
         with self._uow_factory.create() as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
@@ -91,7 +128,7 @@ class IngestionService(IngestionServiceProtocol):
                 raise ClickNotFound("")
 
             saved_install = uow.install_repo.save(
-                CrmInstallEntity(
+                AnalyticsInstallEntity(
                     click_id=click.click_id,
                     app_platform_id=app_platform.platform_id,
                     device_data=command.device.model_dump(mode="python"),
@@ -142,7 +179,22 @@ class IngestionService(IngestionServiceProtocol):
 
         raise UnsupportedEventType(event.type)
 
-    async def process_batch_events(self, command: SdkEventsCommand) -> None:
+    async def process_batch_events(self, command: SdkEventsCommand) -> bool:
+        key = self._scope("events", f"{command.install_key}:{command.click_id}", command.idempotency_key)
+        owner_token = await self._start_idempotent_request(key)
+        if owner_token is None:
+            return False
+
+        try:
+            await self._process_batch_events(command)
+        except BaseException:
+            await self._idempotency_repo.release(key, owner_token)
+            raise
+
+        await self._finish_idempotent_request(key, owner_token)
+        return True
+
+    async def _process_batch_events(self, command: SdkEventsCommand) -> None:
         with self._uow_factory.create() as uow:
             app_platform = self._resolve_platform(command.install_key, uow)
             click = uow.click_repo.get_by_id(command.click_id)
@@ -156,7 +208,7 @@ class IngestionService(IngestionServiceProtocol):
             click.validate_platform_match(app_platform.platform_id)
 
             install = uow.install_repo.get_by_click_id(click.click_id)
-            events_list: list[EventEntity] = []
+            events_list: list[AnalyticsEventEntity] = []
             keys: list[str] = []
 
             for _, event in enumerate(command.events):
@@ -164,7 +216,7 @@ class IngestionService(IngestionServiceProtocol):
                 if exist_event is not None or event.idempotency_key in keys:
                     continue
 
-                keys.append(event.key)
+                keys.append(event.idempotency_key)
 
                 builder = self._make_event_builder(
                     idempotency_key=event.idempotency_key,
@@ -196,7 +248,22 @@ class IngestionService(IngestionServiceProtocol):
 
         await self._async_event_bus.publish_many(SdkEventMessageFactory.from_events(inserted))
 
-    async def update_params(self, command: SdkParamsUpdateCommand) -> None:
+    async def update_params(self, command: SdkParamsUpdateCommand) -> bool:
+        key = self._scope("params-update", command.click_id, command.idempotency_key)
+        owner_token = await self._start_idempotent_request(key)
+        if owner_token is None:
+            return False
+
+        try:
+            await self._update_params(command)
+        except BaseException:
+            await self._idempotency_repo.release(key, owner_token)
+            raise
+
+        await self._finish_idempotent_request(key, owner_token)
+        return True
+
+    async def _update_params(self, command: SdkParamsUpdateCommand) -> None:
         with self._uow_factory.create() as uow:
             click = uow.click_repo.get_by_id(command.click_id)
 

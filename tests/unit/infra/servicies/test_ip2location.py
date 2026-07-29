@@ -29,10 +29,7 @@ def test_resolve_reads_from_configured_database_and_maps_location_fields(
 ) -> None:
     calls: dict[str, object] = {}
 
-    monkeypatch.setattr(
-        "app.infra.services.ip2location.IP2Location.IP2Location",
-        lambda path: _FakeDatabase(path, calls=calls),
-    )
+    monkeypatch.setattr(ip2location_module.IP2Location, "IP2Location", lambda path: _FakeDatabase(path, calls=calls))
 
     gateway = ip2location_module.IP2LocationGateway(settings.ip2location_bin_database_path)
     location = gateway.resolve("203.0.113.10")

@@ -3,7 +3,7 @@ from typing import Any, TypeVar
 
 from app.core.bus.event.events.analytics import RawEventMessage
 from app.modules.crm.application.exception import GeneralException
-from app.modules.crm.domain.events.CrmEventEntity import EventEntity
+from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
 
 TRawEventMessage = TypeVar("TRawEventMessage", bound=RawEventMessage)
 
@@ -14,7 +14,7 @@ class RawEventMessageFactory:
     @classmethod
     def from_event(
         cls,
-        event: EventEntity,
+        event: AnalyticsEventEntity,
         *,
         metadata: Mapping[str, Any] | None = None,
         name: str = RawEventMessage.EVENT_NAME,
@@ -51,7 +51,7 @@ class RawEventMessageFactory:
     @classmethod
     def from_events(
         cls,
-        events: Sequence[EventEntity],
+        events: Sequence[AnalyticsEventEntity],
         *,
         metadata: Mapping[str, Any] | None = None,
         name: str = RawEventMessage.EVENT_NAME,

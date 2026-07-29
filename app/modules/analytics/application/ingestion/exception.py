@@ -13,6 +13,16 @@ class InvalidInstallKey(SdkIngestionException):
         super().__init__("sdk.ingestion.install_key.invalid", {"install_key": install_key}, 400)
 
 
+class IdempotencyKeyProcessing(SdkIngestionException):
+    def __init__(self, key: str):
+        super().__init__("sdk.idempotency.processing", {"idempotency_key": key}, 409)
+
+
+class IdempotencyStateLost(SdkIngestionException):
+    def __init__(self, key: str):
+        super().__init__("sdk.idempotency.state_lost", {"idempotency_key": key}, 500)
+
+
 class UnsupportedEventType(SdkIngestionException):
     def __init__(self, event_type: str):
         super().__init__("sdk.ingestion.event.type.unsupported", {"event_type": event_type}, 400)

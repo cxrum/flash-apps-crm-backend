@@ -5,7 +5,7 @@ from typing import Any, Protocol
 
 from app.modules.crm.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
 from app.modules.crm.domain.app_platform.app_platform_repository_protocol import CrmAppPlatformRepositoryProtocol
-from app.modules.crm.domain.click.click_repository_protocol import CrmClickRepositoryProtocol
+from app.modules.analytics.domain.click.click_repository_protocol import AnalyticsClickRepositoryProtocol
 from app.modules.crm.domain.conversion_definition.conversion_definition_repository_protocol import (
     CrmConversionDefinitionRepositoryProtocol,
 )
@@ -13,8 +13,8 @@ from app.modules.crm.domain.current_param.current_param_repository_protocol impo
 from app.modules.crm.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
     CustomParamsStatisticsRepositoryProtocol,
 )
-from app.modules.crm.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
-from app.modules.crm.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
+from app.modules.analytics.domain.events.event_repository_protocol import AnalyticsEventRepositoryProtocol
+from app.modules.analytics.domain.install.install_repository_protocol import AnalyticsInstallRepositoryProtocol
 from app.modules.crm.domain.metric_definition.metric_definition_repository_protocol import (
     CrmMetricDefinitionRepositoryProtocol,
 )
@@ -29,9 +29,9 @@ from app.modules.crm.domain.statistics_aggregate.statistics_aggregate_repository
 class AnalyticsUnitOfWorkProtocol(Protocol):
     app_repo: CrmAppRepositoryProtocol
     app_platform_repo: CrmAppPlatformRepositoryProtocol
-    click_repo: CrmClickRepositoryProtocol
-    install_repo: CrmInstallRepositoryProtocol
-    event_repo: CrmEventRepositoryProtocol
+    click_repo: AnalyticsClickRepositoryProtocol
+    install_repo: AnalyticsInstallRepositoryProtocol
+    event_repo: AnalyticsEventRepositoryProtocol
     current_param_repo: CrmCurrentParamRepositoryProtocol
     statistics_repo: StatisticsRepositoryProtocol
     custom_params_statistics_repo: CustomParamsStatisticsRepositoryProtocol

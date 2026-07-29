@@ -4,15 +4,15 @@ from typing import Any, Protocol
 from app.core.bus.event.events.analytics import ConversionEventMessage, MetricEventMessage, RawEventMessage
 from app.core.bus.type import EventMessage
 from app.modules.analytics.application.events_bus.factories.raw_event import RawEventMessageFactory
-from app.modules.crm.domain.events.CrmEventEntity import EventEntity
+from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
 
 
 class EventMessageFactoryStrategyProtocol(Protocol):
-    def supports(self, event: EventEntity) -> bool: ...
+    def supports(self, event: AnalyticsEventEntity) -> bool: ...
 
     def create(
         self,
-        event: EventEntity,
+        event: AnalyticsEventEntity,
         *,
         metadata: Mapping[str, Any] | None = None,
     ) -> EventMessage: ...
@@ -28,12 +28,12 @@ class _TypedEventMessageFactoryStrategy:
         self._event_type = event_type
         self._message_cls = message_cls
 
-    def supports(self, event: EventEntity) -> bool:
+    def supports(self, event: AnalyticsEventEntity) -> bool:
         return event.event_type == self._event_type
 
     def create(
         self,
-        event: EventEntity,
+        event: AnalyticsEventEntity,
         *,
         metadata: Mapping[str, Any] | None = None,
     ) -> RawEventMessage:
@@ -46,12 +46,12 @@ class _TypedEventMessageFactoryStrategy:
 
 
 class _RawEventMessageFactoryStrategy:
-    def supports(self, event: EventEntity) -> bool:
+    def supports(self, event: AnalyticsEventEntity) -> bool:
         return True
 
     def create(
         self,
-        event: EventEntity,
+        event: AnalyticsEventEntity,
         *,
         metadata: Mapping[str, Any] | None = None,
     ) -> RawEventMessage:
@@ -74,7 +74,7 @@ class SdkEventMessageFactory:
     @classmethod
     def from_event(
         cls,
-        event: EventEntity,
+        event: AnalyticsEventEntity,
         *,
         metadata: Mapping[str, Any] | None = None,
     ) -> EventMessage:
@@ -84,7 +84,7 @@ class SdkEventMessageFactory:
     @classmethod
     def from_events(
         cls,
-        events: Sequence[EventEntity],
+        events: Sequence[AnalyticsEventEntity],
         *,
         metadata: Mapping[str, Any] | None = None,
     ) -> list[EventMessage]:
@@ -93,7 +93,7 @@ class SdkEventMessageFactory:
     @classmethod
     def _resolve_strategy(
         cls,
-        event: EventEntity,
+        event: AnalyticsEventEntity,
     ) -> EventMessageFactoryStrategyProtocol:
         for strategy in cls._strategies:
             if strategy.supports(event):
