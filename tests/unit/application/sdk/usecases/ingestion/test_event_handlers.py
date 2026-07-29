@@ -12,7 +12,7 @@ from app.modules.analytics.handlers.event.metric import AsyncMetricHandler
 from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
 from app.modules.analytics.handlers.update_param.update_param import AsyncUpdateParamHandler
 from app.modules.crm.application.events_bus.handlers.audit import AsyncAuditValueHandler
-from app.modules.crm.application.exception import GeneralException
+from app.modules.analytics.core.exception import AnalyticsApplicationException as GeneralException
 from app.modules.analytics.di.event_bus import get_event_subscribers as get_analytics_event_subscribers
 from app.modules.crm.di.event_bus import get_event_subscribers as get_crm_event_subscribers
 from app.modules.crm.domain.app.CrmAppEntity import CrmAppEntity

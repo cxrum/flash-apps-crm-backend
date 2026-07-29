@@ -15,7 +15,10 @@ from app.modules.analytics.application.ingestion.exception import (
     RevenueCurrencyInvalid,
     RevenueCurrencyRequired,
 )
-from app.modules.crm.application.sdk.exception import ConversionMoneyValueException, MetricMoneyValueException
+from app.modules.analytics.application.ingestion.exception import (
+    ConversionMoneyValueException,
+    MetricMoneyValueException,
+)
 from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
 
 

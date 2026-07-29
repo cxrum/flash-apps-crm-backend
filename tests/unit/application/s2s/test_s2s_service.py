@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from app.modules.crm.application.contracts.ip2location import IpLocation
-from app.modules.crm.application.exception import GeneralException
+from app.modules.analytics.core.exception import AnalyticsApplicationException
 from app.modules.analytics.application.s2s.service import ClickService
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from tests.unit.builders import (
@@ -66,7 +66,7 @@ def _build_service(
 def test_process_s2s_click_raises_for_unknown_app_code() -> None:
     service, _, _ = _build_service(StubUnitOfWork())
 
-    with pytest.raises(GeneralException, match="Unknown app code"):
+    with pytest.raises(AnalyticsApplicationException, match="Unknown app code"):
         service.process_s2s_click(build_s2s_click_command(app_code="missing-app"))
 
 
@@ -75,7 +75,7 @@ def test_process_s2s_click_raises_for_unknown_platform() -> None:
     service, _, _ = _build_service(uow)
     _seed_platform(uow, platform="ios")
 
-    with pytest.raises(GeneralException, match="is not configured"):
+    with pytest.raises(AnalyticsApplicationException, match="is not configured"):
         service.process_s2s_click(build_s2s_click_command(platform="android"))
 
 
@@ -84,7 +84,7 @@ def test_process_s2s_click_rejects_invalid_signature() -> None:
     service, signature_service, ip2location_gateway = _build_service(uow, compare_result=False)
     platform = _seed_platform(uow)
 
-    with pytest.raises(GeneralException):
+    with pytest.raises(AnalyticsApplicationException):
         service.process_s2s_click(
             build_s2s_click_command(
                 app_code="test-app",

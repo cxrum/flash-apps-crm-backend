@@ -35,7 +35,7 @@ from app.modules.crm.domain.statistics_aggregate.statistics_aggregate_repository
     StatisticsRepositoryProtocol,
 )
 from app.modules.crm.infra.db.apps.models import AppPlatform
-from app.modules.crm.infra.exception import BaseInfraException
+from app.modules.analytics.infra.exception import AnalyticsInfraException
 
 
 def _apply_pagination(stmt, pagination: Pagination | None):
@@ -109,7 +109,7 @@ class SqlAlchemyAnalyticsClickRepository(AnalyticsClickRepositoryProtocol):
     def delete(self, click_id: str) -> AnalyticsClickEntity:
         row = self.session.get(AnalyticsClick, click_id)
         if row is None:
-            raise BaseInfraException()
+            raise AnalyticsInfraException()
 
         click = self._to_domain(row)
         self.session.delete(row)
@@ -210,7 +210,7 @@ class SqlAlchemyAnalyticsInstallRepository(AnalyticsInstallRepositoryProtocol):
     def delete(self, install_id: int) -> AnalyticsInstallEntity:
         row = self.session.get(AnalyticsInstall, install_id)
         if row is None:
-            raise BaseInfraException()
+            raise AnalyticsInfraException()
 
         install = self._to_domain(row)
         self.session.delete(row)
@@ -327,7 +327,7 @@ class SqlAlchemyAnalyticsEventRepository(AnalyticsEventRepositoryProtocol):
     def delete(self, event_id: str) -> AnalyticsEventEntity:
         row = self.session.get(AnalyticsEvent, event_id)
         if row is None:
-            raise BaseInfraException()
+            raise AnalyticsInfraException()
 
         event = self._to_domain(row)
         self.session.delete(row)
@@ -546,7 +546,7 @@ class SqlAlchemyAnalyticsStatisticsRepository(StatisticsRepositoryProtocol):
     def delete(self, aggregate_id: int) -> StatisticsAggregateEntity:
         row = self.session.get(AnalyticsStatisticsAggregate, aggregate_id)
         if row is None:
-            raise BaseInfraException()
+            raise AnalyticsInfraException()
         aggregate = self._to_domain(row)
         self.session.delete(row)
         self.session.flush()
@@ -661,7 +661,7 @@ class SqlAlchemyAnalyticsCustomParamsStatisticsRepository(CustomParamsStatistics
     def delete(self, aggregate_id: int) -> CustomParamsStatisticsAggregateEntity:
         row = self.session.get(AnalyticsCustomParamsStatisticsAggregate, aggregate_id)
         if row is None:
-            raise BaseInfraException()
+            raise AnalyticsInfraException()
         aggregate = self._to_domain(row)
         self.session.delete(row)
         self.session.flush()

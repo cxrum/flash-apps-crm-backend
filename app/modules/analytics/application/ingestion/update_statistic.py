@@ -4,7 +4,7 @@ from typing import Any
 
 from app.core.bus.event.events.analytics import RawEventMessage
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkProtocol
-from app.modules.crm.application.exception import GeneralException
+from app.modules.analytics.core.exception import AnalyticsApplicationException
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.modules.crm.domain.currency.entity import Money
 from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
@@ -36,7 +36,7 @@ class StatisticAggregates:
         app_platform: CrmAppPlatformEntity,
     ) -> None:
         if app_platform.platform_id is None:
-            raise GeneralException()
+            raise AnalyticsApplicationException()
 
         definitions = uow.param_definition_repo.list_by_app_id(app_platform.app_id)
 
@@ -58,7 +58,7 @@ class StatisticAggregates:
         )
 
         if len(current_conversion_statistic) > 1:
-            raise GeneralException()
+            raise AnalyticsApplicationException()
 
         if len(current_conversion_statistic) == 0:
             current_conversion_statistic.append(
@@ -94,7 +94,7 @@ class StatisticAggregates:
             )
 
             if len(current_conversion_detailed_statistic) > 1:
-                raise GeneralException()
+                raise AnalyticsApplicationException()
 
             if len(current_conversion_detailed_statistic) == 0:
                 current_conversion_detailed_statistic.append(

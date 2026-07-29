@@ -1,9 +1,9 @@
 from typing import Any, Dict
 
-from app.modules.crm.application.sdk.exception import SdkException
+from app.modules.analytics.application.exception import AnalyticsSdkException
 
 
-class S2SException(SdkException):
+class S2SException(AnalyticsSdkException):
     def __init__(self, message_key: str = "internal", context: Dict[str, Any] = {}, code: int = 500):
         super().__init__(message_key, context, code)
 

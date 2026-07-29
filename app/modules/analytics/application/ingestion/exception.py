@@ -1,9 +1,9 @@
 from typing import Any, Dict
 
-from app.modules.crm.application.sdk.exception import EventValueException, SdkException
+from app.modules.analytics.application.exception import AnalyticsEventValueException, AnalyticsSdkException
 
 
-class SdkIngestionException(SdkException):
+class SdkIngestionException(AnalyticsSdkException):
     def __init__(self, message_key: str = "internal", context: Dict[str, Any] = {}, code: int = 500):
         super().__init__(message_key, context, code)
 
@@ -72,16 +72,26 @@ class ReservedEventPayloadKeys(SdkIngestionException):
         super().__init__("sdk.event.payload.reserved", {}, 400)
 
 
-class RevenueAmountRequired(EventValueException):
+class RevenueAmountRequired(AnalyticsEventValueException):
     def __init__(self):
         super().__init__("sdk.event.revenue.amount.required")
 
 
-class RevenueCurrencyRequired(EventValueException):
+class RevenueCurrencyRequired(AnalyticsEventValueException):
     def __init__(self):
         super().__init__("sdk.event.revenue.currency.required")
 
 
-class RevenueCurrencyInvalid(EventValueException):
+class RevenueCurrencyInvalid(AnalyticsEventValueException):
     def __init__(self):
         super().__init__("sdk.event.revenue.currency.invalid")
+
+
+class MetricMoneyValueException(AnalyticsEventValueException):
+    def __init__(self):
+        super().__init__("metric.money.value")
+
+
+class ConversionMoneyValueException(AnalyticsEventValueException):
+    def __init__(self):
+        super().__init__("conversion.money.value")

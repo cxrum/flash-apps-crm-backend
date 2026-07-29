@@ -4,13 +4,13 @@ import asyncio
 
 import pytest
 
+from app.modules.analytics.application.exception import AnalyticsClickNotFound
 from app.modules.analytics.application.ingestion.exception import (
     IdempotencyKeyProcessing,
     IdempotencyStateLost,
     InvalidInstallKey,
 )
 from app.modules.analytics.application.ingestion.service import IngestionService
-from app.modules.crm.application.sdk.exception import ClickNotFound
 from tests.unit.base import UnitTestContext
 from tests.unit.builders import (
     build_app_entity,
@@ -117,7 +117,7 @@ def test_failed_batches_and_parameter_updates_release_keys_for_retry(unit_test_c
         params = build_sdk_params_update_command(click_id="missing-click", idempotency_key="params-retry")
         params_key = service._scope("params-update", params.click_id, params.idempotency_key)
 
-        with pytest.raises(ClickNotFound):
+        with pytest.raises(AnalyticsClickNotFound):
             await service.update_params(params)
 
         assert (await unit_test_context.idempotency_repository.acquire(params_key)).is_owner

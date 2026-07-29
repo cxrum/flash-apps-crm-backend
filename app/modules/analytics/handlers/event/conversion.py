@@ -3,7 +3,7 @@ from app.core.bus.type import EventMessage
 from app.modules.analytics.application.ingestion.update_statistic import StatisticAggregates
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.analytics.handlers.event.event import ConversionEventMessage
-from app.modules.crm.application.exception import GeneralException
+from app.modules.analytics.core.exception import AnalyticsApplicationException as GeneralException
 from app.modules.crm.domain.conversion_definition.CrmConversionDefinitionEntity import (
     CrmConversionDefinitionEntity,
 )

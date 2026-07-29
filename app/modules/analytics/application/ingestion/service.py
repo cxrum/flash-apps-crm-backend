@@ -26,6 +26,7 @@ from app.modules.analytics.application.ingestion.exception import (
     RevenueDataRequired,
     UnsupportedEventType,
 )
+from app.modules.analytics.application.exception import AnalyticsClickNotFound, AnalyticsPlatformNotFound
 from app.modules.analytics.application.ingestion.protocol import IngestionServiceProtocol
 from app.modules.analytics.application.ingestion.responses import SdkInstallResponse
 from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
@@ -33,8 +34,6 @@ from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEv
 from app.modules.analytics.domain.install.AnalyticsInstallEntity import AnalyticsInstallEntity
 from app.modules.analytics.domain.redis.repo import IdempotencyKeyRepositoryProtocol, IdempotencyKeyStatus
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
-from app.modules.crm.application.exception import PlatformNotFound
-from app.modules.crm.application.sdk.exception import ClickNotFound
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.modules.crm.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.modules.crm.domain.currency.entity import Money
@@ -120,12 +119,12 @@ class IngestionService(IngestionServiceProtocol):
             app_platform = self._resolve_platform(command.install_key, uow)
 
             if app_platform is None or app_platform.platform_id is None:
-                raise PlatformNotFound()
+                raise AnalyticsPlatformNotFound()
 
             click = self._resolve_click(command, app_platform.platform_id, uow)
 
             if click is None or click.click_id is None:
-                raise ClickNotFound("")
+                raise AnalyticsClickNotFound("")
 
             saved_install = uow.install_repo.save(
                 AnalyticsInstallEntity(
@@ -200,10 +199,10 @@ class IngestionService(IngestionServiceProtocol):
             click = uow.click_repo.get_by_id(command.click_id)
 
             if click is None:
-                raise ClickNotFound(command.click_id)
+                raise AnalyticsClickNotFound(command.click_id)
 
             if app_platform is None or app_platform.platform_id is None:
-                raise PlatformNotFound()
+                raise AnalyticsPlatformNotFound()
 
             click.validate_platform_match(app_platform.platform_id)
 
@@ -268,7 +267,7 @@ class IngestionService(IngestionServiceProtocol):
             click = uow.click_repo.get_by_id(command.click_id)
 
             if click is None:
-                raise ClickNotFound(command.click_id)
+                raise AnalyticsClickNotFound(command.click_id)
 
         value = UpdateParamValue(
             click_id=command.click_id, params=command.params, occurred_at=command.event_time or datetime.now(UTC)

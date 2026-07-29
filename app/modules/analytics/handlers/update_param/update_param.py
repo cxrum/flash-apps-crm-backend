@@ -4,7 +4,7 @@ from app.core.bus.contract import AsyncEventMessageHandler
 from app.core.bus.type import EventMessage
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
-from app.modules.crm.application.exception import GeneralException
+from app.modules.analytics.core.exception import AnalyticsApplicationException as GeneralException
 from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 

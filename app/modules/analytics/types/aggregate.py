@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 
-from app.modules.crm.domain.statistics_aggregate.exception import InvalidStatisticsAmountCurrency
+from app.modules.analytics.domain.exception import AnalyticsStatisticsAmountCurrencyInvalid
 
 
 @dataclass(frozen=True)
@@ -33,14 +33,14 @@ class StatisticsAggregate:
 
     def increase_amount_usd(self, amount: Money):
         if amount.base != "USD":
-            raise InvalidStatisticsAmountCurrency()
+            raise AnalyticsStatisticsAmountCurrencyInvalid()
 
         self.amount_usd = self.amount_usd if self.amount_usd is not None else 0.0
         self.amount_usd += amount.value
 
     def decrease_amount_usd(self, amount: Money):
         if amount.base != "USD":
-            raise InvalidStatisticsAmountCurrency()
+            raise AnalyticsStatisticsAmountCurrencyInvalid()
 
         self.amount_usd = self.amount_usd if self.amount_usd is not None else 0.0
         self.amount_usd -= amount.value

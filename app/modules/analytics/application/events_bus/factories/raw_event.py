@@ -2,7 +2,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, TypeVar
 
 from app.core.bus.event.events.analytics import RawEventMessage
-from app.modules.crm.application.exception import GeneralException
+from app.modules.analytics.core.exception import AnalyticsApplicationException
 from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
 
 TRawEventMessage = TypeVar("TRawEventMessage", bound=RawEventMessage)
@@ -21,9 +21,9 @@ class RawEventMessageFactory:
         message_cls: type[TRawEventMessage] = RawEventMessage,
     ) -> TRawEventMessage:
         if not event.event_id:
-            raise GeneralException("Event id is required for RawEventMessage")
+            raise AnalyticsApplicationException("Event id is required for RawEventMessage")
         if not event.click_id:
-            raise GeneralException("Click id is required for RawEventMessage")
+            raise AnalyticsApplicationException("Click id is required for RawEventMessage")
 
         message_metadata = {
             "source": cls.DEFAULT_SOURCE,

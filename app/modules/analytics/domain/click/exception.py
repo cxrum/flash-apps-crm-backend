@@ -1,11 +1,11 @@
-from app.modules.crm.domain.exceptions import DomainException
+from app.modules.analytics.core.exception import AnalyticsDomainException
 
 
-class AnalyticsClickStatusInvalid(DomainException):
+class AnalyticsClickStatusInvalid(AnalyticsDomainException):
     def __init__(self) -> None:
         super().__init__("domain.click.status.invalid", {}, 400)
 
 
-class AnalyticsClickPlatformMismatch(DomainException):
+class AnalyticsClickPlatformMismatch(AnalyticsDomainException):
     def __init__(self) -> None:
         super().__init__("domain.click.platform.invalid", {}, 400)
