@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 
-from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 from app.modules.analytics.domain.click.exception import AnalyticsClickPlatformMismatch, AnalyticsClickStatusInvalid
+from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 
 
 @dataclass
@@ -28,7 +28,7 @@ class AnalyticsClickEntity:
     created_at: datetime | None = None
 
     @classmethod
-    def create_synthetic(cls, app_platform_id: int, params: dict[str, Any]) -> "AnalyticsClickEntity":
+    def create_synthetic(cls, app_platform_id: int, params: dict[str, Any]) -> AnalyticsClickEntity:
         return cls(
             click_id=cls.generate_click_id(),
             app_platform_id=app_platform_id,

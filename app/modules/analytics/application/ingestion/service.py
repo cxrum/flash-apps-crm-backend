@@ -8,6 +8,7 @@ from app.modules.analytics.application.events_bus.factories.param_update_event i
     UpdateParamValue,
 )
 from app.modules.analytics.application.events_bus.factories.sdk_event import SdkEventMessageFactory
+from app.modules.analytics.application.exception import AnalyticsClickNotFound, AnalyticsPlatformNotFound
 from app.modules.analytics.application.ingestion.commands import (
     SdkEventCommand,
     SdkEventsCommand,
@@ -26,7 +27,6 @@ from app.modules.analytics.application.ingestion.exception import (
     RevenueDataRequired,
     UnsupportedEventType,
 )
-from app.modules.analytics.application.exception import AnalyticsClickNotFound, AnalyticsPlatformNotFound
 from app.modules.analytics.application.ingestion.protocol import IngestionServiceProtocol
 from app.modules.analytics.application.ingestion.responses import SdkInstallResponse
 from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity

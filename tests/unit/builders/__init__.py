@@ -48,6 +48,7 @@ from tests.unit.builders.entities import (
     build_app_secret_entity,
     build_app_user_entity,
     build_audit_log_entity,
+    build_analytics_event_entity,
     build_click_entity,
     build_conversion_definition_entity,
     build_current_param_entity,
@@ -71,6 +72,7 @@ from tests.unit.builders.entities import (
 
 __all__ = [
     "build_app_entity",
+    "build_analytics_event_entity",
     "build_app_platform_entity",
     "build_app_secret_entity",
     "build_app_user_entity",

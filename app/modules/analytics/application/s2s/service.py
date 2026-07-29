@@ -9,19 +9,19 @@ from app.modules.analytics.application.s2s.protocol import ClickServiceProtocol
 from app.modules.analytics.application.s2s.responses import S2SClickResponse
 from app.modules.analytics.application.tracking.entities import TrackingRedirectCommand
 from app.modules.analytics.application.tracking.responses import TrackingRedirectResponse
+from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
+from app.modules.analytics.domain.signature_protocol import AnalyticsSignatureProtocol
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.crm.application.contracts.ip2location import IP2LocationGatewayProtocol, IpLocation
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
 from app.modules.crm.domain.hash_protocol import HashableValue
-from app.modules.crm.domain.signature_protocol import SignatureProtocol
 
 
 class ClickService(ClickServiceProtocol):
     def __init__(
         self,
         uow_factory: AnalyticsUnitOfWorkFactoryProtocol,
-        signature_service: SignatureProtocol,
+        signature_service: AnalyticsSignatureProtocol,
         ip2location_gateway: IP2LocationGatewayProtocol,
     ) -> None:
         self._uow_factory = uow_factory

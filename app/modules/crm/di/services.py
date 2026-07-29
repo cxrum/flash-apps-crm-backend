@@ -21,39 +21,21 @@ from app.modules.crm.application.contracts.ip2location import IP2LocationGateway
 from app.modules.crm.application.contracts.requester import S2SRequesterProtocol
 from app.modules.crm.application.sdk.apps.protocol import AppServiceProtocol
 from app.modules.crm.application.sdk.apps.service import AppService
-from app.modules.crm.application.sdk.ingestion.protocol import IngestionServiceProtocol
-from app.modules.crm.application.sdk.ingestion.service import IngestionService
-from app.modules.crm.application.sdk.s2s.protocol import ClickServiceProtocol
-from app.modules.crm.application.sdk.s2s.service import ClickService
 from app.modules.crm.di.infra import get_uow_factory
 from app.modules.crm.domain.currency.currency_convertor_protocol import (
     CurrencyConvertorClientProtocol,
 )
 from app.modules.crm.domain.hash_protocol import HashProtocol
-from app.modules.crm.domain.signature_protocol import SignatureProtocol
 from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol
 from app.modules.crm.infra.services.currency import CurrencyConvertorClient
 from app.modules.crm.infra.services.encryption import EncryptionService
 from app.modules.crm.infra.services.hashing import ServerHash
 from app.modules.crm.infra.services.ip2location import IP2LocationGateway
 from app.modules.crm.infra.services.s2s.request_builder import S2SRequester
-from app.modules.crm.infra.services.signature import SignatureSHA256
-
-
-def get_signature_sha256_service() -> SignatureProtocol:
-    return SignatureSHA256()
 
 
 def get_ip2location_gateway() -> IP2LocationGatewayProtocol:
     return IP2LocationGateway(settings.ip2location_bin_database_path)
-
-
-def get_s2s_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
-    signature_service: SignatureProtocol = Depends(get_signature_sha256_service),
-    ip2location_gateway: IP2LocationGatewayProtocol = Depends(get_ip2location_gateway),
-) -> ClickServiceProtocol:
-    return ClickService(uow_factory, signature_service, ip2location_gateway)
 
 
 def get_crm_authorization_service(
@@ -112,12 +94,6 @@ def get_currency_client() -> CurrencyConvertorClientProtocol:
     return CurrencyConvertorClient()
 
 
-def get_sdk_ingestion_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
-    event_bus: IAsyncEventBus = Depends(get_in_memory_event_bus),
-    currency_service: CurrencyConvertorClientProtocol = Depends(get_currency_client),
-) -> IngestionServiceProtocol:
-    return IngestionService(uow_factory, event_bus, currency_service)
 
 
 def get_hash_service() -> HashProtocol:

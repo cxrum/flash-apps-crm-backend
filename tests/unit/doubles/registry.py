@@ -33,7 +33,6 @@ from app.modules.crm.domain.role.role_repository_protocol import CrmRoleReposito
 from app.modules.crm.domain.secret_template.secret_template_repository_protocol import (
     CrmSecretTemplateRepositoryProtocol,
 )
-from app.modules.crm.domain.signature_protocol import SignatureProtocol
 from app.modules.crm.domain.statistics_aggregate.statistics_aggregate_repository_protocol import (
     StatisticsRepositoryProtocol,
 )
@@ -105,7 +104,6 @@ PROTOCOL_DOUBLE_REGISTRY = {
     CrmPushTokenRepositoryProtocol: InMemoryCrmPushTokenRepository,
     CrmRoleRepositoryProtocol: InMemoryCrmRoleRepository,
     CrmSecretTemplateRepositoryProtocol: InMemoryCrmSecretTemplateRepository,
-    SignatureProtocol: StubSignatureService,
     StatisticsRepositoryProtocol: InMemoryStatisticsRepository,
     CrmUserAppAccessRepositoryProtocol: InMemoryCrmUserAppAccessRepository,
     CrmUserRepositoryProtocol: InMemoryCrmUserRepository,

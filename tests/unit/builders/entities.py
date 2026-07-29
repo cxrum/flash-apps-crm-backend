@@ -18,6 +18,7 @@ from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStati
     CustomParamsStatisticsAggregateEntity,
 )
 from app.modules.crm.domain.events.CrmEventEntity import EventEntity
+from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
 from app.modules.crm.domain.hash_protocol import HashableValue
 from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.modules.crm.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
@@ -162,6 +163,21 @@ def build_custom_params_statistics_aggregate_entity(
 
 def build_event_entity(**overrides: Any) -> EventEntity:
     return EventEntity(
+        **_merge(
+            {
+                "event_id": "evt-1",
+                "click_id": "click-1",
+                "event_type": "metric",
+                "event_key": "first_open",
+                "event_time_utc": _now(),
+            },
+            overrides,
+        )
+    )
+
+
+def build_analytics_event_entity(**overrides: Any) -> AnalyticsEventEntity:
+    return AnalyticsEventEntity(
         **_merge(
             {
                 "event_id": "evt-1",

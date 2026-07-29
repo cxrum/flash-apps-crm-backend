@@ -1,7 +1,15 @@
 from pydantic import Field
 
 from app.modules.crm.application.base import FlexibleCommand, JsonDict, PaginationCommand
-from app.modules.crm.application.sdk.ingestion.commands import SdkDeviceValueCommand
+
+
+class PushDeviceValueCommand(FlexibleCommand):
+    os_name: str | None = None
+    os_version: str | None = None
+    device_brand: str | None = None
+    device_model: str | None = None
+    app_version: str | None = None
+    sdk_version: str | None = None
 
 
 class ListPushCampaignsCommand(PaginationCommand):
@@ -59,5 +67,5 @@ class PushDeviceRegisterCommand(FlexibleCommand):
     click_id: str
     app_user_id: int | None = None
     provider: str | None = None
-    device: SdkDeviceValueCommand | None = None
+    device: PushDeviceValueCommand | None = None
     params: JsonDict = Field(default_factory=dict)

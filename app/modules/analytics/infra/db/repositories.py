@@ -1,12 +1,19 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date, datetime
-from typing import Any, Mapping
+from typing import Any
 
 from sqlalchemy import RowMapping, desc, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
+from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
+from app.modules.analytics.domain.click.click_repository_protocol import AnalyticsClickRepositoryProtocol
+from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
+from app.modules.analytics.domain.events.event_repository_protocol import AnalyticsEventRepositoryProtocol
+from app.modules.analytics.domain.install.AnalyticsInstallEntity import AnalyticsInstallEntity
+from app.modules.analytics.domain.install.install_repository_protocol import AnalyticsInstallRepositoryProtocol
 from app.modules.analytics.infra.db.models import (
     AnalyticsClick,
     AnalyticsCurrentParam,
@@ -15,8 +22,7 @@ from app.modules.analytics.infra.db.models import (
     AnalyticsInstall,
     AnalyticsStatisticsAggregate,
 )
-from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
-from app.modules.analytics.domain.click.click_repository_protocol import AnalyticsClickRepositoryProtocol
+from app.modules.analytics.infra.exception import AnalyticsInfraException
 from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.modules.crm.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
 from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
@@ -25,17 +31,12 @@ from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStati
 from app.modules.crm.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
     CustomParamsStatisticsRepositoryProtocol,
 )
-from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
-from app.modules.analytics.domain.events.event_repository_protocol import AnalyticsEventRepositoryProtocol
-from app.modules.analytics.domain.install.AnalyticsInstallEntity import AnalyticsInstallEntity
-from app.modules.analytics.domain.install.install_repository_protocol import AnalyticsInstallRepositoryProtocol
 from app.modules.crm.domain.pagination import Pagination
-from app.modules.crm.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
 from app.modules.crm.domain.statistics_aggregate.statistics_aggregate_repository_protocol import (
     StatisticsRepositoryProtocol,
 )
+from app.modules.crm.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
 from app.modules.crm.infra.db.apps.models import AppPlatform
-from app.modules.analytics.infra.exception import AnalyticsInfraException
 
 
 def _apply_pagination(stmt, pagination: Pagination | None):

@@ -5,10 +5,10 @@ from app.modules.crm.domain.hash_protocol import HashableValue
 
 
 @dataclass(frozen=True)
-class SignatureValue:
+class AnalyticsSignatureValue:
     signature: HashableValue
 
 
-class SignatureProtocol(Protocol):
-    def sign(self, *, value: HashableValue, key: HashableValue) -> SignatureValue: ...
+class AnalyticsSignatureProtocol(Protocol):
+    def sign(self, *, value: HashableValue, key: HashableValue) -> AnalyticsSignatureValue: ...
     def compare(self, *, value: HashableValue, signature: HashableValue, key: HashableValue) -> bool: ...
