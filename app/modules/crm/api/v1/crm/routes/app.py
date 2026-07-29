@@ -24,8 +24,8 @@ router = APIRouter()
 @router.get("/{app_id}", tags=["admin", "app"])
 async def get_app(
     app_id: int,
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> JsonDict:
     command = SdkAppCommandsMapper.get_app_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id)
@@ -38,8 +38,8 @@ async def get_app(
 @router.get("/", tags=["admin", "app"])
 async def list_apps(
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> JsonDict:
     command = SdkAppCommandsMapper.list_apps_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, pagination_queries)
@@ -53,8 +53,8 @@ async def list_apps(
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
 async def create_app(
     payload: Annotated[CreateAppPayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> JsonDict:
     command = SdkAppCommandsMapper.create_app_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -68,8 +68,8 @@ async def create_app(
 @router.patch("/", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
 async def update_app(
     payload: Annotated[UpdateAppPayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> JsonDict:
     command = SdkAppCommandsMapper.update_app_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -83,8 +83,8 @@ async def update_app(
 @router.delete("/", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
 async def delete_app(
     payload: Annotated[DeleteAppPayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> JsonDict:
 
     command = SdkAppCommandsMapper.delete_app_from_transport(
@@ -100,8 +100,8 @@ async def delete_app(
 async def get_app_platform(
     app_id: int,
     platform_id: int,
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> JsonDict:
     command = SdkAppCommandsMapper.get_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id, platform_id=platform_id)
@@ -116,8 +116,8 @@ async def get_app_platform(
 async def list_app_platforms(
     app_id: int,
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> JsonDict:
     command = SdkAppCommandsMapper.list_app_platforms_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, pagination_queries, app_id=app_id)
@@ -133,8 +133,8 @@ async def update_app_platform(
     app_id: int,
     platform_id: int,
     payload: Annotated[UpdateAppPlatformPayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> JsonDict:
     command = SdkAppCommandsMapper.update_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -153,8 +153,8 @@ async def update_app_platform(
 @router.post("/platform", status_code=status.HTTP_201_CREATED, tags=["admin", "app"])
 async def create_app_platform(
     payload: Annotated[CreateAppPlatformPayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> JsonDict:
     command = SdkAppCommandsMapper.create_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -169,8 +169,8 @@ async def create_app_platform(
 async def delete_app_platform(
     app_id: int,
     platform_id: int,
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> JsonDict:
     command = SdkAppCommandsMapper.delete_app_platform_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id, platform_id=platform_id)
@@ -188,8 +188,8 @@ async def delete_app_platform(
 async def rotate_platform_secret(
     app_id: int,
     platform_id: int,
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> JsonDict:
     command = SdkAppCommandsMapper.rotate_platform_secret_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_id=app_id, platform_id=platform_id)

@@ -1,7 +1,7 @@
 from fastapi import Depends
 
 from app.core.bus.contract import IAsyncEventBus
-from app.modules.analytics.application.admin.logs.protocol import AnalyticsLogsServiceProtocol
+from app.modules.analytics.application.admin.logs.protocol import AnalyticsLogsPort
 from app.modules.analytics.application.admin.logs.service import AnalyticsLogsService
 from app.modules.analytics.application.ingestion.protocol import IngestionServiceProtocol
 from app.modules.analytics.application.ingestion.service import IngestionService
@@ -23,23 +23,23 @@ def get_analytics_signature_sha256_service() -> AnalyticsSignatureProtocol:
 
 
 def get_analytics_click_service(
-    uow_factory: AnalyticsUnitOfWorkFactoryProtocol = Depends(get_analytics_uow_factory),
-    signature_service: AnalyticsSignatureProtocol = Depends(get_analytics_signature_sha256_service),
-    ip2location_gateway: IP2LocationGatewayProtocol = Depends(get_ip2location_gateway),
+    uow_factory: Annotated[AnalyticsUnitOfWorkFactoryProtocol, Depends(get_analytics_uow_factory)],
+    signature_service: Annotated[AnalyticsSignatureProtocol, Depends(get_analytics_signature_sha256_service)],
+    ip2location_gateway: Annotated[IP2LocationGatewayProtocol, Depends(get_ip2location_gateway)],
 ) -> ClickServiceProtocol:
     return ClickService(uow_factory, signature_service, ip2location_gateway)
 
 
 def get_analytics_ingestion_service(
-    uow_factory: AnalyticsUnitOfWorkFactoryProtocol = Depends(get_analytics_uow_factory),
-    event_bus: IAsyncEventBus = Depends(get_analytics_event_bus),
-    currency_service: CurrencyConvertorClientProtocol = Depends(get_currency_client),
-    idempotency_repo: IdempotencyKeyRepositoryProtocol = Depends(get_idempotency_repository),
+    uow_factory: Annotated[AnalyticsUnitOfWorkFactoryProtocol, Depends(get_analytics_uow_factory)],
+    event_bus: Annotated[IAsyncEventBus, Depends(get_analytics_event_bus)],
+    currency_service: Annotated[CurrencyConvertorClientProtocol, Depends(get_currency_client)],
+    idempotency_repo: Annotated[IdempotencyKeyRepositoryProtocol, Depends(get_idempotency_repository)],
 ) -> IngestionServiceProtocol:
     return IngestionService(uow_factory, event_bus, currency_service, idempotency_repo)
 
 
 def get_analytics_logs_service(
-    uow_factory: AnalyticsUnitOfWorkFactoryProtocol = Depends(get_analytics_uow_factory),
-) -> AnalyticsLogsServiceProtocol:
+    uow_factory: Annotated[AnalyticsUnitOfWorkFactoryProtocol, Depends(get_analytics_uow_factory)],
+) -> AnalyticsLogsPort:
     return AnalyticsLogsService(uow_factory)

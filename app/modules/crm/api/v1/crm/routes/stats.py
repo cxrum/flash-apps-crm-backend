@@ -20,7 +20,7 @@ router = APIRouter()
 async def get_stats(
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     stats_queries: Annotated[StatsQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
 ) -> JsonDict:
     command = LogsResponseMapper.audit_logs_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, stats_queries, pagination_queries)
@@ -32,8 +32,8 @@ async def get_stats(
 async def list_click_logs(
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     click_log_queries: Annotated[ClickLogsQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    logs_service: LogsServiceProtocol = Depends(get_admin_logs_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    logs_service: Annotated[LogsServiceProtocol, Depends(get_admin_logs_service)],
 ) -> JsonDict:
     command = LogsResponseMapper.click_logs_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, click_log_queries, pagination_queries)
@@ -46,8 +46,8 @@ async def list_click_logs(
 async def list_event_logs(
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     event_log_queries: Annotated[EventLogsQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    logs_service: LogsServiceProtocol = Depends(get_admin_logs_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    logs_service: Annotated[LogsServiceProtocol, Depends(get_admin_logs_service)],
 ) -> JsonDict:
     command = LogsResponseMapper.event_logs_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, event_log_queries, pagination_queries)

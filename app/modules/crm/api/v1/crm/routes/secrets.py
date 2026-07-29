@@ -24,8 +24,8 @@ router = APIRouter()
 async def list_secret_templates(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    secrets_service: SecretsServiceProtocol = Depends(get_admin_secrets_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    secrets_service: Annotated[SecretsServiceProtocol, Depends(get_admin_secrets_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.list_secret_templates_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, pagination_queries)
@@ -38,8 +38,8 @@ async def list_secret_templates(
 async def get_secret_template(
     template_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    secrets_service: SecretsServiceProtocol = Depends(get_admin_secrets_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    secrets_service: Annotated[SecretsServiceProtocol, Depends(get_admin_secrets_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.get_secret_template_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, template_id=template_id)
@@ -51,8 +51,8 @@ async def get_secret_template(
 @router.post("/template", status_code=status.HTTP_201_CREATED, tags=["admin", "secrets"])
 async def create_secret_template(
     payload: Annotated[CreateSecretTemplatePayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    secrets_service: SecretsServiceProtocol = Depends(get_admin_secrets_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    secrets_service: Annotated[SecretsServiceProtocol, Depends(get_admin_secrets_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.create_secret_template_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -66,8 +66,8 @@ async def update_secret_template(
     template_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     payload: Annotated[UpdateSecretTemplatePayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    secrets_service: SecretsServiceProtocol = Depends(get_admin_secrets_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    secrets_service: Annotated[SecretsServiceProtocol, Depends(get_admin_secrets_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.update_secret_template_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -85,8 +85,8 @@ async def update_secret_template(
 async def delete_secret_template(
     template_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    secrets_service: SecretsServiceProtocol = Depends(get_admin_secrets_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    secrets_service: Annotated[SecretsServiceProtocol, Depends(get_admin_secrets_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.delete_secret_template_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, template_id=template_id)
@@ -99,8 +99,8 @@ async def delete_secret_template(
 async def list_app_secrets(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    secrets_service: SecretsServiceProtocol = Depends(get_admin_secrets_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    secrets_service: Annotated[SecretsServiceProtocol, Depends(get_admin_secrets_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.list_app_secrets_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, pagination_queries)
@@ -113,8 +113,8 @@ async def list_app_secrets(
 async def get_app_secret(
     secret_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    secrets_service: SecretsServiceProtocol = Depends(get_admin_secrets_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    secrets_service: Annotated[SecretsServiceProtocol, Depends(get_admin_secrets_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.get_app_secret_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, app_secret_id=secret_id)
@@ -128,8 +128,8 @@ async def update_app_secret(
     secret_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     payload: Annotated[UpdateAppSecretPayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    secrets_service: SecretsServiceProtocol = Depends(get_admin_secrets_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    secrets_service: Annotated[SecretsServiceProtocol, Depends(get_admin_secrets_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.update_app_secret_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -147,8 +147,8 @@ async def update_app_secret(
 async def delete_app_secret(
     secret_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    secrets_service: SecretsServiceProtocol = Depends(get_admin_secrets_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    secrets_service: Annotated[SecretsServiceProtocol, Depends(get_admin_secrets_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.delete_app_secret_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, secret_id=secret_id)

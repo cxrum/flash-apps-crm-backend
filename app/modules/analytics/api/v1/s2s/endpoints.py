@@ -17,7 +17,7 @@ router = APIRouter()
 async def ingest_s2s_click(
     request: Request,
     payload: Annotated[S2SClickPayload, Body()],
-    s2s_service: ClickServiceProtocol = Depends(get_analytics_click_service),
+    s2s_service: Annotated[ClickServiceProtocol, Depends(get_analytics_click_service)],
 ) -> str:
 
     user_agent = request.headers.get("user-agent")

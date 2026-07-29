@@ -21,7 +21,7 @@ async def tracking_redirect(
     platform: str,
     redirect_url: Annotated[str, Query()],
     idempotency_key: Annotated[str | None, Query()] = None,
-    s2s_service: ClickServiceProtocol = Depends(get_analytics_click_service),
+    s2s_service: Annotated[ClickServiceProtocol,  Depends(get_analytics_click_service)],
 ) -> RedirectResponse:
 
     user_agent = request.headers.get("user-agent")

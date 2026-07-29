@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import Depends
 
 from app.core.bus.contract import IAsyncEventBus
@@ -39,21 +41,21 @@ def get_ip2location_gateway() -> IP2LocationGatewayProtocol:
 
 
 def get_crm_authorization_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
+    uow_factory: Annotated[UnitOfWorkFactoryProtocol, Depends(get_uow_factory)],
 ) -> CrmAuthorizationServiceProtocol:
     return CrmAuthorizationService(uow_factory)
 
 
 def get_push_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
-    authorization_service: CrmAuthorizationServiceProtocol = Depends(get_crm_authorization_service),
+    uow_factory: Annotated[UnitOfWorkFactoryProtocol, Depends(get_uow_factory)],
+    authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
 ) -> PushServiceProtocol:
     return PushService(uow_factory=uow_factory, authorization_service=authorization_service)
 
 
 def get_admin_logs_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
-    authorization_service: CrmAuthorizationServiceProtocol = Depends(get_crm_authorization_service),
+    uow_factory: Annotated[UnitOfWorkFactoryProtocol, Depends(get_uow_factory)],
+    authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
 ) -> LogsServiceProtocol:
     return LogsService(uow_factory, authorization_service)
 
@@ -63,10 +65,10 @@ def get_s2s_requester() -> S2SRequesterProtocol:
 
 
 def get_admin_postback_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
-    event_bus: IAsyncEventBus = Depends(get_in_memory_event_bus),
-    requester: S2SRequesterProtocol = Depends(get_s2s_requester),
-    authorization_service: CrmAuthorizationServiceProtocol = Depends(get_crm_authorization_service),
+    uow_factory: Annotated[UnitOfWorkFactoryProtocol, Depends(get_uow_factory)],
+    event_bus: Annotated[IAsyncEventBus, Depends(get_in_memory_event_bus)],
+    requester: Annotated[S2SRequesterProtocol, Depends(get_s2s_requester)],
+    authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
 ) -> PostbackServiceProtocol:
     return PostbackService(uow_factory, event_bus, requester, authorization_service)
 
@@ -76,16 +78,16 @@ def get_app_secrets_encryption_service() -> EncryptionServiceProtocol:
 
 
 def get_admin_secrets_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
-    authorization_service: CrmAuthorizationServiceProtocol = Depends(get_crm_authorization_service),
-    encryption_service: EncryptionServiceProtocol = Depends(get_app_secrets_encryption_service),
+    uow_factory: Annotated[UnitOfWorkFactoryProtocol, Depends(get_uow_factory)],
+    authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
+    encryption_service: Annotated[EncryptionServiceProtocol, Depends(get_app_secrets_encryption_service)],
 ) -> SecretsServiceProtocol:
     return SecretsService(uow_factory, authorization_service, encryption_service)
 
 
 def get_admin_definitions_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
-    user_service: CrmAuthorizationServiceProtocol = Depends(get_crm_authorization_service),
+    uow_factory: Annotated[UnitOfWorkFactoryProtocol, Depends(get_uow_factory)],
+    user_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
 ) -> DefinitionsServiceProtocol:
     return DefinitionsService(uow_factory, user_service)
 
@@ -94,18 +96,16 @@ def get_currency_client() -> CurrencyConvertorClientProtocol:
     return CurrencyConvertorClient()
 
 
-
-
 def get_hash_service() -> HashProtocol:
     return ServerHash()
 
 
 def get_sdk_app_service(
-    uow_factory: UnitOfWorkFactoryProtocol = Depends(get_uow_factory),
-    authorization_service: CrmAuthorizationServiceProtocol = Depends(get_crm_authorization_service),
-    encryption_service: EncryptionServiceProtocol = Depends(get_app_secrets_encryption_service),
-    hash_service: HashProtocol = Depends(get_hash_service),
-    event_bus: IAsyncEventBus = Depends(get_in_memory_event_bus),
+    uow_factory: Annotated[UnitOfWorkFactoryProtocol, Depends(get_uow_factory)],
+    authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
+    encryption_service: Annotated[EncryptionServiceProtocol, Depends(get_app_secrets_encryption_service)],
+    hash_service: Annotated[HashProtocol, Depends(get_hash_service)],
+    event_bus: Annotated[IAsyncEventBus, Depends(get_in_memory_event_bus)],
 ) -> AppServiceProtocol:
     app_service = AppService(uow_factory, authorization_service, encryption_service, hash_service)
     return AuditedAppsService(uow_factory, app_service, event_bus)

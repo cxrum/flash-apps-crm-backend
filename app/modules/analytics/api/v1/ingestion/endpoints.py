@@ -23,7 +23,7 @@ router = APIRouter()
 async def create_or_link_install(
     idempotency_key: Annotated[str, Query(alias="Idempotency-Key")],
     payload: Annotated[SdkInstallPayload, Body()],
-    ingestion_service: IngestionServiceProtocol = Depends(get_analytics_ingestion_service),
+    ingestion_service: Annotated[IngestionServiceProtocol, Depends(get_analytics_ingestion_service)],
 ) -> str | Response:
     command = SdkIngestionCommandMapper.install_from_transport(
         GeneralMapper.to_dict(payload, idempotency_key=idempotency_key)
@@ -38,7 +38,7 @@ async def create_or_link_install(
 async def ingest_sdk_events(
     idempotency_key: Annotated[str, Query(alias="Idempotency-Key")],
     payload: Annotated[SdkEventsPayload, Body()],
-    ingestion_service: IngestionServiceProtocol = Depends(get_analytics_ingestion_service),
+    ingestion_service: Annotated[IngestionServiceProtocol, Depends(get_analytics_ingestion_service)],
 ) -> Response:
     command = SdkIngestionCommandMapper.events_from_transport(
         GeneralMapper.to_dict(payload, idempotency_key=idempotency_key)
@@ -51,7 +51,7 @@ async def ingest_sdk_events(
 async def update_sdk_params(
     idempotency_key: Annotated[str, Query(alias="Idempotency-Key")],
     payload: Annotated[SdkParamsUpdatePayload, Body()],
-    ingestion_service: IngestionServiceProtocol = Depends(get_analytics_ingestion_service),
+    ingestion_service: Annotated[IngestionServiceProtocol, Depends(get_analytics_ingestion_service)],
 ) -> Response:
     command = SdkIngestionCommandMapper.params_update_from_transport(
         GeneralMapper.to_dict(payload, idempotency_key=idempotency_key)
@@ -63,7 +63,7 @@ async def update_sdk_params(
 @router.get("/config", tags=["sdk"])
 async def get_public_config(
     install_key: Annotated[str, Query()],
-    app_service: AppServiceProtocol = Depends(get_sdk_app_service),
+    app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> str:
     command = SdkIngestionCommandMapper.config_from_transport(GeneralMapper.to_dict(install_key=install_key))
     response = app_service.get_app_config_secrets(command)

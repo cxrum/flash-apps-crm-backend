@@ -22,8 +22,8 @@ router = APIRouter()
 async def list_postbacks(
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    postback_service: PostbackServiceProtocol = Depends(get_admin_postback_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    postback_service: Annotated[PostbackServiceProtocol, Depends(get_admin_postback_service)],
 ) -> str:
     command = AdminCommandMapper.list_postbacks_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_filter_queries, pagination_queries)
@@ -36,8 +36,8 @@ async def list_postbacks(
 async def get_postback(
     postback_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    postback_service: PostbackServiceProtocol = Depends(get_admin_postback_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    postback_service: Annotated[PostbackServiceProtocol, Depends(get_admin_postback_service)],
 ) -> str:
     command = AdminCommandMapper.get_postback_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_filter_queries, postback_id=postback_id)
@@ -51,8 +51,8 @@ async def update_postback(
     postback_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
     payload: Annotated[UpdatePostbackRulePayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    postback_service: PostbackServiceProtocol = Depends(get_admin_postback_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    postback_service: Annotated[PostbackServiceProtocol, Depends(get_admin_postback_service)],
 ) -> str:
     command = AdminCommandMapper.update_postback_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -70,8 +70,8 @@ async def update_postback(
 async def delete_postback(
     postback_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    postback_service: PostbackServiceProtocol = Depends(get_admin_postback_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    postback_service: Annotated[PostbackServiceProtocol, Depends(get_admin_postback_service)],
 ) -> str:
     command = AdminCommandMapper.delete_postback_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_filter_queries, postback_id=postback_id)
@@ -83,8 +83,8 @@ async def delete_postback(
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "postback"])
 async def create_postback(
     payload: Annotated[CreatePostbackRulePayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    postback_service: PostbackServiceProtocol = Depends(get_admin_postback_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    postback_service: Annotated[PostbackServiceProtocol, Depends(get_admin_postback_service)],
 ) -> str:
     command = AdminCommandMapper.create_postback_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)

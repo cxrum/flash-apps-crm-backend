@@ -25,8 +25,8 @@ router = APIRouter()
 async def list_push_campaigns(
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    push_service: PushServiceProtocol = Depends(get_push_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    push_service: Annotated[PushServiceProtocol, Depends(get_push_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.list_push_campaigns_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_filter_queries, pagination_queries)
@@ -41,8 +41,8 @@ async def list_push_campaigns(
 async def get_push_campaign(
     push_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    push_service: PushServiceProtocol = Depends(get_push_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    push_service: Annotated[PushServiceProtocol, Depends(get_push_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.get_push_campaign_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_filter_queries, push_id=push_id)
@@ -55,8 +55,8 @@ async def get_push_campaign(
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "push"])
 async def create_push_campaign(
     payload: Annotated[CreatePushCampaignPayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    push_service: PushServiceProtocol = Depends(get_push_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    push_service: Annotated[PushServiceProtocol, Depends(get_push_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.create_push_campaign_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -71,8 +71,8 @@ async def update_push_campaign(
     push_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
     payload: Annotated[UpdatePushCampaignPayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    push_service: PushServiceProtocol = Depends(get_push_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    push_service: Annotated[PushServiceProtocol, Depends(get_push_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.update_push_campaign_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -91,8 +91,8 @@ async def update_push_campaign(
 async def delete_push_campaign(
     push_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    push_service: PushServiceProtocol = Depends(get_push_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    push_service: Annotated[PushServiceProtocol, Depends(get_push_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.delete_push_campaign_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_filter_queries, push_id=push_id)
@@ -106,8 +106,8 @@ async def delete_push_campaign(
 async def start_push_campaign(
     push_id: int,
     app_filter_queries: Annotated[AppFilterQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    push_service: PushServiceProtocol = Depends(get_push_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    push_service: Annotated[PushServiceProtocol, Depends(get_push_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.start_push_campaign_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_filter_queries, push_id=push_id)
@@ -117,7 +117,7 @@ async def start_push_campaign(
 
 @router.post("/register", status_code=status.HTTP_202_ACCEPTED, tags=["sdk"])
 async def register_push_token(
-    payload: SdkPushRegisterPayload, push_service: PushServiceProtocol = Depends(get_push_service)
+    payload: SdkPushRegisterPayload, push_service: Annotated[PushServiceProtocol, Depends(get_push_service)]
 ) -> JsonDict:
     command = AdminCommandMapper.push_register_from_transport(GeneralMapper.to_dict(payload))
 

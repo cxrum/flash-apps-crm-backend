@@ -22,8 +22,8 @@ router = APIRouter()
 @router.post("/", status_code=status.HTTP_201_CREATED, tags=["admin", "metrics"])
 async def create_metric(
     payload: Annotated[CreateMetricDefinitionPayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    definition_service: Annotated[DefinitionsServiceProtocol, Depends(get_admin_definitions_service)],
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.create_metric_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -36,8 +36,8 @@ async def create_metric(
 async def list_metrics(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    definition_service: Annotated[DefinitionsServiceProtocol, Depends(get_admin_definitions_service)],
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.list_metrics_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, app_scope_queries, pagination_queries)
@@ -50,8 +50,8 @@ async def list_metrics(
 async def get_metric(
     metric_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    definition_service: Annotated[DefinitionsServiceProtocol, Depends(get_admin_definitions_service)],
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.get_metric_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -69,8 +69,8 @@ async def update_metric(
     metric_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     payload: Annotated[UpdateMetricDefinitionPayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    definition_service: Annotated[DefinitionsServiceProtocol, Depends(get_admin_definitions_service)],
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.update_metric_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -88,8 +88,8 @@ async def update_metric(
 async def delete_metric(
     metric_definition_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    definition_service: DefinitionsServiceProtocol = Depends(get_admin_definitions_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    definition_service: Annotated[DefinitionsServiceProtocol, Depends(get_admin_definitions_service)],
 ) -> JsonDict:
     command = DefinitionsCommandsMapper.delete_metric_from_transport(
         GeneralMapper.transport_to_command_payload(

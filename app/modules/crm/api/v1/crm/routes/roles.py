@@ -21,8 +21,8 @@ router = APIRouter()
 async def list_roles(
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
     role_queries: Annotated[RolesQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    authorization_service: CrmAuthorizationServiceProtocol = Depends(get_crm_authorization_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.list_roles_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, role_queries, pagination_queries)
@@ -34,8 +34,8 @@ async def list_roles(
 @router.post("/share", tags=["admin", "roles"])
 async def grant_user_app_access(
     payload: Annotated[ShareAppPayload, Body()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    authorization_service: CrmAuthorizationServiceProtocol = Depends(get_crm_authorization_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.share_app_access_from_transport(
         GeneralMapper.transport_to_command_payload(crm_user, payload)
@@ -48,8 +48,8 @@ async def grant_user_app_access(
 async def remove_user_app_access(
     manager_id: int,
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    authorization_service: CrmAuthorizationServiceProtocol = Depends(get_crm_authorization_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.delete_app_access_from_transport(
         GeneralMapper.transport_to_command_payload(
@@ -66,8 +66,8 @@ async def remove_user_app_access(
 async def list_users_with_app_access(
     app_scope_queries: Annotated[AppScopeQueryPayload, Query()],
     pagination_queries: Annotated[PaginationQueryPayload, Query()],
-    crm_user: ResolvedCrmUserResponse = Depends(resolve_user),
-    authorization_service: CrmAuthorizationServiceProtocol = Depends(get_crm_authorization_service),
+    crm_user: Annotated[ResolvedCrmUserResponse, Depends(resolve_user)],
+    authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
 ) -> JsonDict:
     command = AdminCommandMapper.list_users_with_access_from_transport(
         GeneralMapper.transport_to_command_payload(

@@ -25,10 +25,10 @@ def _extract_bearer_token(authorization: str | None) -> str | None:
 
 @router.post("/token", tags=["authentication"])
 def login(
+    authentication_service: Annotated[CrmAuthenticationProtocol, Depends(stub_user_resolver)],
     username: Annotated[str | None, Form()] = None,
     password: Annotated[str | None, Form()] = None,
     authorization: Annotated[str | None, Header()] = None,
-    authentication_service: CrmAuthenticationProtocol = Depends(stub_user_resolver),
 ) -> JsonDict:
     token = _extract_bearer_token(authorization)
 
@@ -51,7 +51,7 @@ def login(
 def register(
     request: Request,
     body: Annotated[UserRegistrationSchemaPayload, Body()],
-    authentication_service: CrmAuthenticationProtocol = Depends(stub_user_resolver),
+    authentication_service: Annotated[CrmAuthenticationProtocol, Depends(stub_user_resolver)],
 ) -> JsonDict:
     resolved_user = authentication_service.register(
         UserRegistrationCommand(
