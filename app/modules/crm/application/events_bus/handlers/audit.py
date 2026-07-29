@@ -26,5 +26,3 @@ class AsyncAuditValueHandler(AsyncEventMessageHandler):
 
         with self.__uow_factory.create() as uow:
             uow.audit_log_repo.insert_many(audit_log)
-
-        return None

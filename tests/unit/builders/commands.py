@@ -689,7 +689,6 @@ def build_s2s_click_command(**overrides: Any) -> S2SClickCommand:
             "ip": "203.0.113.10",
             "user_agent": "Mozilla/5.0",
             "params": {"campaign": "spring"},
-            "raw_params": "campaign=spring",
         },
         overrides,
     )

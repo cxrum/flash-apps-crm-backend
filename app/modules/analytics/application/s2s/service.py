@@ -14,7 +14,7 @@ from app.modules.analytics.domain.signature_protocol import AnalyticsSignaturePr
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.crm.application.contracts.ip2location import IP2LocationGatewayProtocol, IpLocation
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.modules.crm.domain.hash_protocol import HashableValue
+from app.modules.crm.domain.hash_protocol import HashableValue, HashProtocol
 
 
 class ClickService(ClickServiceProtocol):
@@ -22,11 +22,16 @@ class ClickService(ClickServiceProtocol):
         self,
         uow_factory: AnalyticsUnitOfWorkFactoryProtocol,
         signature_service: AnalyticsSignatureProtocol,
+        # hash_service: HashProtocol,
         ip2location_gateway: IP2LocationGatewayProtocol,
     ) -> None:
         self._uow_factory = uow_factory
         self._signature_service = signature_service
         self._ip2location_gateway = ip2location_gateway
+
+    @staticmethod
+    def _signature_value(params: dict[str, object]) -> HashableValue:
+        return HashableValue.from_str(urlencode(sorted(params.items()), doseq=True))
 
     def _resolve_platform(
         self,
@@ -86,10 +91,15 @@ class ClickService(ClickServiceProtocol):
             if platform.platform_id is None:
                 raise PlatformNotConfigured(command.platform, command.app_code)
 
+            try:
+                signature = HashableValue.from_hex(command.signature)
+            except ValueError as exc:
+                raise SignatureMismatch() from exc
+
             is_signature_correct = self._signature_service.compare(
-                value=HashableValue.from_str(command.raw_params),
-                signature=HashableValue.from_hex(command.signature),
-                key=platform.sdk_secret_encrypted,
+                value=self._signature_value(command.params),
+                key=HashableValue.from_str(platform.sdk_secret_encrypted),
+                signature=signature,
             )
 
             if not is_signature_correct:
@@ -154,3 +164,6 @@ class ClickService(ClickServiceProtocol):
             )
 
             return TrackingRedirectResponse(click_id=click.click_id)
+
+
+from urllib.parse import urlencode
