@@ -35,8 +35,8 @@ from app.modules.analytics.domain.install.AnalyticsInstallEntity import Analytic
 from app.modules.analytics.domain.redis.repo import IdempotencyKeyRepositoryProtocol, IdempotencyKeyStatus
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.modules.crm.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
-from app.modules.crm.domain.currency.entity import Money
+from app.modules.analytics.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
+from app.modules.analytics.domain.currency.entity import Money
 
 
 class IngestionService(IngestionServiceProtocol):

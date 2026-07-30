@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 
 from app.modules.crm.application.access_decorators import require_permission
 from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
+from app.modules.crm.application.attribution.protocol import CrmAttributionGateway
 from app.modules.crm.application.admin.exception import ClickNotFound, InstallNotFound
 from app.modules.crm.application.admin.push.commands import (
     CreatePushCampaignCommand,
@@ -43,9 +44,11 @@ class PushService(PushServiceProtocol):
         self,
         uow_factory: UnitOfWorkFactoryProtocol,
         authorization_service: CrmAuthorizationServiceProtocol,
+        attribution_gateway: CrmAttributionGateway,
     ) -> None:
         self._uow_factory = uow_factory
         self._authorization_service = authorization_service
+        self._attribution_gateway = attribution_gateway
 
     @staticmethod
     def _parse_scheduled_at(value: str | None) -> datetime | None:
@@ -163,20 +166,17 @@ class PushService(PushServiceProtocol):
         return GetPushCampaignResponse(campaign=PushCommandsMapper.push_campaign_domain_to_value(campaign))
 
     def register_device(self, command: PushDeviceRegisterCommand) -> RegisterDeviceResponse:
+        click = self._attribution_gateway.get_click_context(command.click_id)
+        if click is None:
+            raise ClickNotFound(command.click_id)
+        if click.install_id is None:
+            raise InstallNotFound(command.click_id)
+
         with self._uow_factory.create() as uow:
-            click = uow.click_repo.get_by_id(command.click_id)
-
-            if click is None or click.click_id is None:
-                raise ClickNotFound(command.click_id)
-
             platform = uow.app_platform_repo.get_by_install_key(command.install_key)
 
             if platform is None or platform.platform_id is None:
                 raise PushPlatformNotFound()
-
-            install = uow.install_repo.get_by_click_id(command.click_id)
-            if install is None or install.install_id is None:
-                raise InstallNotFound(command.click_id)
 
             app_user = None
             if command.app_user_id is not None:
@@ -197,7 +197,7 @@ class PushService(PushServiceProtocol):
             lang = filtered_payload.get(DefaultParamKeys.LANG.value, None)
 
             entity = CrmPushTokenEntity(
-                install_id=install.install_id,
+                install_id=click.install_id,
                 click_id=click.click_id,
                 push_token=command.push_token,
                 app_user_id=app_user.app_user_id if app_user is not None else None,

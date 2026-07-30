@@ -10,8 +10,8 @@ from app.modules.analytics.handlers.update_param.update_param import AsyncUpdate
 from app.modules.crm.domain.event_bus.entity import DomainEventMessage
 from app.modules.analytics.core.exception import AnalyticsApplicationException as GeneralException
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.modules.crm.domain.currency.entity import Money
-from app.modules.crm.domain.exceptions import DomainException
+from app.modules.analytics.domain.currency.entity import Money
+from app.modules.analytics.core.exception import AnalyticsDomainException
 from tests.unit.application.sdk.events.test_async_bus import AsyncRecordingHandler, RecordingHandler
 from tests.unit.base import UnitTestContext
 from tests.unit.builders import (
@@ -202,7 +202,7 @@ def test_process_install_rejects_click_bound_to_another_platform(
             )
         )
 
-        with pytest.raises(DomainException):
+        with pytest.raises(AnalyticsDomainException):
             await service.process_install(
                 build_sdk_install_command(
                     install_key=android_platform.install_key,

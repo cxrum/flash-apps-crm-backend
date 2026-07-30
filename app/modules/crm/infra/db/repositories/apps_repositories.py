@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import desc, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.modules.crm.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
@@ -9,10 +9,8 @@ from app.modules.crm.domain.app_platform.app_platform_repository_protocol import
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity, VersionPolicyEntity
 from app.modules.crm.domain.app_user.app_user_repository_protocol import CrmAppUserRepositoryProtocol
 from app.modules.crm.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
-from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
-from app.modules.crm.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
 from app.modules.crm.domain.pagination import Pagination
-from app.modules.crm.infra.db.apps.models import App, AppPlatform, AppUser, Install
+from app.modules.crm.infra.db.apps.models import App, AppPlatform, AppUser
 from app.modules.crm.infra.exception import BaseInfraException
 
 
@@ -79,7 +77,6 @@ class SqlAlchemyCrmAppRepository(CrmAppRepositoryProtocol):
         rows = [self.session.merge(self._to_row(entity)) for entity in entities]
         self.session.flush()
         return [self._to_domain(row) for row in rows]
-
     def get_by_id(self, app_id: int) -> CrmAppEntity | None:
         row = self.session.get(App, app_id)
         return self._to_domain(row) if row is not None else None
@@ -256,71 +253,3 @@ class SqlAlchemyCrmAppUserRepository(CrmAppUserRepositoryProtocol):
             )
         ).all()
         return [self._to_domain(row) for row in rows]
-
-
-class SqlAlchemyCrmInstallRepository(CrmInstallRepositoryProtocol):
-    def __init__(self, session: Session) -> None:
-        self.session = session
-
-    def _to_domain(self, row: Install) -> CrmInstallEntity:
-        return CrmInstallEntity(
-            install_id=row.install_id,
-            click_id=row.click_id,
-            app_user_id=row.app_user_id,
-            app_platform_id=row.app_platform_id,
-            device_data=dict(row.device_data),
-            installed_at=row.installed_at,
-        )
-
-    def _to_row(self, entity: CrmInstallEntity) -> Install:
-        kwargs: dict[str, object] = {
-            "click_id": entity.click_id,
-            "app_user_id": entity.app_user_id,
-            "app_platform_id": entity.app_platform_id,
-            "device_data": dict(entity.device_data),
-        }
-        if entity.install_id is not None:
-            kwargs["install_id"] = entity.install_id
-        if entity.installed_at is not None:
-            kwargs["installed_at"] = entity.installed_at
-        return Install(**kwargs)
-
-    def save(self, entity: CrmInstallEntity) -> CrmInstallEntity:
-        row = self.session.merge(self._to_row(entity))
-        self.session.flush()
-        return self._to_domain(row)
-
-    def save_many(self, entities: list[CrmInstallEntity]) -> list[CrmInstallEntity]:
-        rows = [self.session.merge(self._to_row(entity)) for entity in entities]
-        self.session.flush()
-        return [self._to_domain(row) for row in rows]
-
-    def get_by_id(self, install_id: int) -> CrmInstallEntity | None:
-        row = self.session.get(Install, install_id)
-        return self._to_domain(row) if row is not None else None
-
-    def delete(self, install_id: int) -> CrmInstallEntity:
-        row = self.session.get(Install, install_id)
-        if row is None:
-            raise BaseInfraException()
-
-        install = self._to_domain(row)
-        self.session.delete(row)
-        self.session.flush()
-        return install
-
-    def get_by_app_user_id(self, app_user_id: int) -> CrmInstallEntity | None:
-        row = self.session.scalars(
-            select(Install)
-            .where(Install.app_user_id == app_user_id)
-            .order_by(desc(Install.installed_at), desc(Install.install_id))
-        ).first()
-        return self._to_domain(row) if row is not None else None
-
-    def get_by_click_id(self, click_id: str) -> CrmInstallEntity | None:
-        row = self.session.scalars(
-            select(Install)
-            .where(Install.click_id == click_id)
-            .order_by(desc(Install.installed_at), desc(Install.install_id))
-        ).first()
-        return self._to_domain(row) if row is not None else None

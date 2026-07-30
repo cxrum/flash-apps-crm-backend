@@ -17,7 +17,7 @@ from app.modules.analytics.di.event_bus import get_event_subscribers as get_anal
 from app.modules.crm.di.event_bus import get_event_subscribers as get_crm_event_subscribers
 from app.modules.crm.domain.app.CrmAppEntity import CrmAppEntity
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.modules.crm.domain.click.CrmClickEntity import CrmClickEntity
+from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
 from app.modules.crm.domain.event_bus.events.crm_value_update_event import ValueChangedEvent
 from app.modules.crm.domain.exceptions import DomainException
 from tests.unit.builders import build_app_entity, build_app_platform_entity, build_click_entity
@@ -34,7 +34,7 @@ def _seed_click_context(
     *,
     app_id: int = 1,
     click_id: str = "click-1",
-) -> tuple[CrmAppEntity, CrmAppPlatformEntity, CrmClickEntity]:
+) -> tuple[CrmAppEntity, CrmAppPlatformEntity, AnalyticsClickEntity]:
     app = uow.app_repo.save(build_app_entity(app_id=app_id))
     platform = uow.app_platform_repo.save(build_app_platform_entity(app_id=app.app_id, platform="ios"))
     click = uow.click_repo.insert(
@@ -115,7 +115,7 @@ def _seed_conversion_handler_context(
     expects_amount: bool = False,
     expects_currency: bool = False,
     param_definitions: list[dict[str, object]] | None = None,
-) -> tuple[CrmAppEntity, CrmAppPlatformEntity, CrmClickEntity]:
+) -> tuple[CrmAppEntity, CrmAppPlatformEntity, AnalyticsClickEntity]:
     app, platform, click = _seed_click_context(
         uow,
         app_id=app_id,

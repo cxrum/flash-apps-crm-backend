@@ -29,6 +29,9 @@ class AnalyticsMessageResolver:
         "conversion.money.value": "Non-revenue conversion events cannot carry money values",
         "domain.click.status.invalid": "Click status is invalid",
         "domain.click.platform.invalid": "Click platform does not match",
+        "domain.current_param.update_policy.unsupported": "Unsupported param update_policy: {update_policy}",
+        "domain.current_param.append.unsupported": "Append policy supports only string and list values",
+        "domain.current_param.merge.unsupported": "Merge policy supports only dict and list values",
         "domain.statistics.amount.currency.invalid": "Statistics aggregate amount currency must be USD",
     }
 

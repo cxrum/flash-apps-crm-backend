@@ -8,19 +8,18 @@ from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatf
 from app.modules.crm.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
 from app.modules.crm.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
 from app.modules.crm.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
-from app.modules.crm.domain.click.CrmClickEntity import CrmClickEntity
+from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
 from app.modules.crm.domain.conversion_definition.CrmConversionDefinitionEntity import (
     CrmConversionDefinitionEntity,
 )
-from app.modules.crm.domain.currency.entity import Money
-from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
-from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
-    CustomParamsStatisticsAggregateEntity,
+from app.modules.analytics.domain.currency.entity import Money
+from app.modules.analytics.domain.current_param.AnalyticsCurrentParamEntity import AnalyticsCurrentParamEntity
+from app.modules.analytics.domain.custom_params_statistics_aggregate.AnalyticsCustomParamsStatisticsAggregateEntity import (
+    AnalyticsCustomParamsStatisticsAggregateEntity,
 )
-from app.modules.crm.domain.events.CrmEventEntity import EventEntity
 from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
 from app.modules.crm.domain.hash_protocol import HashableValue
-from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
+from app.modules.analytics.domain.install.AnalyticsInstallEntity import AnalyticsInstallEntity
 from app.modules.crm.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 from app.modules.crm.domain.permission.CrmPermissionEntity import CrmPermissionEntity
@@ -30,7 +29,7 @@ from app.modules.crm.domain.push_event.CrmPushEventEntity import CrmPushEventEnt
 from app.modules.crm.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
 from app.modules.crm.domain.role.CrmRoleEntity import CrmRoleEntity
 from app.modules.crm.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
-from app.modules.crm.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
+from app.modules.analytics.domain.statistics_aggregate.AnalyticsStatisticsAggregateEntity import AnalyticsStatisticsAggregateEntity
 from app.modules.crm.domain.user.CrmUserEntity import CrmUserEntity
 from app.modules.crm.domain.user_app_access.CrmUserAppAccessEntity import CrmUserAppAccessEntity
 from app.modules.crm.domain.user_permissions.CrmUserPermissionEntity import CrmUserPermissionEntity
@@ -99,8 +98,8 @@ def build_audit_log_entity(**overrides: Any) -> CrmAuditLogEntity:
     )
 
 
-def build_click_entity(**overrides: Any) -> CrmClickEntity:
-    return CrmClickEntity(
+def build_click_entity(**overrides: Any) -> AnalyticsClickEntity:
+    return AnalyticsClickEntity(
         **_merge(
             {
                 "click_id": "click-1",
@@ -127,8 +126,8 @@ def build_conversion_definition_entity(
     )
 
 
-def build_current_param_entity(**overrides: Any) -> CrmCurrentParamEntity:
-    return CrmCurrentParamEntity(
+def build_current_param_entity(**overrides: Any) -> AnalyticsCurrentParamEntity:
+    return AnalyticsCurrentParamEntity(
         **_merge(
             {
                 "click_id": "click-1",
@@ -143,8 +142,8 @@ def build_current_param_entity(**overrides: Any) -> CrmCurrentParamEntity:
 
 def build_custom_params_statistics_aggregate_entity(
     **overrides: Any,
-) -> CustomParamsStatisticsAggregateEntity:
-    return CustomParamsStatisticsAggregateEntity(
+) -> AnalyticsCustomParamsStatisticsAggregateEntity:
+    return AnalyticsCustomParamsStatisticsAggregateEntity(
         **_merge(
             {
                 "app_platform_id": 1,
@@ -161,8 +160,8 @@ def build_custom_params_statistics_aggregate_entity(
     )
 
 
-def build_event_entity(**overrides: Any) -> EventEntity:
-    return EventEntity(
+def build_event_entity(**overrides: Any) -> AnalyticsEventEntity:
+    return AnalyticsEventEntity(
         **_merge(
             {
                 "event_id": "evt-1",
@@ -191,8 +190,8 @@ def build_analytics_event_entity(**overrides: Any) -> AnalyticsEventEntity:
     )
 
 
-def build_install_entity(**overrides: Any) -> CrmInstallEntity:
-    return CrmInstallEntity(
+def build_install_entity(**overrides: Any) -> AnalyticsInstallEntity:
+    return AnalyticsInstallEntity(
         **_merge(
             {
                 "click_id": "click-1",
@@ -306,8 +305,8 @@ def build_secret_template_entity(**overrides: Any) -> CrmSecretTemplateEntity:
     )
 
 
-def build_statistics_aggregate_entity(**overrides: Any) -> StatisticsAggregateEntity:
-    return StatisticsAggregateEntity(
+def build_statistics_aggregate_entity(**overrides: Any) -> AnalyticsStatisticsAggregateEntity:
+    return AnalyticsStatisticsAggregateEntity(
         **_merge(
             {
                 "app_platform_id": 1,

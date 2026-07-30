@@ -6,8 +6,8 @@ from app.modules.crm.domain.app_platform.app_platform_repository_protocol import
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.modules.crm.domain.app_user.app_user_repository_protocol import CrmAppUserRepositoryProtocol
 from app.modules.crm.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
-from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
-from app.modules.crm.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
+from app.modules.analytics.domain.install.AnalyticsInstallEntity import AnalyticsInstallEntity
+from app.modules.analytics.domain.install.install_repository_protocol import AnalyticsInstallRepositoryProtocol
 from tests.unit.doubles.base import (
     CallRecorderMixin,
     IntegerSequence,
@@ -190,13 +190,13 @@ class InMemoryCrmAppUserRepository(CallRecorderMixin, CrmAppUserRepositoryProtoc
         return [clone(item) for item in items]
 
 
-class InMemoryCrmInstallRepository(CallRecorderMixin, CrmInstallRepositoryProtocol):
+class InMemoryCrmInstallRepository(CallRecorderMixin, AnalyticsInstallRepositoryProtocol):
     def __init__(self) -> None:
         super().__init__()
-        self._items: dict[int, CrmInstallEntity] = {}
+        self._items: dict[int, AnalyticsInstallEntity] = {}
         self._ids = IntegerSequence()
 
-    def save(self, entity: CrmInstallEntity) -> CrmInstallEntity:
+    def save(self, entity: AnalyticsInstallEntity) -> AnalyticsInstallEntity:
         self._record("save", clone(entity))
         existing = self._items.get(entity.install_id) if entity.install_id is not None else None
         if existing is None and entity.app_user_id is not None:
@@ -225,16 +225,16 @@ class InMemoryCrmInstallRepository(CallRecorderMixin, CrmInstallRepositoryProtoc
         self._items[saved.install_id] = clone(saved)
         return clone(saved)
 
-    def save_many(self, entities: list[CrmInstallEntity]) -> list[CrmInstallEntity]:
+    def save_many(self, entities: list[AnalyticsInstallEntity]) -> list[AnalyticsInstallEntity]:
         self._record("save_many", clone(entities))
         return [self.save(entity) for entity in entities]
 
-    def get_by_id(self, install_id: int) -> CrmInstallEntity | None:
+    def get_by_id(self, install_id: int) -> AnalyticsInstallEntity | None:
         self._record("get_by_id", install_id)
         item = self._items.get(install_id)
         return clone(item) if item is not None else None
 
-    def get_by_app_user_id(self, app_user_id: int) -> CrmInstallEntity | None:
+    def get_by_app_user_id(self, app_user_id: int) -> AnalyticsInstallEntity | None:
         self._record("get_by_app_user_id", app_user_id)
         items = [item for item in self._items.values() if item.app_user_id == app_user_id]
         if not items:
@@ -245,7 +245,7 @@ class InMemoryCrmInstallRepository(CallRecorderMixin, CrmInstallRepositoryProtoc
         )
         return clone(latest)
 
-    def get_by_click_id(self, click_id: str) -> CrmInstallEntity | None:
+    def get_by_click_id(self, click_id: str) -> AnalyticsInstallEntity | None:
         self._record("get_by_click_id", click_id)
         items = [item for item in self._items.values() if item.click_id == click_id]
         if not items:

@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Callable
-
-from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.modules.crm.domain.push_campaign.CrmPushCampaignEntity import CrmPushCampaignEntity
 from app.modules.crm.domain.push_campaign.push_campaign_repository_protocol import CrmPushCampaignRepositoryProtocol
 from app.modules.crm.domain.push_event.CrmPushEventEntity import CrmPushEventEntity
@@ -65,15 +62,10 @@ class InMemoryCrmPushCampaignRepository(CallRecorderMixin, CrmPushCampaignReposi
 
 
 class InMemoryCrmPushTokenRepository(CallRecorderMixin, CrmPushTokenRepositoryProtocol):
-    def __init__(
-        self,
-        *,
-        install_lookup: Callable[[int], CrmInstallEntity | None],
-    ) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self._items: dict[int, CrmPushTokenEntity] = {}
         self._ids = IntegerSequence()
-        self._install_lookup = install_lookup
 
     def save(self, entity: CrmPushTokenEntity) -> CrmPushTokenEntity:
         self._record("save", clone(entity))
@@ -114,12 +106,7 @@ class InMemoryCrmPushTokenRepository(CallRecorderMixin, CrmPushTokenRepositoryPr
 
     def list_by_app_user_id(self, app_user_id: int) -> list[CrmPushTokenEntity]:
         self._record("list_by_app_user_id", app_user_id)
-        items = []
-        for item in self._items.values():
-            install = self._install_lookup(item.install_id)
-            if install is None or install.app_user_id != app_user_id:
-                continue
-            items.append(clone(item))
+        items = [clone(item) for item in self._items.values() if item.app_user_id == app_user_id]
         items.sort(key=lambda item: item.token_id or 0)
         return [clone(item) for item in items]
 

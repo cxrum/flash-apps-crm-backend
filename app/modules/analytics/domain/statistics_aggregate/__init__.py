@@ -1,0 +1,4 @@
+from app.modules.analytics.domain.statistics_aggregate.AnalyticsStatisticsAggregateEntity import AnalyticsStatisticsAggregateEntity
+from app.modules.analytics.domain.statistics_aggregate.statistics_aggregate_repository_protocol import AnalyticsStatisticsRepositoryProtocol
+
+__all__ = ["AnalyticsStatisticsAggregateEntity", "AnalyticsStatisticsRepositoryProtocol"]

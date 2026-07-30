@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.crm.domain.click.exception import IncorrectClickPlatform, IncorrectClickStatus
-from app.modules.crm.domain.current_param.exception import (
+from app.modules.analytics.domain.click.exception import AnalyticsClickPlatformMismatch, AnalyticsClickStatusInvalid
+from app.modules.analytics.domain.current_param.exception import (
     AppendPolicyNotSupported,
     MergePolicyNotSupported,
     UnsupportedCurrentParamUpdatePolicy,
@@ -18,8 +18,8 @@ from app.modules.crm.domain.role.exceptions import AdminAccessRequired, ManagerA
 @pytest.mark.parametrize(
     ("exc", "expected"),
     [
-        pytest.param(IncorrectClickStatus(), "Click status is invalid", id="click-status"),
-        pytest.param(IncorrectClickPlatform(), "Click platform does not match", id="click-platform"),
+        pytest.param(AnalyticsClickStatusInvalid(), "Click status is invalid", id="click-status"),
+        pytest.param(AnalyticsClickPlatformMismatch(), "Click platform does not match", id="click-platform"),
         pytest.param(
             UnsupportedCurrentParamUpdatePolicy("prepend"),
             "Unsupported param update_policy: prepend",
@@ -60,6 +60,5 @@ from app.modules.crm.domain.role.exceptions import AdminAccessRequired, ManagerA
         ),
     ],
 )
-def test_domain_exceptions_resolve_messages(exc: DomainException, expected: str) -> None:
-    assert isinstance(exc, DomainException)
+def test_domain_exceptions_resolve_messages(exc: Exception, expected: str) -> None:
     assert str(exc) == expected

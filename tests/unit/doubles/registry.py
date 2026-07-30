@@ -6,18 +6,10 @@ from app.modules.crm.domain.app_platform.app_platform_repository_protocol import
 from app.modules.crm.domain.app_secret.app_secret_repository_protocol import CrmAppSecretRepositoryProtocol
 from app.modules.crm.domain.app_user.app_user_repository_protocol import CrmAppUserRepositoryProtocol
 from app.modules.crm.domain.audit_log.audit_log_repository_protocol import CrmAuditLogRepositoryProtocol
-from app.modules.crm.domain.click.click_repository_protocol import CrmClickRepositoryProtocol
 from app.modules.crm.domain.conversion_definition.conversion_definition_repository_protocol import (
     CrmConversionDefinitionRepositoryProtocol,
 )
-from app.modules.crm.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
-from app.modules.crm.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
-from app.modules.crm.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
-    CustomParamsStatisticsRepositoryProtocol,
-)
-from app.modules.crm.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
 from app.modules.crm.domain.hash_protocol import HashProtocol
-from app.modules.crm.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
 from app.modules.crm.domain.metric_definition.metric_definition_repository_protocol import (
     CrmMetricDefinitionRepositoryProtocol,
 )
@@ -32,9 +24,6 @@ from app.modules.crm.domain.push_token.push_token_repository_protocol import Crm
 from app.modules.crm.domain.role.role_repository_protocol import CrmRoleRepositoryProtocol
 from app.modules.crm.domain.secret_template.secret_template_repository_protocol import (
     CrmSecretTemplateRepositoryProtocol,
-)
-from app.modules.crm.domain.statistics_aggregate.statistics_aggregate_repository_protocol import (
-    StatisticsRepositoryProtocol,
 )
 from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProtocol
 from app.modules.crm.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
@@ -89,12 +78,7 @@ PROTOCOL_DOUBLE_REGISTRY = {
     CrmAppSecretRepositoryProtocol: InMemoryCrmAppSecretRepository,
     CrmAppUserRepositoryProtocol: InMemoryCrmAppUserRepository,
     CrmAuditLogRepositoryProtocol: InMemoryCrmAuditLogRepository,
-    CrmClickRepositoryProtocol: InMemoryCrmClickRepository,
     CrmConversionDefinitionRepositoryProtocol: InMemoryCrmConversionDefinitionRepository,
-    CrmCurrentParamRepositoryProtocol: InMemoryCrmCurrentParamRepository,
-    CustomParamsStatisticsRepositoryProtocol: InMemoryCustomParamsStatisticsRepository,
-    CrmEventRepositoryProtocol: InMemoryCrmEventRepository,
-    CrmInstallRepositoryProtocol: InMemoryCrmInstallRepository,
     CrmMetricDefinitionRepositoryProtocol: InMemoryCrmMetricDefinitionRepository,
     CrmParamDefinitionRepositoryProtocol: InMemoryCrmParamDefinitionRepository,
     CrmPermissionRepositoryProtocol: InMemoryCrmPermissionRepository,
@@ -104,10 +88,8 @@ PROTOCOL_DOUBLE_REGISTRY = {
     CrmPushTokenRepositoryProtocol: InMemoryCrmPushTokenRepository,
     CrmRoleRepositoryProtocol: InMemoryCrmRoleRepository,
     CrmSecretTemplateRepositoryProtocol: InMemoryCrmSecretTemplateRepository,
-    StatisticsRepositoryProtocol: InMemoryStatisticsRepository,
     CrmUserAppAccessRepositoryProtocol: InMemoryCrmUserAppAccessRepository,
     CrmUserRepositoryProtocol: InMemoryCrmUserRepository,
     CrmUserPermissionsRepositoryProtocol: InMemoryCrmUserPermissionsRepository,
-    CurrencyConvertorClientProtocol: StubCurrencyConvertorClient,
     S2SRequesterProtocol: StubS2SRequester,
 }

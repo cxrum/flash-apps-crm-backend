@@ -8,8 +8,11 @@ from sqlalchemy.orm import Session
 from typing_extensions import Self
 
 from app.modules.analytics.domain.click.click_repository_protocol import AnalyticsClickRepositoryProtocol
+from app.modules.analytics.domain.current_param.current_param_repository_protocol import AnalyticsCurrentParamRepositoryProtocol
+from app.modules.analytics.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import AnalyticsCustomParamsStatisticsRepositoryProtocol
 from app.modules.analytics.domain.events.event_repository_protocol import AnalyticsEventRepositoryProtocol
 from app.modules.analytics.domain.install.install_repository_protocol import AnalyticsInstallRepositoryProtocol
+from app.modules.analytics.domain.statistics_aggregate.statistics_aggregate_repository_protocol import AnalyticsStatisticsRepositoryProtocol
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.analytics.infra.db.factory import AnalyticsSqlAlchemyRepositoryFactory
 from app.modules.crm.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
@@ -17,18 +20,11 @@ from app.modules.crm.domain.app_platform.app_platform_repository_protocol import
 from app.modules.crm.domain.conversion_definition.conversion_definition_repository_protocol import (
     CrmConversionDefinitionRepositoryProtocol,
 )
-from app.modules.crm.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
-from app.modules.crm.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
-    CustomParamsStatisticsRepositoryProtocol,
-)
 from app.modules.crm.domain.metric_definition.metric_definition_repository_protocol import (
     CrmMetricDefinitionRepositoryProtocol,
 )
 from app.modules.crm.domain.param_definition.param_definition_repository_protocol import (
     CrmParamDefinitionRepositoryProtocol,
-)
-from app.modules.crm.domain.statistics_aggregate.statistics_aggregate_repository_protocol import (
-    StatisticsRepositoryProtocol,
 )
 from app.modules.crm.infra.db.repositories.factory import CrmSqlAlchemyRepositoryFactory
 
@@ -41,9 +37,9 @@ class SqlAlchemyUnitOfWork(AnalyticsUnitOfWorkProtocol):
     click_repo: AnalyticsClickRepositoryProtocol
     install_repo: AnalyticsInstallRepositoryProtocol
     event_repo: AnalyticsEventRepositoryProtocol
-    current_param_repo: CrmCurrentParamRepositoryProtocol
-    statistics_repo: StatisticsRepositoryProtocol
-    custom_params_statistics_repo: CustomParamsStatisticsRepositoryProtocol
+    current_param_repo: AnalyticsCurrentParamRepositoryProtocol
+    statistics_repo: AnalyticsStatisticsRepositoryProtocol
+    custom_params_statistics_repo: AnalyticsCustomParamsStatisticsRepositoryProtocol
     metric_definition_repo: CrmMetricDefinitionRepositoryProtocol
     conversion_definition_repo: CrmConversionDefinitionRepositoryProtocol
     param_definition_repo: CrmParamDefinitionRepositoryProtocol

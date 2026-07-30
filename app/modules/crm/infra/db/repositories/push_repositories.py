@@ -10,7 +10,6 @@ from app.modules.crm.domain.push_event.CrmPushEventEntity import CrmPushEventEnt
 from app.modules.crm.domain.push_event.push_event_repository_protocol import CrmPushEventRepositoryProtocol
 from app.modules.crm.domain.push_token.CrmPushTokenEntity import CrmPushTokenEntity
 from app.modules.crm.domain.push_token.push_token_repository_protocol import CrmPushTokenRepositoryProtocol
-from app.modules.crm.infra.db.apps.models import Install
 from app.modules.crm.infra.db.push.models import PushCampaign, PushEvent, PushToken
 from app.modules.crm.infra.exception import BaseInfraException
 
@@ -124,7 +123,9 @@ class SqlAlchemyCrmPushTokenRepository(CrmPushTokenRepositoryProtocol):
     def _to_row(self, entity: CrmPushTokenEntity) -> PushToken:
         kwargs: dict[str, object] = {
             "install_id": entity.install_id,
-            "token": entity.push_token,
+            "push_token": entity.push_token,
+            "click_id": entity.click_id,
+            "app_user_id": entity.app_user_id,
             "geo": entity.geo,
             "country_code": entity.country_code,
             "lang": entity.lang,
@@ -174,8 +175,7 @@ class SqlAlchemyCrmPushTokenRepository(CrmPushTokenRepositoryProtocol):
         rows = self.session.scalars(
             _apply_pagination(
                 select(PushToken)
-                .join(Install, PushToken.install_id == Install.install_id)
-                .where(Install.app_user_id == app_user_id)
+                .where(PushToken.app_user_id == app_user_id)
                 .order_by(PushToken.token_id.asc()),
                 pagination,
             )

@@ -5,16 +5,9 @@ from app.modules.crm.domain.app_platform.app_platform_repository_protocol import
 from app.modules.crm.domain.app_secret.app_secret_repository_protocol import CrmAppSecretRepositoryProtocol
 from app.modules.crm.domain.app_user.app_user_repository_protocol import CrmAppUserRepositoryProtocol
 from app.modules.crm.domain.audit_log.audit_log_repository_protocol import CrmAuditLogRepositoryProtocol
-from app.modules.crm.domain.click.click_repository_protocol import CrmClickRepositoryProtocol
 from app.modules.crm.domain.conversion_definition.conversion_definition_repository_protocol import (
     CrmConversionDefinitionRepositoryProtocol,
 )
-from app.modules.crm.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
-from app.modules.crm.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
-    CustomParamsStatisticsRepositoryProtocol,
-)
-from app.modules.crm.domain.events.event_repository_protocol import CrmEventRepositoryProtocol
-from app.modules.crm.domain.install.install_repository_protocol import CrmInstallRepositoryProtocol
 from app.modules.crm.domain.metric_definition.metric_definition_repository_protocol import (
     CrmMetricDefinitionRepositoryProtocol,
 )
@@ -30,9 +23,6 @@ from app.modules.crm.domain.role.role_repository_protocol import CrmRoleReposito
 from app.modules.crm.domain.secret_template.secret_template_repository_protocol import (
     CrmSecretTemplateRepositoryProtocol,
 )
-from app.modules.crm.domain.statistics_aggregate.statistics_aggregate_repository_protocol import (
-    StatisticsRepositoryProtocol,
-)
 from app.modules.crm.domain.user.user_repository_protocol import CrmUserRepositoryProtocol
 from app.modules.crm.domain.user_app_access.user_app_access_repository_protocol import (
     CrmUserAppAccessRepositoryProtocol,
@@ -47,12 +37,7 @@ __all__ = [
     "CrmPermissionRepositoryProtocol",
     "CrmUserPermissionEntity",
     "CrmUserAppAccessRepositoryProtocol",
-    "CrmClickRepositoryProtocol",
     "CrmAppUserRepositoryProtocol",
-    "CrmInstallRepositoryProtocol",
-    "CrmEventRepositoryProtocol",
-    "CrmCurrentParamRepositoryProtocol",
-    "CustomParamsStatisticsRepositoryProtocol",
     "CrmMetricDefinitionRepositoryProtocol",
     "CrmConversionDefinitionRepositoryProtocol",
     "CrmSecretTemplateRepositoryProtocol",
@@ -63,5 +48,4 @@ __all__ = [
     "CrmPushTokenRepositoryProtocol",
     "CrmPushEventRepositoryProtocol",
     "CrmAuditLogRepositoryProtocol",
-    "StatisticsRepositoryProtocol",
 ]

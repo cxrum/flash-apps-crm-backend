@@ -2,26 +2,26 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
-    CustomParamsStatisticsAggregateEntity,
+from app.modules.analytics.domain.custom_params_statistics_aggregate.AnalyticsCustomParamsStatisticsAggregateEntity import (
+    AnalyticsCustomParamsStatisticsAggregateEntity,
 )
-from app.modules.crm.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
-    CustomParamsStatisticsRepositoryProtocol,
+from app.modules.analytics.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
+    AnalyticsCustomParamsStatisticsRepositoryProtocol,
 )
-from app.modules.crm.domain.statistics_aggregate.statistics_aggregate_repository_protocol import (
-    StatisticsRepositoryProtocol,
+from app.modules.analytics.domain.statistics_aggregate.statistics_aggregate_repository_protocol import (
+    AnalyticsStatisticsRepositoryProtocol,
 )
-from app.modules.crm.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
+from app.modules.analytics.domain.statistics_aggregate.AnalyticsStatisticsAggregateEntity import AnalyticsStatisticsAggregateEntity
 from tests.unit.doubles.base import CallRecorderMixin, IntegerSequence, clone, comparable_datetime, evolve, utcnow
 
 
-class InMemoryStatisticsRepository(CallRecorderMixin, StatisticsRepositoryProtocol):
+class InMemoryStatisticsRepository(CallRecorderMixin, AnalyticsStatisticsRepositoryProtocol):
     def __init__(self) -> None:
         super().__init__()
-        self._items: dict[int, StatisticsAggregateEntity] = {}
+        self._items: dict[int, AnalyticsStatisticsAggregateEntity] = {}
         self._ids = IntegerSequence()
 
-    def save(self, entity: StatisticsAggregateEntity) -> StatisticsAggregateEntity:
+    def save(self, entity: AnalyticsStatisticsAggregateEntity) -> AnalyticsStatisticsAggregateEntity:
         self._record("save", clone(entity))
         existing = self._items.get(entity.aggregate_id) if entity.aggregate_id is not None else None
         now = utcnow()
@@ -40,11 +40,11 @@ class InMemoryStatisticsRepository(CallRecorderMixin, StatisticsRepositoryProtoc
         self._items[saved.aggregate_id] = clone(saved)
         return clone(saved)
 
-    def save_many(self, entities: list[StatisticsAggregateEntity]) -> list[StatisticsAggregateEntity]:
+    def save_many(self, entities: list[AnalyticsStatisticsAggregateEntity]) -> list[AnalyticsStatisticsAggregateEntity]:
         self._record("save_many", clone(entities))
         return [self.save(entity) for entity in entities]
 
-    def get_by_id(self, aggregate_id: int) -> StatisticsAggregateEntity | None:
+    def get_by_id(self, aggregate_id: int) -> AnalyticsStatisticsAggregateEntity | None:
         self._record("get_by_id", aggregate_id)
         item = self._items.get(aggregate_id)
         return clone(item) if item is not None else None
@@ -62,7 +62,7 @@ class InMemoryStatisticsRepository(CallRecorderMixin, StatisticsRepositoryProtoc
         amount_usd: float | None = None,
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
-    ) -> list[StatisticsAggregateEntity]:
+    ) -> list[AnalyticsStatisticsAggregateEntity]:
         filters = {
             "aggregate_id": aggregate_id,
             "app_platform_id": app_platform_id,
@@ -95,7 +95,7 @@ class InMemoryStatisticsRepository(CallRecorderMixin, StatisticsRepositoryProtoc
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
         limit: int = 100,
-    ) -> list[StatisticsAggregateEntity]:
+    ) -> list[AnalyticsStatisticsAggregateEntity]:
         self._record(
             "list_by_filters",
             aggregate_id=aggregate_id,
@@ -133,7 +133,7 @@ class InMemoryStatisticsRepository(CallRecorderMixin, StatisticsRepositoryProtoc
         app_platform_id: int,
         *,
         limit: int = 100,
-    ) -> list[StatisticsAggregateEntity]:
+    ) -> list[AnalyticsStatisticsAggregateEntity]:
         self._record("list_by_app_platform_id", app_platform_id, limit=limit)
         items = self._filter_items(app_platform_id=app_platform_id)
         items.sort(
@@ -143,13 +143,13 @@ class InMemoryStatisticsRepository(CallRecorderMixin, StatisticsRepositoryProtoc
         return [clone(item) for item in items[:limit]]
 
 
-class InMemoryCustomParamsStatisticsRepository(CallRecorderMixin, CustomParamsStatisticsRepositoryProtocol):
+class InMemoryCustomParamsStatisticsRepository(CallRecorderMixin, AnalyticsCustomParamsStatisticsRepositoryProtocol):
     def __init__(self) -> None:
         super().__init__()
-        self._items: dict[int, CustomParamsStatisticsAggregateEntity] = {}
+        self._items: dict[int, AnalyticsCustomParamsStatisticsAggregateEntity] = {}
         self._ids = IntegerSequence()
 
-    def save(self, entity: CustomParamsStatisticsAggregateEntity) -> CustomParamsStatisticsAggregateEntity:
+    def save(self, entity: AnalyticsCustomParamsStatisticsAggregateEntity) -> AnalyticsCustomParamsStatisticsAggregateEntity:
         self._record("save", clone(entity))
         existing = self._items.get(entity.aggregate_id) if entity.aggregate_id is not None else None
         now = utcnow()
@@ -170,12 +170,12 @@ class InMemoryCustomParamsStatisticsRepository(CallRecorderMixin, CustomParamsSt
 
     def save_many(
         self,
-        entities: list[CustomParamsStatisticsAggregateEntity],
-    ) -> list[CustomParamsStatisticsAggregateEntity]:
+        entities: list[AnalyticsCustomParamsStatisticsAggregateEntity],
+    ) -> list[AnalyticsCustomParamsStatisticsAggregateEntity]:
         self._record("save_many", clone(entities))
         return [self.save(entity) for entity in entities]
 
-    def get_by_id(self, aggregate_id: int) -> CustomParamsStatisticsAggregateEntity | None:
+    def get_by_id(self, aggregate_id: int) -> AnalyticsCustomParamsStatisticsAggregateEntity | None:
         self._record("get_by_id", aggregate_id)
         item = self._items.get(aggregate_id)
         return clone(item) if item is not None else None
@@ -195,7 +195,7 @@ class InMemoryCustomParamsStatisticsRepository(CallRecorderMixin, CustomParamsSt
         amount_usd: float | None = None,
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
-    ) -> list[CustomParamsStatisticsAggregateEntity]:
+    ) -> list[AnalyticsCustomParamsStatisticsAggregateEntity]:
         filters = {
             "aggregate_id": aggregate_id,
             "app_platform_id": app_platform_id,
@@ -232,7 +232,7 @@ class InMemoryCustomParamsStatisticsRepository(CallRecorderMixin, CustomParamsSt
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
         limit: int = 100,
-    ) -> list[CustomParamsStatisticsAggregateEntity]:
+    ) -> list[AnalyticsCustomParamsStatisticsAggregateEntity]:
         self._record(
             "list_by_filters",
             aggregate_id=aggregate_id,
@@ -274,7 +274,7 @@ class InMemoryCustomParamsStatisticsRepository(CallRecorderMixin, CustomParamsSt
         app_platform_id: int,
         *,
         limit: int = 100,
-    ) -> list[CustomParamsStatisticsAggregateEntity]:
+    ) -> list[AnalyticsCustomParamsStatisticsAggregateEntity]:
         self._record("list_by_app_platform_id", app_platform_id, limit=limit)
         items = self._filter_items(app_platform_id=app_platform_id)
         items.sort(

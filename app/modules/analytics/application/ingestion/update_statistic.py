@@ -6,12 +6,10 @@ from app.core.bus.event.events.analytics import RawEventMessage
 from app.modules.analytics.core.exception import AnalyticsApplicationException
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkProtocol
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.modules.crm.domain.currency.entity import Money
-from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
-    CustomParamsStatisticsAggregateEntity,
-)
+from app.modules.analytics.domain.currency.entity import Money
+from app.modules.analytics.domain.custom_params_statistics_aggregate.AnalyticsCustomParamsStatisticsAggregateEntity import AnalyticsCustomParamsStatisticsAggregateEntity
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity, DefaultParamKeys
-from app.modules.crm.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
+from app.modules.analytics.domain.statistics_aggregate.AnalyticsStatisticsAggregateEntity import AnalyticsStatisticsAggregateEntity
 
 
 class StatisticAggregates:
@@ -63,7 +61,7 @@ class StatisticAggregates:
         if len(current_conversion_statistic) == 0:
             current_conversion_statistic.append(
                 uow.statistics_repo.save(
-                    StatisticsAggregateEntity(
+                    AnalyticsStatisticsAggregateEntity(
                         app_platform_id=app_platform.platform_id,
                         geo=geo,
                         ddate=aggregate_date,
@@ -99,7 +97,7 @@ class StatisticAggregates:
             if len(current_conversion_detailed_statistic) == 0:
                 current_conversion_detailed_statistic.append(
                     uow.custom_params_statistics_repo.save(
-                        CustomParamsStatisticsAggregateEntity(
+                        AnalyticsCustomParamsStatisticsAggregateEntity(
                             app_platform_id=app_platform.platform_id,
                             geo=geo,
                             ddate=aggregate_date,

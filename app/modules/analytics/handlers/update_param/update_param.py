@@ -5,7 +5,7 @@ from app.core.bus.type import EventMessage
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
 from app.modules.analytics.core.exception import AnalyticsApplicationException as GeneralException
-from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
+from app.modules.analytics.domain.current_param.AnalyticsCurrentParamEntity import AnalyticsCurrentParamEntity
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 
 
@@ -21,7 +21,7 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
         click_id: str,
         params_dictionary: list[CrmParamDefinitionEntity],
         updated_at: datetime | None = None,
-    ) -> list[CrmCurrentParamEntity]:
+    ) -> list[AnalyticsCurrentParamEntity]:
 
         new_params = []
 
@@ -39,7 +39,7 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
                 _updated_at = updated_at
 
             if current_param is None:
-                current_param = CrmCurrentParamEntity(
+                current_param = AnalyticsCurrentParamEntity(
                     click_id=click_id,
                     param_key=definition.machine_key,
                     updated_at=_updated_at,

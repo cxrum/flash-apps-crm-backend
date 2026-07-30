@@ -83,17 +83,11 @@ class PushToken(Base):
     __tablename__ = "crm_push_tokens"
 
     token_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    install_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("crm_installs.install_id", ondelete="RESTRICT"),
-        nullable=False,
-        index=True,
-    )
-    click_id: Mapped[str] = mapped_column(
-        String(64),
-        ForeignKey("crm_clicks.click_id", ondelete="RESTRICT"),
-        nullable=False,
-    )
+    # These identifiers refer to Analytics-owned ingestion records.  CRM keeps
+    # them as scalar references and obtains any needed attribution data through
+    # its outbound port instead of ORM relationships.
+    install_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+    click_id: Mapped[str] = mapped_column(String(64), nullable=False)
     app_user_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("crm_app_users.app_user_id", ondelete="RESTRICT"),

@@ -4,6 +4,8 @@ from typing import Any, ClassVar, Protocol
 
 from app.modules.crm.application.access_decorators import require_permission
 from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
+from app.modules.crm.application.attribution.contracts import CrmPostbackContext
+from app.modules.crm.application.attribution.protocol import CrmAttributionGateway
 from app.modules.crm.application.admin.exception import ClickNotFound, EventNotFound
 from app.modules.crm.application.admin.postback.commands import (
     CreatePostbackRuleCommand,
@@ -43,26 +45,16 @@ from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol, UnitOfWorkProt
 
 
 class TemplateParamResolverProtocol(Protocol):
-    def resolve(self, uow: UnitOfWorkProtocol, key: str, event_id: str) -> Any | None: ...
+    def resolve(self, uow: UnitOfWorkProtocol, key: str, context: CrmPostbackContext) -> Any | None: ...
 
 
 class _CurrentTemplateParam(TemplateParamResolverProtocol):
-    def resolve(self, uow: UnitOfWorkProtocol, key: str, event_id: str) -> Any | None:
-        event = uow.event_repo.get_by_id(event_id)
-        if event is None:
+    def resolve(self, uow: UnitOfWorkProtocol, key: str, context: CrmPostbackContext) -> Any | None:
+        raw_value = context.current_params.get(key)
+        if raw_value is None:
             return None
 
-        current = uow.current_param_repo.get_by_click_and_key(event.click_id, key)
-        if current is None:
-            return None
-
-        raw_value = current.current_value()
-
-        click = uow.click_repo.get_by_id(event.click_id)
-        if click is None:
-            return raw_value
-
-        platform = uow.app_platform_repo.get_by_id(click.app_platform_id)
+        platform = uow.app_platform_repo.get_by_id(context.click.app_platform_id)
         if platform is None:
             return raw_value
 
@@ -77,50 +69,37 @@ class _CurrentTemplateParam(TemplateParamResolverProtocol):
 
 
 class _SnapshotTemplateParam(TemplateParamResolverProtocol):
-    def resolve(self, uow: UnitOfWorkProtocol, key: str, event_id: str) -> Any | None:
-        event = uow.event_repo.get_by_id(event_id)
-        if event is None:
-            return None
-
-        return event.payload.get(key)
+    def resolve(self, uow: UnitOfWorkProtocol, key: str, context: CrmPostbackContext) -> Any | None:
+        return context.payload.get(key)
 
 
 class _FallbackTemplateParam(TemplateParamResolverProtocol):
-    def resolve(self, uow: UnitOfWorkProtocol, key: str, event_id: str) -> Any | None:
-        event = uow.event_repo.get_by_id(event_id)
-        if event is None:
-            return None
-
-        click = uow.click_repo.get_by_id(event.click_id)
-        if click is None:
-            return None
-
-        platform = uow.app_platform_repo.get_by_id(click.app_platform_id)
+    def resolve(self, uow: UnitOfWorkProtocol, key: str, context: CrmPostbackContext) -> Any | None:
+        platform = uow.app_platform_repo.get_by_id(context.click.app_platform_id)
         if platform is None:
             return None
 
         if key == "click_id":
-            return event.click_id
+            return context.click.click_id
         if key == "user_id":
-            install = uow.install_repo.get_by_click_id(click.click_id)
-            return None if install is None else install.app_user_id
+            return context.click.app_user_id
         if key == "app_code":
             app = uow.app_repo.get_by_id(platform.app_id)
             return None if app is None else app.code_slug
         if key == "platform":
             return platform.platform
         if key == "timestamp":
-            return event.event_time_utc
+            return context.event_time_utc
         if key == "amount_usd":
-            return event.amount_usd
+            return context.amount_usd
         if key == "raw_amount":
-            return event.amount
+            return context.amount
         if key == "geo":
-            return event.geo()
+            return context.payload.get("geo")
         if key == "ip":
-            return event.ip()
+            return context.payload.get("ip")
         if key == "ua":
-            return event.ua()
+            return context.payload.get("ua")
         return None
 
 
@@ -143,11 +122,13 @@ class PostbackService(PostbackServiceProtocol):
         uow_factory: UnitOfWorkFactoryProtocol,
         async_event_bus: IAsyncEventBus,
         s2s_requester: S2SRequesterProtocol,
+        attribution_gateway: CrmAttributionGateway,
         authorization_service: CrmAuthorizationServiceProtocol | None = None,
     ) -> None:
         self._uow_factory = uow_factory
         self._async_event_bus = async_event_bus
         self._s2s_requester = s2s_requester
+        self._attribution_gateway = attribution_gateway
         self._authorization_service = authorization_service
 
     def _check_user_app_access(
@@ -255,18 +236,13 @@ class PostbackService(PostbackServiceProtocol):
         return CreatePostbackResponse(postback=PostbackCommandsMapper.postback_domain_to_value(saved_rules[0]))
 
     def evaluate(self, command: EvaluatePostbackRuleCommand) -> list[CrmPostbackRuleEntity]:
+        context = self._attribution_gateway.get_postback_context(command.event_id)
+        if context is None:
+            raise EventNotFound(command.event_id)
+
         with self._uow_factory.create() as uow:
-            event = uow.event_repo.get_by_id(command.event_id)
-            if event is None:
-                raise EventNotFound(command.event_id)
-
-            click = uow.click_repo.get_by_id(event.click_id)
-
-            if click is None:
-                raise ClickNotFound(event.click_id)
-
             postback_rules = uow.postback_rule_repo.list_by_filters(
-                platform_app_id=click.app_platform_id,
+                platform_app_id=context.click.app_platform_id,
                 trigger_type=command.trigger_type,
                 event_key=command.event_key,
             )
@@ -277,13 +253,13 @@ class PostbackService(PostbackServiceProtocol):
     def build_params(
         uow: UnitOfWorkProtocol,
         template: PostbackTemplateEntity,
-        event_id: str,
+        context: CrmPostbackContext,
     ) -> JsonDict:
         params: JsonDict = {}
 
         for key, value in template.normalized().items():
             resolver, resolved_key = TemplateResolverFactory().from_value(value)
-            params[key] = resolver.resolve(uow, resolved_key, event_id)
+            params[key] = resolver.resolve(uow, resolved_key, context)
 
         return params
 
@@ -318,6 +294,10 @@ class PostbackService(PostbackServiceProtocol):
         return unmasked_auth_params
 
     async def execute(self, command: ExecutePostbackRuleCommand) -> None:
+        context = self._attribution_gateway.get_postback_context(command.event_id)
+        if context is None:
+            raise EventNotFound(command.event_id)
+
         with self._uow_factory.create() as uow:
             rule = uow.postback_rule_repo.get_by_id(command.postback_rule_id)
             if rule is None:
@@ -328,7 +308,7 @@ class PostbackService(PostbackServiceProtocol):
                 rule.auth_params,
                 platform_id=rule.platform_app_id,
             )
-            params = self.build_params(uow, rule.template, command.event_id)
+            params = self.build_params(uow, rule.template, context)
 
             await self._s2s_requester.postback(
                 url=rule.endpoint_url,

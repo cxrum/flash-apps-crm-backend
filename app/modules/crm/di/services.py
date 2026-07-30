@@ -11,10 +11,6 @@ from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuth
 from app.modules.crm.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.modules.crm.application.admin.definitions.protocol import DefinitionsServiceProtocol
 from app.modules.crm.application.admin.definitions.service import DefinitionsService
-from app.modules.crm.application.admin.postback.protocol import PostbackServiceProtocol
-from app.modules.crm.application.admin.postback.service import PostbackService
-from app.modules.crm.application.admin.push.protocol import PushServiceProtocol
-from app.modules.crm.application.admin.push.service import PushService
 from app.modules.crm.application.admin.secrets.protocol import SecretsServiceProtocol
 from app.modules.crm.application.admin.secrets.service import SecretsService
 from app.modules.crm.application.audited.audited_apps import AuditedAppsService
@@ -24,12 +20,8 @@ from app.modules.crm.application.contracts.requester import S2SRequesterProtocol
 from app.modules.crm.application.sdk.apps.protocol import AppServiceProtocol
 from app.modules.crm.application.sdk.apps.service import AppService
 from app.modules.crm.di.infra import get_uow_factory
-from app.modules.crm.domain.currency.currency_convertor_protocol import (
-    CurrencyConvertorClientProtocol,
-)
 from app.modules.crm.domain.hash_protocol import HashProtocol
 from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol
-from app.modules.crm.infra.services.currency import CurrencyConvertorClient
 from app.modules.crm.infra.services.encryption import EncryptionService
 from app.modules.crm.infra.services.hashing import ServerHash
 from app.modules.crm.infra.services.ip2location import IP2LocationGateway
@@ -46,13 +38,6 @@ def get_crm_authorization_service(
     return CrmAuthorizationService(uow_factory)
 
 
-def get_push_service(
-    uow_factory: Annotated[UnitOfWorkFactoryProtocol, Depends(get_uow_factory)],
-    authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
-) -> PushServiceProtocol:
-    return PushService(uow_factory=uow_factory, authorization_service=authorization_service)
-
-
 def get_admin_audit_service(
     uow_factory: Annotated[UnitOfWorkFactoryProtocol, Depends(get_uow_factory)],
     authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
@@ -62,15 +47,6 @@ def get_admin_audit_service(
 
 def get_s2s_requester() -> S2SRequesterProtocol:
     return S2SRequester()
-
-
-def get_admin_postback_service(
-    uow_factory: Annotated[UnitOfWorkFactoryProtocol, Depends(get_uow_factory)],
-    event_bus: Annotated[IAsyncEventBus, Depends(get_in_memory_event_bus)],
-    requester: Annotated[S2SRequesterProtocol, Depends(get_s2s_requester)],
-    authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
-) -> PostbackServiceProtocol:
-    return PostbackService(uow_factory, event_bus, requester, authorization_service)
 
 
 def get_app_secrets_encryption_service() -> EncryptionServiceProtocol:
@@ -90,10 +66,6 @@ def get_admin_definitions_service(
     user_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
 ) -> DefinitionsServiceProtocol:
     return DefinitionsService(uow_factory, user_service)
-
-
-def get_currency_client() -> CurrencyConvertorClientProtocol:
-    return CurrencyConvertorClient()
 
 
 def get_hash_service() -> HashProtocol:

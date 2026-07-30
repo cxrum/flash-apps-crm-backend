@@ -3,20 +3,10 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.modules.crm.infra.db.repositories.access_repositories import SqlAlchemyCrmUserAppAccessRepository
-from app.modules.crm.infra.db.repositories.aggregate_repositories import (
-    SqlAlchemyCustomParamsStatisticsRepository,
-    SqlAlchemyStatisticsRepository,
-)
 from app.modules.crm.infra.db.repositories.apps_repositories import (
     SqlAlchemyCrmAppPlatformRepository,
     SqlAlchemyCrmAppRepository,
     SqlAlchemyCrmAppUserRepository,
-    SqlAlchemyCrmInstallRepository,
-)
-from app.modules.crm.infra.db.repositories.attribution_repositories import (
-    SqlAlchemyCrmClickRepository,
-    SqlAlchemyCrmCurrentParamRepository,
-    SqlAlchemyCrmEventRepository,
 )
 from app.modules.crm.infra.db.repositories.audit_repositories import SqlAlchemyCrmAuditLogRepository
 from app.modules.crm.infra.db.repositories.config_repositories import (
@@ -62,26 +52,8 @@ class CrmSqlAlchemyRepositoryFactory:
     def user_app_access_repo(self, session: Session) -> SqlAlchemyCrmUserAppAccessRepository:
         return SqlAlchemyCrmUserAppAccessRepository(session)
 
-    def click_repo(self, session: Session) -> SqlAlchemyCrmClickRepository:
-        return SqlAlchemyCrmClickRepository(session)
-
     def app_user_repo(self, session: Session) -> SqlAlchemyCrmAppUserRepository:
         return SqlAlchemyCrmAppUserRepository(session)
-
-    def install_repo(self, session: Session) -> SqlAlchemyCrmInstallRepository:
-        return SqlAlchemyCrmInstallRepository(session)
-
-    def event_repo(self, session: Session) -> SqlAlchemyCrmEventRepository:
-        return SqlAlchemyCrmEventRepository(session)
-
-    def current_param_repo(self, session: Session) -> SqlAlchemyCrmCurrentParamRepository:
-        return SqlAlchemyCrmCurrentParamRepository(session)
-
-    def statistics_repo(self, session: Session) -> SqlAlchemyStatisticsRepository:
-        return SqlAlchemyStatisticsRepository(session)
-
-    def custom_params_statistics_repo(self, session: Session) -> SqlAlchemyCustomParamsStatisticsRepository:
-        return SqlAlchemyCustomParamsStatisticsRepository(session)
 
     def metric_definition_repo(self, session: Session) -> SqlAlchemyCrmMetricDefinitionRepository:
         return SqlAlchemyCrmMetricDefinitionRepository(session)

@@ -7,15 +7,13 @@ from urllib.parse import urlencode
 import pytest
 
 from app.modules.crm.application.admin.postback.service import PostbackService
+from app.modules.crm.application.attribution.contracts import CrmClickContext, CrmPostbackContext
+from app.modules.crm.application.attribution.protocol import CrmAttributionGateway
 from app.modules.crm.application.exception import GeneralException
 from app.modules.crm.domain.app.CrmAppEntity import CrmAppEntity
 from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.modules.crm.domain.click.CrmClickEntity import CrmClickEntity
-from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
 from app.modules.crm.domain.event_bus.service_protocol import IAsyncEventBus
-from app.modules.crm.domain.events.CrmEventEntity import EventEntity
 from app.modules.crm.domain.exceptions import DomainException
-from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.modules.crm.domain.postback_rule.CrmPostbackRuleEntity import CrmPostbackRuleEntity
 from app.modules.crm.domain.postback_rule.template import PostbackTemplateEntity
 from app.modules.crm.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
@@ -34,6 +32,9 @@ from tests.unit.builders import (
     build_postback_rule_entity,
     build_secret_template_entity,
 )
+from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
+from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
+from app.modules.analytics.domain.install.AnalyticsInstallEntity import AnalyticsInstallEntity
 from tests.unit.doubles.application import StubS2SRequester
 from tests.unit.doubles.domain.uow import StubUnitOfWork, StubUoWFactory
 
@@ -41,6 +42,42 @@ from tests.unit.doubles.domain.uow import StubUnitOfWork, StubUoWFactory
 class _AllowPostbackAuthorization:
     def required_user_permission(self, **_: object) -> None:
         return None
+
+
+class _StubAttributionGateway(CrmAttributionGateway):
+    def __init__(self, uow: StubUnitOfWork) -> None:
+        self._uow = uow
+
+    def get_click_context(self, click_id: str) -> CrmClickContext | None:
+        click = self._uow.click_repo.get_by_id(click_id)
+        if click is None:
+            return None
+        install = self._uow.install_repo.get_by_click_id(click_id)
+        return CrmClickContext(
+            click_id=click.click_id,
+            app_platform_id=click.app_platform_id,
+            install_id=install.install_id if install else None,
+            app_user_id=install.app_user_id if install else None,
+        )
+
+    def get_postback_context(self, event_id: str) -> CrmPostbackContext | None:
+        event = self._uow.event_repo.get_by_id(event_id)
+        if event is None:
+            return None
+        click = self.get_click_context(event.click_id)
+        if click is None:
+            return None
+        return CrmPostbackContext(
+            event_id=event.event_id,
+            click=click,
+            event_type=event.event_type,
+            event_key=event.event_key,
+            event_time_utc=event.event_time_utc,
+            amount=event.amount,
+            amount_usd=event.amount_usd,
+            payload=dict(event.payload),
+            current_params={item.param_key: item.current_value() for item in self._uow.current_param_repo.list_by_click_id(click.click_id)},
+        )
 
 
 def _seed_platform(
@@ -71,7 +108,7 @@ def _seed_event_context(
     event_key: str = "purchase",
     payload: dict[str, object] | None = None,
     app_user_id: int = 77,
-) -> tuple[CrmAppEntity, CrmAppPlatformEntity, CrmClickEntity, CrmInstallEntity, EventEntity]:
+) -> tuple[CrmAppEntity, CrmAppPlatformEntity, AnalyticsClickEntity, AnalyticsInstallEntity, AnalyticsEventEntity]:
     app = uow.app_repo.save(build_app_entity(app_id=app_id, code_slug=app_code))
     platform_entity = _seed_platform(uow, app_id=app_id, platform=platform)
     click = uow.click_repo.insert(
@@ -139,6 +176,7 @@ def _build_service(
         StubUoWFactory(uow),
         async_event_bus,
         requester,
+        _StubAttributionGateway(uow),
         authorization_service=_AllowPostbackAuthorization(),
     )
     return service, requester
@@ -382,7 +420,7 @@ def test_evaluate_raises_when_event_does_not_exist(
         service.evaluate(build_admin_evaluate_postback_rule_command(event_id="missing-event"))
 
     assert uow.commit_count == 0
-    assert uow.rollback_count == 1
+    assert uow.rollback_count == 0
 
 
 def test_evaluate_raises_when_click_does_not_exist(
@@ -396,7 +434,7 @@ def test_evaluate_raises_when_click_does_not_exist(
         service.evaluate(build_admin_evaluate_postback_rule_command())
 
     assert uow.commit_count == 0
-    assert uow.rollback_count == 1
+    assert uow.rollback_count == 0
 
 
 def test_evaluate_returns_only_rules_matching_platform_and_trigger(
@@ -476,7 +514,7 @@ def test_build_params_resolves_current_snapshot_and_fallback_fields() -> None:
         }
     )
 
-    params = PostbackService.build_params(uow, template, event.event_id)
+    params = PostbackService.build_params(uow, template, _StubAttributionGateway(uow).get_postback_context(event.event_id))
 
     assert params == {
         "current_value": "organic",
@@ -515,7 +553,7 @@ def test_build_params_resolves_current_values_by_param_definition_type(
     )
     template = PostbackTemplateEntity.from_dict({"typed_value": "{current.typed_value}"})
 
-    params = PostbackService.build_params(uow, template, event.event_id)
+    params = PostbackService.build_params(uow, template, _StubAttributionGateway(uow).get_postback_context(event.event_id))
 
     assert params == {"typed_value": expected}
 
@@ -550,7 +588,7 @@ def test_build_params_returns_none_for_missing_related_data() -> None:
         }
     )
 
-    params = PostbackService.build_params(uow, template, event.event_id)
+    params = PostbackService.build_params(uow, template, _StubAttributionGateway(uow).get_postback_context(event.event_id))
 
     assert params == {
         "current_value": None,
@@ -586,31 +624,12 @@ def test_build_params_returns_none_when_platform_context_is_missing() -> None:
         }
     )
 
-    params = PostbackService.build_params(uow, template, event.event_id)
+    params = PostbackService.build_params(uow, template, _StubAttributionGateway(uow).get_postback_context(event.event_id))
 
     assert params == {
         "platform": None,
         "app_code": None,
         "geo": None,
-    }
-
-
-def test_build_params_returns_none_when_event_is_missing() -> None:
-    uow = StubUnitOfWork()
-    template = PostbackTemplateEntity.from_dict(
-        {
-            "current_value": "{current.utm_source}",
-            "snapshot_value": "{snapshot.campaign}",
-            "click_id": "{click_id}",
-        }
-    )
-
-    params = PostbackService.build_params(uow, template, "missing-event")
-
-    assert params == {
-        "current_value": None,
-        "snapshot_value": None,
-        "click_id": None,
     }
 
 
@@ -707,7 +726,7 @@ def test_execute_raises_when_rule_does_not_exist(
 
         assert requester.calls == []
         assert uow.commit_count == 0
-        assert uow.rollback_count == 1
+        assert uow.rollback_count == 0
 
     asyncio.run(scenario())
 

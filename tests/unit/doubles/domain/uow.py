@@ -112,12 +112,7 @@ class StubUnitOfWork(CallRecorderMixin, UnitOfWorkProtocol):
                 platform_lookup=self.app_platform_repo.get_by_id,
             ),
         )
-        self.push_token_repo = overrides.get(
-            "push_token_repo",
-            InMemoryCrmPushTokenRepository(
-                install_lookup=self.install_repo.get_by_id,
-            ),
-        )
+        self.push_token_repo = overrides.get("push_token_repo", InMemoryCrmPushTokenRepository())
         self.push_event_repo = overrides.get("push_event_repo", InMemoryCrmPushEventRepository())
 
     def __enter__(self) -> "StubUnitOfWork":

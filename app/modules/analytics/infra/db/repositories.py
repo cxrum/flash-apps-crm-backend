@@ -23,19 +23,13 @@ from app.modules.analytics.infra.db.models import (
     AnalyticsStatisticsAggregate,
 )
 from app.modules.analytics.infra.exception import AnalyticsInfraException
-from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
-from app.modules.crm.domain.current_param.current_param_repository_protocol import CrmCurrentParamRepositoryProtocol
-from app.modules.crm.domain.custom_params_statistics_aggregate.CustomParamsStatisticsAggregateEntity import (
-    CustomParamsStatisticsAggregateEntity,
-)
-from app.modules.crm.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
-    CustomParamsStatisticsRepositoryProtocol,
-)
+from app.modules.analytics.domain.current_param.AnalyticsCurrentParamEntity import AnalyticsCurrentParamEntity
+from app.modules.analytics.domain.current_param.current_param_repository_protocol import AnalyticsCurrentParamRepositoryProtocol
+from app.modules.analytics.domain.custom_params_statistics_aggregate.AnalyticsCustomParamsStatisticsAggregateEntity import AnalyticsCustomParamsStatisticsAggregateEntity
+from app.modules.analytics.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import AnalyticsCustomParamsStatisticsRepositoryProtocol
 from app.modules.crm.domain.pagination import Pagination
-from app.modules.crm.domain.statistics_aggregate.statistics_aggregate_repository_protocol import (
-    StatisticsRepositoryProtocol,
-)
-from app.modules.crm.domain.statistics_aggregate.StatisticsAggregateEntity import StatisticsAggregateEntity
+from app.modules.analytics.domain.statistics_aggregate.AnalyticsStatisticsAggregateEntity import AnalyticsStatisticsAggregateEntity
+from app.modules.analytics.domain.statistics_aggregate.statistics_aggregate_repository_protocol import AnalyticsStatisticsRepositoryProtocol
 from app.modules.crm.infra.db.apps.models import AppPlatform
 
 
@@ -397,12 +391,12 @@ class SqlAlchemyAnalyticsEventRepository(AnalyticsEventRepositoryProtocol):
         return self._list_events(stmt, click_id=click_id, event_key=event_key, pagination=pagination)
 
 
-class SqlAlchemyAnalyticsCurrentParamRepository(CrmCurrentParamRepositoryProtocol):
+class SqlAlchemyAnalyticsCurrentParamRepository(AnalyticsCurrentParamRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def _to_domain(self, row: AnalyticsCurrentParam) -> CrmCurrentParamEntity:
-        return CrmCurrentParamEntity(
+    def _to_domain(self, row: AnalyticsCurrentParam) -> AnalyticsCurrentParamEntity:
+        return AnalyticsCurrentParamEntity(
             click_id=row.click_id,
             param_key=row.param_key,
             value_string=row.value_string,
@@ -412,8 +406,8 @@ class SqlAlchemyAnalyticsCurrentParamRepository(CrmCurrentParamRepositoryProtoco
             updated_at=row.updated_at,
         )
 
-    def _mapping_to_domain(self, row: RowMapping) -> CrmCurrentParamEntity:
-        return CrmCurrentParamEntity(
+    def _mapping_to_domain(self, row: RowMapping) -> AnalyticsCurrentParamEntity:
+        return AnalyticsCurrentParamEntity(
             click_id=row["click_id"],
             param_key=row["param_key"],
             value_string=row["value_string"],
@@ -423,7 +417,7 @@ class SqlAlchemyAnalyticsCurrentParamRepository(CrmCurrentParamRepositoryProtoco
             updated_at=row["updated_at"],
         )
 
-    def _to_values(self, entity: CrmCurrentParamEntity) -> dict[str, object]:
+    def _to_values(self, entity: AnalyticsCurrentParamEntity) -> dict[str, object]:
         values: dict[str, object] = {
             "click_id": entity.click_id,
             "param_key": entity.param_key,
@@ -436,14 +430,14 @@ class SqlAlchemyAnalyticsCurrentParamRepository(CrmCurrentParamRepositoryProtoco
             values["updated_at"] = entity.updated_at
         return values
 
-    def save(self, entity: CrmCurrentParamEntity) -> CrmCurrentParamEntity:
+    def save(self, entity: AnalyticsCurrentParamEntity) -> AnalyticsCurrentParamEntity:
         rows = self.create_or_update_many([entity])
         return rows[0]
 
-    def save_many(self, entities: list[CrmCurrentParamEntity]) -> list[CrmCurrentParamEntity]:
+    def save_many(self, entities: list[AnalyticsCurrentParamEntity]) -> list[AnalyticsCurrentParamEntity]:
         return self.create_or_update_many(entities)
 
-    def create_or_update_many(self, entities: list[CrmCurrentParamEntity]) -> list[CrmCurrentParamEntity]:
+    def create_or_update_many(self, entities: list[AnalyticsCurrentParamEntity]) -> list[AnalyticsCurrentParamEntity]:
         if not entities:
             return []
 
@@ -474,7 +468,7 @@ class SqlAlchemyAnalyticsCurrentParamRepository(CrmCurrentParamRepositoryProtoco
         self.session.flush()
         return [self._mapping_to_domain(row) for row in rows]
 
-    def get_by_click_and_key(self, click_id: str, param_key: str) -> CrmCurrentParamEntity | None:
+    def get_by_click_and_key(self, click_id: str, param_key: str) -> AnalyticsCurrentParamEntity | None:
         row = self.session.get(AnalyticsCurrentParam, {"click_id": click_id, "param_key": param_key})
         return self._to_domain(row) if row is not None else None
 
@@ -483,7 +477,7 @@ class SqlAlchemyAnalyticsCurrentParamRepository(CrmCurrentParamRepositoryProtoco
         click_id: str,
         *,
         pagination: Pagination | None = None,
-    ) -> list[CrmCurrentParamEntity]:
+    ) -> list[AnalyticsCurrentParamEntity]:
         rows = self.session.scalars(
             _apply_pagination(
                 select(AnalyticsCurrentParam)
@@ -495,12 +489,12 @@ class SqlAlchemyAnalyticsCurrentParamRepository(CrmCurrentParamRepositoryProtoco
         return [self._to_domain(row) for row in rows]
 
 
-class SqlAlchemyAnalyticsStatisticsRepository(StatisticsRepositoryProtocol):
+class SqlAlchemyAnalyticsStatisticsRepository(AnalyticsStatisticsRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def _to_domain(self, row: AnalyticsStatisticsAggregate) -> StatisticsAggregateEntity:
-        return StatisticsAggregateEntity(
+    def _to_domain(self, row: AnalyticsStatisticsAggregate) -> AnalyticsStatisticsAggregateEntity:
+        return AnalyticsStatisticsAggregateEntity(
             aggregate_id=row.aggregate_id,
             app_platform_id=row.app_platform_id,
             geo=row.geo,
@@ -513,7 +507,7 @@ class SqlAlchemyAnalyticsStatisticsRepository(StatisticsRepositoryProtocol):
             created_at=row.created_at,
         )
 
-    def _to_row(self, entity: StatisticsAggregateEntity) -> AnalyticsStatisticsAggregate:
+    def _to_row(self, entity: AnalyticsStatisticsAggregateEntity) -> AnalyticsStatisticsAggregate:
         kwargs: dict[str, object] = {
             "app_platform_id": entity.app_platform_id,
             "geo": entity.geo,
@@ -530,21 +524,21 @@ class SqlAlchemyAnalyticsStatisticsRepository(StatisticsRepositoryProtocol):
             kwargs["created_at"] = entity.created_at
         return AnalyticsStatisticsAggregate(**kwargs)
 
-    def save(self, entity: StatisticsAggregateEntity) -> StatisticsAggregateEntity:
+    def save(self, entity: AnalyticsStatisticsAggregateEntity) -> AnalyticsStatisticsAggregateEntity:
         row = self.session.merge(self._to_row(entity))
         self.session.flush()
         return self._to_domain(row)
 
-    def save_many(self, entities: list[StatisticsAggregateEntity]) -> list[StatisticsAggregateEntity]:
+    def save_many(self, entities: list[AnalyticsStatisticsAggregateEntity]) -> list[AnalyticsStatisticsAggregateEntity]:
         rows = [self.session.merge(self._to_row(entity)) for entity in entities]
         self.session.flush()
         return [self._to_domain(row) for row in rows]
 
-    def get_by_id(self, aggregate_id: int) -> StatisticsAggregateEntity | None:
+    def get_by_id(self, aggregate_id: int) -> AnalyticsStatisticsAggregateEntity | None:
         row = self.session.get(AnalyticsStatisticsAggregate, aggregate_id)
         return self._to_domain(row) if row is not None else None
 
-    def delete(self, aggregate_id: int) -> StatisticsAggregateEntity:
+    def delete(self, aggregate_id: int) -> AnalyticsStatisticsAggregateEntity:
         row = self.session.get(AnalyticsStatisticsAggregate, aggregate_id)
         if row is None:
             raise AnalyticsInfraException()
@@ -567,7 +561,7 @@ class SqlAlchemyAnalyticsStatisticsRepository(StatisticsRepositoryProtocol):
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
         pagination: Pagination | None = None,
-    ) -> list[StatisticsAggregateEntity]:
+    ) -> list[AnalyticsStatisticsAggregateEntity]:
         filter_values = {
             "aggregate_id": aggregate_id,
             "app_platform_id": app_platform_id,
@@ -599,16 +593,16 @@ class SqlAlchemyAnalyticsStatisticsRepository(StatisticsRepositoryProtocol):
         app_platform_id: int,
         *,
         pagination: Pagination | None = None,
-    ) -> list[StatisticsAggregateEntity]:
+    ) -> list[AnalyticsStatisticsAggregateEntity]:
         return self.list_by_filters(app_platform_id=app_platform_id, pagination=pagination)
 
 
-class SqlAlchemyAnalyticsCustomParamsStatisticsRepository(CustomParamsStatisticsRepositoryProtocol):
+class SqlAlchemyAnalyticsCustomParamsStatisticsRepository(AnalyticsCustomParamsStatisticsRepositoryProtocol):
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def _to_domain(self, row: AnalyticsCustomParamsStatisticsAggregate) -> CustomParamsStatisticsAggregateEntity:
-        return CustomParamsStatisticsAggregateEntity(
+    def _to_domain(self, row: AnalyticsCustomParamsStatisticsAggregate) -> AnalyticsCustomParamsStatisticsAggregateEntity:
+        return AnalyticsCustomParamsStatisticsAggregateEntity(
             aggregate_id=row.aggregate_id,
             app_platform_id=row.app_platform_id,
             geo=row.geo,
@@ -623,7 +617,7 @@ class SqlAlchemyAnalyticsCustomParamsStatisticsRepository(CustomParamsStatistics
             created_at=row.created_at,
         )
 
-    def _to_row(self, entity: CustomParamsStatisticsAggregateEntity) -> AnalyticsCustomParamsStatisticsAggregate:
+    def _to_row(self, entity: AnalyticsCustomParamsStatisticsAggregateEntity) -> AnalyticsCustomParamsStatisticsAggregate:
         kwargs: dict[str, object] = {
             "app_platform_id": entity.app_platform_id,
             "geo": entity.geo,
@@ -642,24 +636,24 @@ class SqlAlchemyAnalyticsCustomParamsStatisticsRepository(CustomParamsStatistics
             kwargs["created_at"] = entity.created_at
         return AnalyticsCustomParamsStatisticsAggregate(**kwargs)
 
-    def save(self, entity: CustomParamsStatisticsAggregateEntity) -> CustomParamsStatisticsAggregateEntity:
+    def save(self, entity: AnalyticsCustomParamsStatisticsAggregateEntity) -> AnalyticsCustomParamsStatisticsAggregateEntity:
         row = self.session.merge(self._to_row(entity))
         self.session.flush()
         return self._to_domain(row)
 
     def save_many(
         self,
-        entities: list[CustomParamsStatisticsAggregateEntity],
-    ) -> list[CustomParamsStatisticsAggregateEntity]:
+        entities: list[AnalyticsCustomParamsStatisticsAggregateEntity],
+    ) -> list[AnalyticsCustomParamsStatisticsAggregateEntity]:
         rows = [self.session.merge(self._to_row(entity)) for entity in entities]
         self.session.flush()
         return [self._to_domain(row) for row in rows]
 
-    def get_by_id(self, aggregate_id: int) -> CustomParamsStatisticsAggregateEntity | None:
+    def get_by_id(self, aggregate_id: int) -> AnalyticsCustomParamsStatisticsAggregateEntity | None:
         row = self.session.get(AnalyticsCustomParamsStatisticsAggregate, aggregate_id)
         return self._to_domain(row) if row is not None else None
 
-    def delete(self, aggregate_id: int) -> CustomParamsStatisticsAggregateEntity:
+    def delete(self, aggregate_id: int) -> AnalyticsCustomParamsStatisticsAggregateEntity:
         row = self.session.get(AnalyticsCustomParamsStatisticsAggregate, aggregate_id)
         if row is None:
             raise AnalyticsInfraException()
@@ -684,7 +678,7 @@ class SqlAlchemyAnalyticsCustomParamsStatisticsRepository(CustomParamsStatistics
         updated_at: datetime | None = None,
         created_at: datetime | None = None,
         pagination: Pagination | None = None,
-    ) -> list[CustomParamsStatisticsAggregateEntity]:
+    ) -> list[AnalyticsCustomParamsStatisticsAggregateEntity]:
         filter_values = {
             "aggregate_id": aggregate_id,
             "app_platform_id": app_platform_id,
@@ -721,5 +715,5 @@ class SqlAlchemyAnalyticsCustomParamsStatisticsRepository(CustomParamsStatistics
         app_platform_id: int,
         *,
         pagination: Pagination | None = None,
-    ) -> list[CustomParamsStatisticsAggregateEntity]:
+    ) -> list[AnalyticsCustomParamsStatisticsAggregateEntity]:
         return self.list_by_filters(app_platform_id=app_platform_id, pagination=pagination)

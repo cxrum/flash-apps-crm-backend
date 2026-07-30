@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from app.modules.crm.domain.currency.entity import Money
-from app.modules.crm.infra.services.currency import CurrencyConvertorClient
+from app.modules.analytics.domain.currency.entity import Money
+from app.modules.analytics.infra.services.currency import CurrencyConvertorClient
 
 
 class _FakeResponse:
@@ -34,7 +34,7 @@ def test_convert_raises_for_invalid_currency_code() -> None:
 
 def test_convert_raises_for_non_200_response(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "app.modules.crm.infra.services.currency.requests.get",
+        "app.modules.analytics.infra.services.currency.requests.get",
         lambda *args, **kwargs: _FakeResponse(status_code=503, payload={}),
     )
     service = CurrencyConvertorClient()
@@ -53,7 +53,7 @@ def test_convert_uses_response_rate_for_requested_target_currency(
         calls["params"] = params
         return _FakeResponse(status_code=200, payload={"rates": {"EUR": 0.91}})
 
-    monkeypatch.setattr("app.modules.crm.infra.services.currency.requests.get", fake_get)
+    monkeypatch.setattr("app.modules.analytics.infra.services.currency.requests.get", fake_get)
     service = CurrencyConvertorClient()
 
     converted = service.convert(Money(base="USD", value=4.4), "EUR")

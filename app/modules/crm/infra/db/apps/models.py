@@ -33,7 +33,6 @@ class AppUser(Base):
         index=True,
     )
 
-
 class App(Base):
     __tablename__ = "crm_apps"
     __table_args__ = (CheckConstraint("status IN ('draft', 'active', 'archived')", name="ck_crm_apps_status"),)
@@ -95,39 +94,4 @@ class AppPlatform(Base):
         nullable=False,
         server_default=func.now(),
         onupdate=func.now(),
-    )
-
-
-class Install(Base):
-    __tablename__ = "crm_installs"
-    __table_args__ = (
-        UniqueConstraint("app_platform_id", "app_user_id", name="uq_crm_installs_app_user"),
-        {"extend_existing": True},
-    )
-
-    install_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    click_id: Mapped[str] = mapped_column(
-        String(64),
-        ForeignKey("crm_clicks.click_id", ondelete="RESTRICT"),
-        nullable=False,
-        index=True,
-    )
-    app_user_id: Mapped[int | None] = mapped_column(
-        BigInteger,
-        ForeignKey("crm_app_users.app_user_id", ondelete="RESTRICT"),
-        nullable=True,
-        index=True,
-    )
-    app_platform_id: Mapped[int] = mapped_column(
-        BigInteger,
-        ForeignKey("crm_app_platforms.platform_id", ondelete="RESTRICT"),
-        nullable=False,
-        index=True,
-    )
-    device_data: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    installed_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False,
-        server_default=func.now(),
-        index=True,
     )

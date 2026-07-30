@@ -4,7 +4,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any, ClassVar, Protocol
 
-from app.modules.crm.domain.current_param.CrmCurrentParamEntity import UnsupportedCurrentParamUpdatePolicy
+from app.modules.analytics.domain.current_param.exception import UnsupportedCurrentParamUpdatePolicy
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 
 

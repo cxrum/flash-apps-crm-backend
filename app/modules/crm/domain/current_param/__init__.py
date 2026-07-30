@@ -1,5 +1,0 @@
-from __future__ import annotations
-
-from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
-
-__all__ = ["CrmCurrentParamEntity"]

@@ -5,12 +5,8 @@ from app.modules.crm.domain.app_user.CrmAppUserEntity import CrmAppUserEntity
 from app.modules.crm.domain.audit_log.CrmAuditLogEntity import (
     CrmAuditLogEntity,
 )
-from app.modules.crm.domain.click.CrmClickEntity import CrmClickEntity
 from app.modules.crm.domain.conversion_definition.CrmConversionDefinitionEntity import CrmConversionDefinitionEntity
-from app.modules.crm.domain.current_param.CrmCurrentParamEntity import CrmCurrentParamEntity
-from app.modules.crm.domain.events.CrmEventEntity import EventEntity
 from app.modules.crm.domain.exceptions import DomainException
-from app.modules.crm.domain.install.CrmInstallEntity import CrmInstallEntity
 from app.modules.crm.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 from app.modules.crm.domain.permission.CrmPermissionEntity import CrmPermissionEntity
@@ -24,11 +20,7 @@ from app.modules.crm.domain.repositories import (
     CrmAppSecretRepositoryProtocol,
     CrmAppUserRepositoryProtocol,
     CrmAuditLogRepositoryProtocol,
-    CrmClickRepositoryProtocol,
     CrmConversionDefinitionRepositoryProtocol,
-    CrmCurrentParamRepositoryProtocol,
-    CrmEventRepositoryProtocol,
-    CrmInstallRepositoryProtocol,
     CrmMetricDefinitionRepositoryProtocol,
     CrmParamDefinitionRepositoryProtocol,
     CrmPermissionRepositoryProtocol,
@@ -54,12 +46,8 @@ __all__ = [
     "CrmAppSecretEntity",
     "CrmAppUserEntity",
     "CrmAuditLogEntity",
-    "CrmClickEntity",
     "CrmConversionDefinitionEntity",
-    "CrmCurrentParamEntity",
     "DomainException",
-    "EventEntity",
-    "CrmInstallEntity",
     "CrmMetricDefinitionEntity",
     "CrmParamDefinitionEntity",
     "CrmPermissionEntity",
@@ -77,11 +65,7 @@ __all__ = [
     "CrmAppSecretRepositoryProtocol",
     "CrmAppUserRepositoryProtocol",
     "CrmAuditLogRepositoryProtocol",
-    "CrmClickRepositoryProtocol",
     "CrmConversionDefinitionRepositoryProtocol",
-    "CrmCurrentParamRepositoryProtocol",
-    "CrmEventRepositoryProtocol",
-    "CrmInstallRepositoryProtocol",
     "CrmMetricDefinitionRepositoryProtocol",
     "CrmParamDefinitionRepositoryProtocol",
     "CrmPermissionRepositoryProtocol",
