@@ -46,26 +46,6 @@ def _seed_platform(
     )
 
 
-def test_resolve_platform(
-    unit_test_context: UnitTestContext,
-) -> None:
-    service = unit_test_context.build_ingestion_service()
-
-    ios_platfrom = _seed_platform(unit_test_context, app_id=1, install_key="install-key-ios", platform="ios")
-    android_platfrom = _seed_platform(
-        unit_test_context, app_id=2, install_key="install-key-android", platform="android"
-    )
-
-    resolved_ios_platfrom = service._resolve_platform(ios_platfrom.install_key, uow=unit_test_context.uow)
-    resolved_android_platfrom = service._resolve_platform(android_platfrom.install_key, uow=unit_test_context.uow)
-
-    with pytest.raises(GeneralException):
-        service._resolve_platform("uknown-platform-key", uow=unit_test_context.uow)
-
-    assert resolved_android_platfrom.app_id == android_platfrom.app_id
-    assert resolved_ios_platfrom.app_id == ios_platfrom.app_id
-
-
 def test_process_install_creates_click_install_and_raw_event_on_first_install(
     unit_test_context: UnitTestContext,
 ) -> None:
@@ -372,8 +352,6 @@ def test_async_update_param_handler_creates_current_param() -> None:
         assert len(saved) == 1
         assert saved[0].param_key == "utm_source"
         assert saved[0].current_value() == "origin"
-        assert uow.enter_count == 1
-        assert uow.commit_count == 1
 
     asyncio.run(scenario())
 

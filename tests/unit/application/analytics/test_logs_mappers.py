@@ -1,6 +1,6 @@
 from app.modules.analytics.application.logs.mappers import AnalyticsLogsMapper
 from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
-from tests.unit.builders import build_analytics_event_entity
+from tests.unit.builders import build_event_entity
 
 
 def test_analytics_logs_mapper_maps_analytics_click_and_event_entities() -> None:
@@ -10,7 +10,7 @@ def test_analytics_logs_mapper_maps_analytics_click_and_event_entities() -> None
         raw_query={"campaign": "spring"},
         normalized_params={"utm_source": "partner"},
     )
-    event = build_analytics_event_entity(
+    event = build_event_entity(
         event_id="event-1",
         click_id=click.click_id,
         event_key="purchase",

@@ -19,7 +19,7 @@ from tests.unit.doubles.base import (
 )
 
 
-class InMemoryCrmClickRepository(CallRecorderMixin, AnalyticsClickRepositoryProtocol):
+class InMemoryAnalyticsClickRepository(CallRecorderMixin, AnalyticsClickRepositoryProtocol):
     def __init__(self) -> None:
         super().__init__()
         self._items: dict[str, AnalyticsClickEntity] = {}
@@ -58,7 +58,7 @@ class InMemoryCrmClickRepository(CallRecorderMixin, AnalyticsClickRepositoryProt
         return [clone(item) for item in items[:limit]]
 
 
-class InMemoryCrmCurrentParamRepository(CallRecorderMixin, AnalyticsCurrentParamRepositoryProtocol):
+class InMemoryAnalyticsCurrentParamRepository(CallRecorderMixin, AnalyticsCurrentParamRepositoryProtocol):
     def __init__(self) -> None:
         super().__init__()
         self._items: dict[tuple[str, str], AnalyticsCurrentParamEntity] = {}
@@ -94,7 +94,7 @@ class InMemoryCrmCurrentParamRepository(CallRecorderMixin, AnalyticsCurrentParam
         return [clone(item) for item in items]
 
 
-class InMemoryCrmEventRepository(CallRecorderMixin, AnalyticsEventRepositoryProtocol):
+class InMemoryAnalyticsEventRepository(CallRecorderMixin, AnalyticsEventRepositoryProtocol):
     def __init__(
         self,
         *,

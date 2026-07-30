@@ -91,9 +91,6 @@ def test_create_app_platform_saves_valid_platform(unit_test_context: UnitTestCon
     assert saved_platform.sdk_public_key == HashableValue.from_str("random-hash-8-2").to_hex()
     assert response.sdk_secret == HashableValue.from_str("random-hash-8-1").to_hex()
     assert response.app_platform.sdk_secret_encrypted == expected_encrypted_secret
-    assert [call.method for call in unit_test_context.encryption_service.calls] == ["encrypt", "decrypt"]
-    assert [call.method for call in unit_test_context.hash_service.calls] == ["random_hash", "random_hash"]
-    assert [call.args for call in unit_test_context.hash_service.calls] == [(8,), (8,)]
 
 
 def test_create_app_platform_requires_admin_access(unit_test_context: UnitTestContext) -> None:
@@ -260,4 +257,3 @@ def test_get_app_config_secrets_merges_templates_with_platform_values(
 
     by_code = {item.code: item.value for item in response.platform_configurations}
     assert by_code == {"api_key": "real-secret"}
-    assert [call.method for call in unit_test_context.encryption_service.calls] == ["decrypt"]

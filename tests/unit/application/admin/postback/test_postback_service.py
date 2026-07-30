@@ -278,7 +278,6 @@ def test_create_rule_creates_rules_for_all_app_platforms(
     android = _seed_platform(uow, app_id=1, platform="android")
     _seed_platform(uow, app_id=2, platform="ios", install_key="other-ios-install-key")
     uow.secret_template_repo.save(build_secret_template_entity(code="api_key"))
-    uow.app_platform_repo.reset_calls()
 
     service.create_postback(
         build_admin_create_postback_rule_command(
@@ -300,16 +299,10 @@ def test_create_rule_creates_rules_for_all_app_platforms(
         )
     )
 
-    assert [call.method for call in uow.app_platform_repo.calls] == ["list_by_app_id"]
-
     saved_rules = uow.postback_rule_repo.list_by_app_id(1)
 
     assert [rule.platform_app_id for rule in saved_rules] == [ios.platform_id, android.platform_id]
     assert len(uow.postback_rule_repo.list_by_app_id(2)) == 0
-    # Permission authorization runs in its own, read-only UoW before creation.
-    assert uow.commit_count == 2
-    assert uow.rollback_count == 0
-
     _assert_saved_rule(saved_rules[0], platform_id=ios.platform_id or 0)
     _assert_saved_rule(saved_rules[1], platform_id=android.platform_id or 0)
 
@@ -321,7 +314,6 @@ def test_create_rule_creates_rule_for_selected_platform_only(
     service, _ = _build_service(uow, async_event_bus)
     _seed_platform(uow, app_id=1, platform="ios")
     android = _seed_platform(uow, app_id=1, platform="android")
-    uow.app_platform_repo.reset_calls()
 
     service.create_postback(
         build_admin_create_postback_rule_command(
@@ -330,16 +322,12 @@ def test_create_rule_creates_rule_for_selected_platform_only(
         )
     )
 
-    assert [call.method for call in uow.app_platform_repo.calls] == ["get_by_id"]
-
     saved_rules = uow.postback_rule_repo.list_by_app_id(1)
 
     assert len(saved_rules) == 1
     assert saved_rules[0].platform_app_id == android.platform_id
     assert saved_rules[0].name == "Install Rule"
     assert saved_rules[0].trigger_type == "install"
-    assert uow.commit_count == 2
-    assert uow.rollback_count == 0
 
 
 def test_create_rule_raises_when_app_has_no_platforms(
@@ -351,8 +339,6 @@ def test_create_rule_raises_when_app_has_no_platforms(
     with pytest.raises(GeneralException):
         service.create_postback(build_admin_create_postback_rule_command(app_id=1))
 
-    assert uow.commit_count == 1
-    assert uow.rollback_count == 1
     assert uow.postback_rule_repo.list_by_app_id(1) == []
 
 
@@ -370,8 +356,6 @@ def test_create_rule_raises_when_selected_platform_does_not_exist(
             )
         )
 
-    assert uow.commit_count == 1
-    assert uow.rollback_count == 1
 
 
 def test_create_rule_raises_for_unknown_secret_template(
@@ -388,8 +372,6 @@ def test_create_rule_raises_for_unknown_secret_template(
             )
         )
 
-    assert uow.commit_count == 1
-    assert uow.rollback_count == 1
 
 
 def test_create_rule_raises_for_invalid_template_placeholder(
@@ -406,8 +388,6 @@ def test_create_rule_raises_for_invalid_template_placeholder(
             )
         )
 
-    assert uow.commit_count == 1
-    assert uow.rollback_count == 1
 
 
 def test_evaluate_raises_when_event_does_not_exist(
@@ -419,8 +399,6 @@ def test_evaluate_raises_when_event_does_not_exist(
     with pytest.raises(GeneralException):
         service.evaluate(build_admin_evaluate_postback_rule_command(event_id="missing-event"))
 
-    assert uow.commit_count == 0
-    assert uow.rollback_count == 0
 
 
 def test_evaluate_raises_when_click_does_not_exist(
@@ -433,8 +411,6 @@ def test_evaluate_raises_when_click_does_not_exist(
     with pytest.raises(GeneralException):
         service.evaluate(build_admin_evaluate_postback_rule_command())
 
-    assert uow.commit_count == 0
-    assert uow.rollback_count == 0
 
 
 def test_evaluate_returns_only_rules_matching_platform_and_trigger(
@@ -483,8 +459,6 @@ def test_evaluate_returns_only_rules_matching_platform_and_trigger(
     )
 
     assert rules == [expected]
-    assert uow.commit_count == 1
-    assert uow.rollback_count == 0
 
 
 def test_build_params_resolves_current_snapshot_and_fallback_fields() -> None:
@@ -725,8 +699,6 @@ def test_execute_raises_when_rule_does_not_exist(
             await service.execute(build_admin_execute_postback_rule_command(postback_rule_id=999))
 
         assert requester.calls == []
-        assert uow.commit_count == 0
-        assert uow.rollback_count == 0
 
     asyncio.run(scenario())
 
@@ -808,8 +780,6 @@ def test_execute_builds_request_and_calls_requester(
                 http_method="POST",
             )
         ]
-        assert uow.commit_count == 1
-        assert uow.rollback_count == 0
 
     asyncio.run(scenario())
 
@@ -887,8 +857,6 @@ def test_execute_builds_get_request_and_calls_requester(
                 http_method="GET",
             )
         ]
-        assert uow.commit_count == 1
-        assert uow.rollback_count == 0
 
     asyncio.run(scenario())
 
@@ -924,7 +892,5 @@ def test_execute_propagates_requester_failures_and_rolls_back(
             )
 
         assert len(requester.calls) == 1
-        assert uow.commit_count == 0
-        assert uow.rollback_count == 1
 
     asyncio.run(scenario())

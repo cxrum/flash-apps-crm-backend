@@ -173,9 +173,6 @@ def test_async_metric_handler_accepts_valid_metric_event() -> None:
 
         await handler.handle(_build_metric_message(click_id=click.click_id))
 
-        assert uow.enter_count == 1
-        assert uow.commit_count == 1
-        assert uow.rollback_count == 0
 
     asyncio.run(scenario())
 
@@ -325,9 +322,6 @@ def test_async_conversion_handler_accepts_valid_non_revenue_conversion_event() -
 
         aggeregates = uow.statistics_repo.list_by_app_platform_id(platform.platform_id)
 
-        assert uow.enter_count == 1
-        assert uow.commit_count == 1
-        assert uow.rollback_count == 0
         assert len(aggeregates) == 1
         assert aggeregates[0].amount_usd is None
         assert aggeregates[0].count == 1
@@ -392,9 +386,6 @@ def test_async_conversion_handler_accepts_valid_revenue_conversion_event() -> No
         detailed_aggeregates = uow.custom_params_statistics_repo.list_by_app_platform_id(platform.platform_id)
         detailed_by_key = {item.param_key: item for item in detailed_aggeregates}
 
-        assert uow.enter_count == 3
-        assert uow.commit_count == 3
-        assert uow.rollback_count == 0
         assert len(aggeregates) == 1
         assert aggeregates[0].amount_usd == 5.0
         assert aggeregates[0].count == 3

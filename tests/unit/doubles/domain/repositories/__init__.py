@@ -7,12 +7,12 @@ from tests.unit.doubles.domain.repositories.apps import (
     InMemoryCrmAppPlatformRepository,
     InMemoryCrmAppRepository,
     InMemoryCrmAppUserRepository,
-    InMemoryCrmInstallRepository,
+    InMemoryAnalyticsInstallRepository,
 )
 from tests.unit.doubles.domain.repositories.attribution import (
-    InMemoryCrmClickRepository,
-    InMemoryCrmCurrentParamRepository,
-    InMemoryCrmEventRepository,
+    InMemoryAnalyticsClickRepository,
+    InMemoryAnalyticsCurrentParamRepository,
+    InMemoryAnalyticsEventRepository,
 )
 from tests.unit.doubles.domain.repositories.audit import InMemoryCrmAuditLogRepository
 from tests.unit.doubles.domain.repositories.config import (
@@ -42,11 +42,11 @@ __all__ = [
     "InMemoryCrmAppSecretRepository",
     "InMemoryCrmAppUserRepository",
     "InMemoryCrmAuditLogRepository",
-    "InMemoryCrmClickRepository",
+    "InMemoryAnalyticsClickRepository",
     "InMemoryCrmConversionDefinitionRepository",
-    "InMemoryCrmCurrentParamRepository",
-    "InMemoryCrmEventRepository",
-    "InMemoryCrmInstallRepository",
+    "InMemoryAnalyticsCurrentParamRepository",
+    "InMemoryAnalyticsEventRepository",
+    "InMemoryAnalyticsInstallRepository",
     "InMemoryCrmMetricDefinitionRepository",
     "InMemoryCrmParamDefinitionRepository",
     "InMemoryCrmPermissionRepository",

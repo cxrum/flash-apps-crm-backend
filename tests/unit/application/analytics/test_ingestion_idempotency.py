@@ -10,11 +10,11 @@ from app.modules.analytics.application.ingestion.exception import (
     IdempotencyStateLost,
     InvalidInstallKey,
 )
-from app.modules.analytics.application.ingestion.service import IngestionService
 from tests.unit.base import UnitTestContext
 from tests.unit.builders import (
     build_app_entity,
     build_app_platform_entity,
+    build_click_entity,
     build_sdk_event_command,
     build_sdk_events_command,
     build_sdk_install_command,
@@ -31,10 +31,8 @@ def test_processing_key_returns_conflict_before_the_request_is_processed(unit_te
     async def scenario() -> None:
         service = unit_test_context.build_ingestion_service()
         command = build_sdk_install_command(idempotency_key="same-key")
-        key = service._scope("install", command.install_key, command.idempotency_key)
-        claim = await unit_test_context.idempotency_repository.acquire(key)
+        unit_test_context.idempotency_repository.return_processing_for_next_request()
 
-        assert claim.is_owner
         with pytest.raises(IdempotencyKeyProcessing) as error:
             await service.process_install(command)
         assert error.value.code == 409
@@ -46,7 +44,7 @@ def test_completed_keys_are_accepted_as_no_ops_for_all_ingestion_operations(
     unit_test_context: UnitTestContext,
 ) -> None:
     async def scenario() -> None:
-        service: IngestionService = unit_test_context.build_ingestion_service()
+        service = unit_test_context.build_ingestion_service()
         platform = _seed_platform(unit_test_context)
         install = await service.process_install(
             build_sdk_install_command(click_id=None, install_key=platform.install_key, idempotency_key="install-key")
@@ -73,54 +71,52 @@ def test_completed_keys_are_accepted_as_no_ops_for_all_ingestion_operations(
     asyncio.run(scenario())
 
 
-def test_failed_request_releases_its_processing_key(unit_test_context: UnitTestContext) -> None:
+def test_failed_install_can_be_retried_after_its_missing_platform_is_created(unit_test_context: UnitTestContext) -> None:
     async def scenario() -> None:
         service = unit_test_context.build_ingestion_service()
-        command = build_sdk_install_command(install_key="missing-platform", idempotency_key="retryable-key")
-        key = service._scope("install", command.install_key, command.idempotency_key)
+        command = build_sdk_install_command(click_id=None, idempotency_key="retryable-key")
 
         with pytest.raises(InvalidInstallKey):
             await service.process_install(command)
 
-        retry = await unit_test_context.idempotency_repository.acquire(key)
-        assert retry.is_owner
+        _seed_platform(unit_test_context)
+        assert await service.process_install(command) is not None
 
     asyncio.run(scenario())
 
 
-def test_completed_install_skips_validation_and_persistence(unit_test_context: UnitTestContext) -> None:
+def test_failed_batch_can_be_retried_after_its_missing_platform_is_created(unit_test_context: UnitTestContext) -> None:
     async def scenario() -> None:
         service = unit_test_context.build_ingestion_service()
-        command = build_sdk_install_command(install_key="missing-platform", idempotency_key="completed-key")
-        key = service._scope("install", command.install_key, command.idempotency_key)
-        claim = await unit_test_context.idempotency_repository.acquire(key)
-
-        assert claim.owner_token is not None
-        assert await unit_test_context.idempotency_repository.complete(key, claim.owner_token)
-        assert await service.process_install(command) is None
-        assert unit_test_context.uow.enter_count == 0
-
-    asyncio.run(scenario())
-
-
-def test_failed_batches_and_parameter_updates_release_keys_for_retry(unit_test_context: UnitTestContext) -> None:
-    async def scenario() -> None:
-        service = unit_test_context.build_ingestion_service()
-        batch = build_sdk_events_command(install_key="missing-platform", idempotency_key="batch-retry")
-        batch_key = service._scope("events", f"{batch.install_key}:{batch.click_id}", batch.idempotency_key)
+        command = build_sdk_events_command(
+            install_key="install-key-ios",
+            click_id="retry-click",
+            idempotency_key="batch-retry",
+            events=[build_sdk_event_command(idempotency_key="retry-event")],
+        )
 
         with pytest.raises(InvalidInstallKey):
-            await service.process_batch_events(batch)
+            await service.process_batch_events(command)
 
-        assert (await unit_test_context.idempotency_repository.acquire(batch_key)).is_owner
+        platform = _seed_platform(unit_test_context)
+        unit_test_context.uow.click_repo.insert(
+            build_click_entity(click_id=command.click_id, app_platform_id=platform.platform_id)
+        )
+        assert await service.process_batch_events(command)
 
+    asyncio.run(scenario())
+
+
+def test_failed_parameter_update_can_be_retried_after_its_click_is_created(unit_test_context: UnitTestContext) -> None:
+    async def scenario() -> None:
+        service = unit_test_context.build_ingestion_service()
         params = build_sdk_params_update_command(click_id="missing-click", idempotency_key="params-retry")
-        params_key = service._scope("params-update", params.click_id, params.idempotency_key)
 
         with pytest.raises(AnalyticsClickNotFound):
             await service.update_params(params)
 
-        assert (await unit_test_context.idempotency_repository.acquire(params_key)).is_owner
+        unit_test_context.uow.click_repo.insert(build_click_entity(click_id=params.click_id))
+        assert await service.update_params(params)
 
     asyncio.run(scenario())
 
@@ -159,23 +155,18 @@ def test_same_client_key_is_independent_for_each_ingestion_operation(
 
 def test_lost_idempotency_ownership_is_reported_after_processing(
     unit_test_context: UnitTestContext,
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     async def scenario() -> None:
         service = unit_test_context.build_ingestion_service()
         platform = _seed_platform(unit_test_context)
         command = build_sdk_install_command(click_id=None, install_key=platform.install_key, idempotency_key="lost-owner")
-        key = service._scope("install", command.install_key, command.idempotency_key)
-
-        async def complete_without_ownership(_: str, __: str) -> bool:
-            return False
-
-        monkeypatch.setattr(unit_test_context.idempotency_repository, "complete", complete_without_ownership)
+        unit_test_context.idempotency_repository.fail_next_completion()
 
         with pytest.raises(IdempotencyStateLost) as error:
             await service.process_install(command)
 
         assert error.value.code == 500
-        assert not (await unit_test_context.idempotency_repository.acquire(key)).is_owner
+        with pytest.raises(IdempotencyKeyProcessing):
+            await service.process_install(command)
 
     asyncio.run(scenario())

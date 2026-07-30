@@ -175,21 +175,6 @@ def build_event_entity(**overrides: Any) -> AnalyticsEventEntity:
     )
 
 
-def build_analytics_event_entity(**overrides: Any) -> AnalyticsEventEntity:
-    return AnalyticsEventEntity(
-        **_merge(
-            {
-                "event_id": "evt-1",
-                "click_id": "click-1",
-                "event_type": "metric",
-                "event_key": "first_open",
-                "event_time_utc": _now(),
-            },
-            overrides,
-        )
-    )
-
-
 def build_install_entity(**overrides: Any) -> AnalyticsInstallEntity:
     return AnalyticsInstallEntity(
         **_merge(

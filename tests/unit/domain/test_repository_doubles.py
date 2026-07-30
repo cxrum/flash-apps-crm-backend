@@ -17,7 +17,10 @@ from tests.unit.doubles.domain.repositories.aggregates import (
     InMemoryStatisticsRepository,
 )
 from tests.unit.doubles.domain.repositories.apps import InMemoryCrmAppPlatformRepository, InMemoryCrmAppRepository
-from tests.unit.doubles.domain.repositories.attribution import InMemoryCrmClickRepository, InMemoryCrmEventRepository
+from tests.unit.doubles.domain.repositories.attribution import (
+    InMemoryAnalyticsClickRepository,
+    InMemoryAnalyticsEventRepository,
+)
 from tests.unit.doubles.domain.repositories.config import (
     InMemoryCrmAppSecretRepository,
     InMemoryCrmPostbackRuleRepository,
@@ -39,10 +42,10 @@ def test_event_repository_ignores_duplicates_and_lists_by_app_id() -> None:
     app_platform_repo = InMemoryCrmAppPlatformRepository()
     saved_platform = app_platform_repo.save(build_app_platform_entity(app_id=7, platform="ios"))
 
-    click_repo = InMemoryCrmClickRepository()
+    click_repo = InMemoryAnalyticsClickRepository()
     click_repo.insert(build_click_entity(click_id="click-7", app_platform_id=saved_platform.platform_id or 0))
 
-    repository = InMemoryCrmEventRepository(
+    repository = InMemoryAnalyticsEventRepository(
         click_lookup=click_repo.get_by_id,
         platform_lookup=app_platform_repo.get_by_id,
     )

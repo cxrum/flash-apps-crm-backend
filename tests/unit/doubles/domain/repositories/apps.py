@@ -190,7 +190,7 @@ class InMemoryCrmAppUserRepository(CallRecorderMixin, CrmAppUserRepositoryProtoc
         return [clone(item) for item in items]
 
 
-class InMemoryCrmInstallRepository(CallRecorderMixin, AnalyticsInstallRepositoryProtocol):
+class InMemoryAnalyticsInstallRepository(CallRecorderMixin, AnalyticsInstallRepositoryProtocol):
     def __init__(self) -> None:
         super().__init__()
         self._items: dict[int, AnalyticsInstallEntity] = {}

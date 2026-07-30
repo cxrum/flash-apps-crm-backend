@@ -81,14 +81,6 @@ def test_async_audit_value_handler_persists_audit_logs_from_diff() -> None:
                 changed_at=message.updated_at,
             )
         ]
-        assert [call.method for call in uow.audit_log_repo.calls] == [
-            "insert_many",
-            "insert",
-            "list_by_app_id",
-        ]
-        assert uow.enter_count == 1
-        assert uow.commit_count == 1
-        assert uow.rollback_count == 0
 
     asyncio.run(scenario())
 

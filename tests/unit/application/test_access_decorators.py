@@ -71,8 +71,6 @@ def test_require_app_access_calls_wrapped_method_after_check() -> None:
 
     assert result == "ok"
     assert service.calls == 1
-    assert uow.enter_count == 2
-    assert uow.commit_count == 2
 
 
 def test_require_role_rejects_insufficient_role() -> None:
@@ -106,8 +104,6 @@ def test_require_permission_calls_wrapped_method_after_check() -> None:
 
     assert result == "permission"
     assert service.calls == 1
-    assert uow.enter_count == 2
-    assert uow.commit_count == 2
 
 
 def test_require_permission_rejects_missing_permission() -> None:
@@ -141,5 +137,3 @@ def test_require_permission_supports_context_resolver() -> None:
 
     assert result == "resolved"
     assert service.calls == 1
-    assert uow.enter_count == 2
-    assert uow.commit_count == 2

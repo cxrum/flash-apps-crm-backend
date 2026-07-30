@@ -1,10 +1,9 @@
 import pytest
 
 from app.modules.crm.application.admin.exception import ClickNotFound, InstallNotFound
-from app.modules.crm.application.admin.push.commands import PushDeviceRegisterCommand
 from app.modules.crm.application.admin.push.service import PushService
 from app.modules.crm.application.attribution.contracts import CrmClickContext
-from tests.unit.builders import build_app_entity, build_app_platform_entity
+from tests.unit.builders import build_app_entity, build_app_platform_entity, build_sdk_push_register_command
 from tests.unit.doubles.domain.uow import StubUnitOfWork, StubUoWFactory
 
 
@@ -24,15 +23,6 @@ class _AuthorizationStub:
         return None
 
 
-def _register_command() -> PushDeviceRegisterCommand:
-    return PushDeviceRegisterCommand(
-        install_key="install-key-ios",
-        push_token="push-token-1",
-        click_id="click-1",
-        params={},
-    )
-
-
 def test_register_device_persists_a_token_from_the_attribution_port_context() -> None:
     uow = StubUnitOfWork()
     uow.app_repo.save(build_app_entity(app_id=1))
@@ -43,9 +33,10 @@ def test_register_device_persists_a_token_from_the_attribution_port_context() ->
         _AttributionGatewayStub(CrmClickContext("click-1", 1, 9, None)),  # type: ignore[arg-type]
     )
 
-    service.register_device(_register_command())
+    command = build_sdk_push_register_command()
+    service.register_device(command)
 
-    token = uow.push_token_repo.get_by_token("push-token-1")
+    token = uow.push_token_repo.get_by_token(command.push_token)
     assert token is not None
     assert token.click_id == "click-1"
     assert token.install_id == 9
@@ -69,4 +60,4 @@ def test_register_device_rejects_missing_attribution_references(
     )
 
     with pytest.raises(exception_type):
-        service.register_device(_register_command())
+        service.register_device(build_sdk_push_register_command())

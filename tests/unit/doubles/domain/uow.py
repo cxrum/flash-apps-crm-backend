@@ -11,11 +11,11 @@ from tests.unit.doubles.domain.repositories import (
     InMemoryCrmAppSecretRepository,
     InMemoryCrmAppUserRepository,
     InMemoryCrmAuditLogRepository,
-    InMemoryCrmClickRepository,
+    InMemoryAnalyticsClickRepository,
     InMemoryCrmConversionDefinitionRepository,
-    InMemoryCrmCurrentParamRepository,
-    InMemoryCrmEventRepository,
-    InMemoryCrmInstallRepository,
+    InMemoryAnalyticsCurrentParamRepository,
+    InMemoryAnalyticsEventRepository,
+    InMemoryAnalyticsInstallRepository,
     InMemoryCrmMetricDefinitionRepository,
     InMemoryCrmParamDefinitionRepository,
     InMemoryCrmPermissionRepository,
@@ -56,12 +56,12 @@ class StubUnitOfWork(CallRecorderMixin, UnitOfWorkProtocol):
             "user_app_access_repo",
             InMemoryCrmUserAppAccessRepository(),
         )
-        self.click_repo = overrides.get("click_repo", InMemoryCrmClickRepository())
+        self.click_repo = overrides.get("click_repo", InMemoryAnalyticsClickRepository())
         self.app_user_repo = overrides.get("app_user_repo", InMemoryCrmAppUserRepository())
-        self.install_repo = overrides.get("install_repo", InMemoryCrmInstallRepository())
+        self.install_repo = overrides.get("install_repo", InMemoryAnalyticsInstallRepository())
         self.current_param_repo = overrides.get(
             "current_param_repo",
-            InMemoryCrmCurrentParamRepository(),
+            InMemoryAnalyticsCurrentParamRepository(),
         )
         self.statistics_repo = overrides.get(
             "statistics_repo",
@@ -95,7 +95,7 @@ class StubUnitOfWork(CallRecorderMixin, UnitOfWorkProtocol):
 
         self.event_repo = overrides.get(
             "event_repo",
-            InMemoryCrmEventRepository(
+            InMemoryAnalyticsEventRepository(
                 click_lookup=self.click_repo.get_by_id,
                 platform_lookup=self.app_platform_repo.get_by_id,
             ),

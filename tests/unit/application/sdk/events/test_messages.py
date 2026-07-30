@@ -7,11 +7,11 @@ import pytest
 from app.core.bus.event.events.analytics import RawEventMessage
 from app.modules.analytics.application.events_bus.factories.raw_event import RawEventMessageFactory
 from app.modules.analytics.core.exception import AnalyticsApplicationException
-from tests.unit.builders import build_analytics_event_entity
+from tests.unit.builders import build_event_entity
 
 
 def test_raw_event_message_factory_maps_domain_event_into_message() -> None:
-    event = build_analytics_event_entity(
+    event = build_event_entity(
         event_id="evt-1",
         click_id="click-1",
         event_type="metric",
@@ -35,7 +35,7 @@ def test_raw_event_message_factory_maps_domain_event_into_message() -> None:
 
 def test_raw_event_message_factory_uses_created_at_when_present() -> None:
     created_at = datetime(2026, 3, 13, 10, 30, tzinfo=UTC)
-    event = build_analytics_event_entity(created_at=created_at)
+    event = build_event_entity(created_at=created_at)
 
     message = RawEventMessageFactory.from_event(event)
 
@@ -44,8 +44,8 @@ def test_raw_event_message_factory_uses_created_at_when_present() -> None:
 
 def test_raw_event_message_factory_builds_many_messages() -> None:
     events = [
-        build_analytics_event_entity(event_id="evt-1"),
-        build_analytics_event_entity(event_id="evt-2", click_id="click-2"),
+        build_event_entity(event_id="evt-1"),
+        build_event_entity(event_id="evt-2", click_id="click-2"),
     ]
 
     messages = RawEventMessageFactory.from_events(events)
@@ -54,7 +54,7 @@ def test_raw_event_message_factory_builds_many_messages() -> None:
 
 
 def test_raw_event_message_factory_requires_event_id() -> None:
-    event = build_analytics_event_entity(event_id="")
+    event = build_event_entity(event_id="")
 
     with pytest.raises(AnalyticsApplicationException, match="Event id is required"):
         RawEventMessageFactory.from_event(event)

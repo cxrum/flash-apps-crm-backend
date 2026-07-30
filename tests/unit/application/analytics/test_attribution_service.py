@@ -42,10 +42,16 @@ def test_postback_context_contains_only_the_attribution_data_needed_by_other_mod
     assert context.current_params == {"utm_source": "partner"}
 
 
-def test_postback_context_is_unavailable_when_the_event_or_its_click_is_missing() -> None:
+def test_postback_context_is_unavailable_when_the_event_is_missing() -> None:
+    uow = StubUnitOfWork()
+    service = AnalyticsAttributionService(StubUoWFactory(uow))
+
+    assert service.get_postback_context("missing-event") is None
+
+
+def test_postback_context_is_unavailable_when_the_event_click_is_missing() -> None:
     uow = StubUnitOfWork()
     uow.event_repo.insert(build_event_entity(event_id="orphan-event", click_id="missing-click"))
     service = AnalyticsAttributionService(StubUoWFactory(uow))
 
-    assert service.get_postback_context("missing-event") is None
     assert service.get_postback_context("orphan-event") is None
