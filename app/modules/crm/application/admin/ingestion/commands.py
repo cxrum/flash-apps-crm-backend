@@ -12,11 +12,3 @@ class ListEventLogsCommand(PaginationCommand):
     app_id: int
     click_id: str | None = None
     event_key: str | None = None
-
-
-class ListAuditLogCommand(PaginationCommand):
-    crm_user_id: int
-    app_id: int | None = None
-    actor_id: int | None = None
-    entity_type: str | None = None
-    entity_id: int | None = None

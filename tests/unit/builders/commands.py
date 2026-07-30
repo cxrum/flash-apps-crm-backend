@@ -3,6 +3,18 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any, TypeVar
 
+from app.modules.analytics.application.ingestion.commands import (
+    SdkDeviceValueCommand,
+    SdkEventCommand,
+    SdkEventsCommand,
+    SdkInstallCommand,
+    SdkParamsUpdateCommand,
+)
+from app.modules.analytics.application.s2s.commands import S2SClickCommand
+from app.modules.analytics.application.tracking.entities import TrackingRedirectCommand
+from app.modules.crm.application.admin.audit.commands import (
+    ListAuditLogCommand,
+)
 from app.modules.crm.application.admin.crm_authorization.commands import CreateRoleCommand, ListRolesCommand
 from app.modules.crm.application.admin.definitions.commands import (
     CreateConversionDefinitionCommand,
@@ -15,11 +27,7 @@ from app.modules.crm.application.admin.definitions.commands import (
     UpdateMetricDefinitionCommand,
     UpdateParamDefinitionCommand,
 )
-from app.modules.crm.application.admin.logs.commands import (
-    ListAuditLogCommand,
-    ListClickLogsCommand,
-    ListEventLogsCommand,
-)
+from app.modules.crm.application.admin.ingestion.commands import ListClickLogsCommand, ListEventLogsCommand
 from app.modules.crm.application.admin.postback.commands import (
     CreatePostbackRuleCommand,
     EvaluatePostbackRuleCommand,
@@ -46,15 +54,6 @@ from app.modules.crm.application.sdk.apps.commands import (
     ListAppPlatformsCommand,
     ListAppsCommand,
 )
-from app.modules.analytics.application.ingestion.commands import (
-    SdkDeviceValueCommand,
-    SdkEventCommand,
-    SdkEventsCommand,
-    SdkInstallCommand,
-    SdkParamsUpdateCommand,
-)
-from app.modules.analytics.application.s2s.commands import S2SClickCommand
-from app.modules.analytics.application.tracking.entities import TrackingRedirectCommand
 
 CommandT = TypeVar("CommandT", bound=FlexibleCommand)
 

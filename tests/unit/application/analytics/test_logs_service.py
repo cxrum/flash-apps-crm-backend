@@ -1,8 +1,8 @@
 from types import TracebackType
 
-from app.modules.analytics.application.admin.logs.service import AnalyticsLogsService
+from app.modules.analytics.application.logs.contracts import ListAnalyticsClickLogsQuery
+from app.modules.analytics.application.logs.service import AnalyticsLogsService
 from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
-from app.modules.crm.application.admin.logs.commands import ListClickLogsCommand
 from app.modules.crm.domain.pagination import Pagination
 
 
@@ -49,6 +49,6 @@ def test_analytics_logs_service_reads_clicks_without_crm_authorization() -> None
     click = AnalyticsClickEntity(click_id="analytics-click", app_platform_id=1)
     service = AnalyticsLogsService(_AnalyticsLogsUnitOfWorkFactory(_AnalyticsLogsUnitOfWork([click])))  # type: ignore[arg-type]
 
-    response = service.list_clicks(ListClickLogsCommand(crm_user_id=1, app_id=1))
+    response = service.list_clicks(ListAnalyticsClickLogsQuery(app_id=1))
 
-    assert [item.click_id for item in response.clicks] == [click.click_id]
+    assert [item.click_id for item in response] == [click.click_id]

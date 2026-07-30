@@ -8,7 +8,6 @@ from app.core.bus.di import (
 )
 from app.core.config import settings
 from app.modules.analytics.api.router import api_router as analytics_api_router
-from app.modules.analytics.api.v1.admin.stats import router as analytics_stats_router
 from app.modules.analytics.di.event_bus import get_analytics_event_bus, register_analytics_event_handlers
 from app.modules.crm.api.router import api_router
 from app.modules.crm.di.event_bus import register_event_handlers
@@ -32,7 +31,6 @@ app = FastAPI(
 )
 
 app.include_router(api_router)
-app.include_router(analytics_stats_router, prefix="/api/v1/admin/stats")
 app.include_router(analytics_api_router)
 
 register_fastapi_exception_handlers(app)

@@ -5,12 +5,12 @@ from fastapi import Depends
 from app.core.bus.contract import IAsyncEventBus
 from app.core.bus.di import get_in_memory_event_bus
 from app.core.config import settings
+from app.modules.crm.application.admin.audit.protocol import AuditServiceProtocol
+from app.modules.crm.application.admin.audit.service import AuditService
 from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.modules.crm.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.modules.crm.application.admin.definitions.protocol import DefinitionsServiceProtocol
 from app.modules.crm.application.admin.definitions.service import DefinitionsService
-from app.modules.crm.application.admin.logs.protocol import LogsServiceProtocol
-from app.modules.crm.application.admin.logs.service import LogsService
 from app.modules.crm.application.admin.postback.protocol import PostbackServiceProtocol
 from app.modules.crm.application.admin.postback.service import PostbackService
 from app.modules.crm.application.admin.push.protocol import PushServiceProtocol
@@ -53,11 +53,11 @@ def get_push_service(
     return PushService(uow_factory=uow_factory, authorization_service=authorization_service)
 
 
-def get_admin_logs_service(
+def get_admin_audit_service(
     uow_factory: Annotated[UnitOfWorkFactoryProtocol, Depends(get_uow_factory)],
     authorization_service: Annotated[CrmAuthorizationServiceProtocol, Depends(get_crm_authorization_service)],
-) -> LogsServiceProtocol:
-    return LogsService(uow_factory, authorization_service)
+) -> AuditServiceProtocol:
+    return AuditService(uow_factory, authorization_service)
 
 
 def get_s2s_requester() -> S2SRequesterProtocol:

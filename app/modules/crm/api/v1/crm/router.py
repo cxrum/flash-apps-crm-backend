@@ -11,6 +11,7 @@ from app.modules.crm.api.v1.crm.routes.postback import router as postback_router
 from app.modules.crm.api.v1.crm.routes.push import router as push_router
 from app.modules.crm.api.v1.crm.routes.roles import router as roles_router
 from app.modules.crm.api.v1.crm.routes.secrets import router as secrets_router
+from app.modules.crm.api.v1.crm.routes.stats import router as stats_router
 
 router = APIRouter()
 
@@ -23,3 +24,4 @@ router.include_router(postback_router, prefix="/postback")
 router.include_router(push_router, prefix="/push")
 router.include_router(roles_router, prefix="/role")
 router.include_router(secrets_router, prefix="/secret")
+router.include_router(stats_router, prefix="/stats")

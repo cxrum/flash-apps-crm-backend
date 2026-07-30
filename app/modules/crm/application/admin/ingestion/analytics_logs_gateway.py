@@ -1,0 +1,11 @@
+from typing import Protocol
+
+from app.modules.crm.application.admin.ingestion.commands import ListClickLogsCommand, ListEventLogsCommand
+from app.modules.crm.application.admin.ingestion.responses import ListClickLogsResponse, ListRawEventsResponse
+
+
+class AnalyticsLogsGateway(Protocol):
+    """Driven port for the raw ingestion data required by CRM administration."""
+
+    def list_clicks(self, command: ListClickLogsCommand) -> ListClickLogsResponse: ...
+    def list_raw_events(self, command: ListEventLogsCommand) -> ListRawEventsResponse: ...

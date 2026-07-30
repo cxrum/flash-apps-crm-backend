@@ -1,4 +1,4 @@
-from app.modules.analytics.application.admin.logs.mappers import AnalyticsLogsCommandsMapper
+from app.modules.analytics.application.logs.mappers import AnalyticsLogsMapper
 from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
 from tests.unit.builders import build_analytics_event_entity
 
@@ -16,8 +16,8 @@ def test_analytics_logs_mapper_maps_analytics_click_and_event_entities() -> None
         event_key="purchase",
     )
 
-    click_value = AnalyticsLogsCommandsMapper.click_log_domain_to_value(click)
-    event_value = AnalyticsLogsCommandsMapper.event_log_domain_to_value(event)
+    click_value = AnalyticsLogsMapper.click_log_from_domain(click)
+    event_value = AnalyticsLogsMapper.event_log_from_domain(event)
 
     assert click_value.click_id == click.click_id
     assert click_value.normalized_params == {"utm_source": "partner"}

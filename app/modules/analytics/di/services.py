@@ -1,10 +1,12 @@
+from typing import Annotated
+
 from fastapi import Depends
 
 from app.core.bus.contract import IAsyncEventBus
-from app.modules.analytics.application.admin.logs.protocol import AnalyticsLogsPort
-from app.modules.analytics.application.admin.logs.service import AnalyticsLogsService
 from app.modules.analytics.application.ingestion.protocol import IngestionServiceProtocol
 from app.modules.analytics.application.ingestion.service import IngestionService
+from app.modules.analytics.application.logs.protocol import AnalyticsLogsPort
+from app.modules.analytics.application.logs.service import AnalyticsLogsService
 from app.modules.analytics.application.s2s.protocol import ClickServiceProtocol
 from app.modules.analytics.application.s2s.service import ClickService
 from app.modules.analytics.di.event_bus import get_analytics_event_bus
