@@ -4,12 +4,16 @@ from typing import Any
 
 from app.core.bus.event.events.analytics import RawEventMessage
 from app.modules.analytics.core.exception import AnalyticsApplicationException
-from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkProtocol
 from app.modules.analytics.domain.app_platform.AnalyticsAppPlatformEntity import AnalyticsAppPlatformEntity
 from app.modules.analytics.domain.currency.entity import Money
-from app.modules.analytics.domain.custom_params_statistics_aggregate.AnalyticsCustomParamsStatisticsAggregateEntity import AnalyticsCustomParamsStatisticsAggregateEntity
+from app.modules.analytics.domain.custom_params_statistics_aggregate.AnalyticsCustomParamsStatisticsAggregateEntity import (
+    AnalyticsCustomParamsStatisticsAggregateEntity,
+)
+from app.modules.analytics.domain.statistics_aggregate.AnalyticsStatisticsAggregateEntity import (
+    AnalyticsStatisticsAggregateEntity,
+)
+from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkProtocol
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity, DefaultParamKeys
-from app.modules.analytics.domain.statistics_aggregate.AnalyticsStatisticsAggregateEntity import AnalyticsStatisticsAggregateEntity
 
 
 class StatisticAggregates:
@@ -34,7 +38,7 @@ class StatisticAggregates:
         app_platform: AnalyticsAppPlatformEntity,
     ) -> None:
         if app_platform.platform_id is None:
-            raise AnalyticsApplicationException()
+            raise AnalyticsApplicationException("analytics.statistics.platform.id.required")
 
         definitions = uow.param_definition_repo.list_by_app_id(app_platform.app_id)
 
@@ -56,7 +60,7 @@ class StatisticAggregates:
         )
 
         if len(current_conversion_statistic) > 1:
-            raise AnalyticsApplicationException()
+            raise AnalyticsApplicationException("analytics.statistics.conversion.aggregate.ambiguous")
 
         if len(current_conversion_statistic) == 0:
             current_conversion_statistic.append(
@@ -92,7 +96,7 @@ class StatisticAggregates:
             )
 
             if len(current_conversion_detailed_statistic) > 1:
-                raise AnalyticsApplicationException()
+                raise AnalyticsApplicationException("analytics.statistics.custom_params.aggregate.ambiguous")
 
             if len(current_conversion_detailed_statistic) == 0:
                 current_conversion_detailed_statistic.append(

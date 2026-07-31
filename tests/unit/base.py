@@ -32,6 +32,7 @@ class UnitTestContext:
     def build_app_service(self) -> AppService:
         return AppService(
             uow_factory=self.uow_factory,
+            event_bus=self.async_event_bus,
             authorization_service=CrmAuthorizationService(self.uow_factory),
             encryption_service=self.encryption_service,
             hash_service=self.hash_service,

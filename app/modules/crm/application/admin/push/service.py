@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 
-from app.modules.crm.application.access_decorators import require_permission
+from app.modules.crm.application.access_decorators import AuthorizationAwareService, require_permission
 from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
-from app.modules.crm.application.attribution.protocol import CrmAttributionGateway
 from app.modules.crm.application.admin.exception import ClickNotFound, InstallNotFound
 from app.modules.crm.application.admin.push.commands import (
     CreatePushCampaignCommand,
@@ -31,6 +31,7 @@ from app.modules.crm.application.admin.push.responses import (
     RegisterDeviceResponse,
     UpdatePushCampaignResponse,
 )
+from app.modules.crm.application.attribution.protocol import CrmAttributionGateway
 from app.modules.crm.application.mapper import PaginationMapper
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity, DefaultParamKeys
 from app.modules.crm.domain.permission.CrmPermissionEntity import CrmPermissionEntity
@@ -77,11 +78,12 @@ class PushService(PushServiceProtocol):
 
         return campaign
 
-    def _delete_command_access_context(
-        _service: "PushService",
+    def _resolve_campaign_access_context(
+        _service: AuthorizationAwareService,
         uow: UnitOfWorkProtocol,
-        command: DeletePushCampaignCommand,
+        command: Any,
     ) -> tuple[int | None, int | None]:
+        """Resolve the app that owns a campaign before authorizing its deletion."""
         campaign = PushService._get_push_campaign(uow, push_id=command.push_id)
         return command.crm_user_id, campaign.app_id
 
@@ -129,7 +131,7 @@ class PushService(PushServiceProtocol):
 
     @require_permission(
         CrmPermissionEntity.manage_push_permission(),
-        context_resolver=_delete_command_access_context,
+        context_resolver=_resolve_campaign_access_context,
     )
     def delete(self, command: DeletePushCampaignCommand) -> DeletePushCampaignResponse:
         with self._uow_factory.create() as uow:

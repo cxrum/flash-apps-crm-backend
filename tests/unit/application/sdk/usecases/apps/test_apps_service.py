@@ -2,10 +2,15 @@ from __future__ import annotations
 
 import pytest
 
+from app.core.bus.event.events.app_configuration import (
+    AppConfigurationProjectionMessage,
+    AppPlatformConfigurationProjectionMessage,
+)
 from app.modules.crm.application.admin.crm_authorization.service import CrmAuthorizationService
 from app.modules.crm.application.exception import GeneralException
 from app.modules.crm.application.sdk.apps.commands import (
     DeleteAppPlatformCommand,
+    RotatePlatformSecretCommand,
     UpdateAppCommand,
     UpdateAppPlatformCommand,
 )
@@ -28,6 +33,24 @@ from tests.unit.builders import (
 )
 
 
+class RecordingAsyncEventBus:
+    def __init__(self) -> None:
+        self.messages: list[object] = []
+
+    async def publish(self, message: object) -> None:
+        self.messages.append(message)
+
+
+def _build_service(unit_test_context: UnitTestContext, event_bus: RecordingAsyncEventBus) -> AppService:
+    return AppService(
+        uow_factory=unit_test_context.uow_factory,
+        event_bus=event_bus,  # type: ignore[arg-type]
+        authorization_service=CrmAuthorizationService(unit_test_context.uow_factory),
+        encryption_service=unit_test_context.encryption_service,
+        hash_service=unit_test_context.hash_service,
+    )
+
+
 def _seed_manager_access(unit_test_context: UnitTestContext) -> None:
     manager_role = unit_test_context.uow.role_repo.save(
         build_role_entity(code=Roles.MANAGER.value, display_name="Manager")
@@ -41,7 +64,8 @@ def _seed_admin_access(unit_test_context: UnitTestContext) -> None:
 
 
 def test_create_app_drafts_and_saves_app(unit_test_context: UnitTestContext) -> None:
-    service = unit_test_context.build_app_service()
+    event_bus = RecordingAsyncEventBus()
+    service = _build_service(unit_test_context, event_bus)
     admin_role = unit_test_context.uow.role_repo.save(build_role_entity(code=Roles.ADMIN.value, display_name="Admin"))
 
     response = service.create_app(build_sdk_create_app_command())
@@ -54,6 +78,9 @@ def test_create_app_drafts_and_saves_app(unit_test_context: UnitTestContext) -> 
     assert saved_app.code_slug == "test-app"
     assert saved_app.tech_description == "Technical description"
     assert admin_role.role_id is not None
+    assert len(event_bus.messages) == 1
+    assert isinstance(event_bus.messages[0], AppConfigurationProjectionMessage)
+    assert event_bus.messages[0].payload == {"app_id": response.app.app_id, "code_slug": "test-app"}
 
 
 def test_create_app_platform_rejects_invalid_platform(unit_test_context: UnitTestContext) -> None:
@@ -73,7 +100,8 @@ def test_create_app_platform_rejects_missing_app(unit_test_context: UnitTestCont
 
 
 def test_create_app_platform_saves_valid_platform(unit_test_context: UnitTestContext) -> None:
-    service = unit_test_context.build_app_service()
+    event_bus = RecordingAsyncEventBus()
+    service = _build_service(unit_test_context, event_bus)
     unit_test_context.uow.app_repo.save(build_app_entity(app_id=1))
     admin_role = unit_test_context.uow.role_repo.save(build_role_entity(code=Roles.ADMIN.value, display_name="Admin"))
     unit_test_context.uow.user_app_access_repo.save(build_user_app_access_entity(role_id=admin_role.role_id))
@@ -91,6 +119,15 @@ def test_create_app_platform_saves_valid_platform(unit_test_context: UnitTestCon
     assert saved_platform.sdk_public_key == HashableValue.from_str("random-hash-8-2").to_hex()
     assert response.sdk_secret == HashableValue.from_str("random-hash-8-1").to_hex()
     assert response.app_platform.sdk_secret_encrypted == expected_encrypted_secret
+    assert len(event_bus.messages) == 1
+    assert isinstance(event_bus.messages[0], AppPlatformConfigurationProjectionMessage)
+    assert event_bus.messages[0].payload == {
+        "platform_id": response.app_platform.platform_id,
+        "app_id": 1,
+        "platform": "ios",
+        "install_key": "install-key-ios",
+        "sdk_secret_encrypted": expected_encrypted_secret,
+    }
 
 
 def test_create_app_platform_requires_admin_access(unit_test_context: UnitTestContext) -> None:
@@ -106,7 +143,8 @@ def test_create_app_platform_requires_admin_access(unit_test_context: UnitTestCo
 
 
 def test_update_app_persists_changed_values(unit_test_context: UnitTestContext) -> None:
-    service = unit_test_context.build_app_service()
+    event_bus = RecordingAsyncEventBus()
+    service = _build_service(unit_test_context, event_bus)
     unit_test_context.uow.app_repo.save(build_app_entity(app_id=1, name="Old App", status="active"))
     _seed_manager_access(unit_test_context)
 
@@ -123,12 +161,16 @@ def test_update_app_persists_changed_values(unit_test_context: UnitTestContext) 
     assert saved is not None
     assert saved.name == "New App"
     assert saved.status == "draft"
+    assert len(event_bus.messages) == 1
+    assert isinstance(event_bus.messages[0], AppConfigurationProjectionMessage)
+    assert event_bus.messages[0].payload == {"app_id": 1, "code_slug": "test-app"}
 
 
 def test_update_app_platform_persists_changed_values(
     unit_test_context: UnitTestContext,
 ) -> None:
-    service = unit_test_context.build_app_service()
+    event_bus = RecordingAsyncEventBus()
+    service = _build_service(unit_test_context, event_bus)
     unit_test_context.uow.app_repo.save(build_app_entity(app_id=1))
     saved_platform = unit_test_context.uow.app_platform_repo.save(
         build_app_platform_entity(
@@ -155,6 +197,35 @@ def test_update_app_platform_persists_changed_values(
     assert saved is not None
     assert saved.install_key == "new-install-key"
     assert saved.status == "inactive"
+    assert len(event_bus.messages) == 1
+    assert isinstance(event_bus.messages[0], AppPlatformConfigurationProjectionMessage)
+    assert event_bus.messages[0].payload == {
+        "platform_id": saved.platform_id,
+        "app_id": 1,
+        "platform": "ios",
+        "install_key": "new-install-key",
+        "sdk_secret_encrypted": saved.sdk_secret_encrypted,
+    }
+
+
+def test_rotate_platform_secret_publishes_updated_platform_configuration(
+    unit_test_context: UnitTestContext,
+) -> None:
+    event_bus = RecordingAsyncEventBus()
+    service = _build_service(unit_test_context, event_bus)
+    unit_test_context.uow.app_repo.save(build_app_entity(app_id=1))
+    platform = unit_test_context.uow.app_platform_repo.save(build_app_platform_entity(app_id=1, platform_id=7))
+    _seed_admin_access(unit_test_context)
+
+    service.rotate_platform_secret(
+        RotatePlatformSecretCommand(crm_user_id=1, app_id=1, platform_id=platform.platform_id or 0)
+    )
+
+    saved = unit_test_context.uow.app_platform_repo.get_by_id(platform.platform_id or 0)
+    assert saved is not None
+    assert len(event_bus.messages) == 1
+    assert isinstance(event_bus.messages[0], AppPlatformConfigurationProjectionMessage)
+    assert event_bus.messages[0].payload["sdk_secret_encrypted"] == saved.sdk_secret_encrypted
 
 
 def test_delete_app_platform_deletes_by_platform_id(
@@ -162,6 +233,7 @@ def test_delete_app_platform_deletes_by_platform_id(
 ) -> None:
     service = AppService(
         uow_factory=unit_test_context.uow_factory,
+        event_bus=unit_test_context.async_event_bus,
         authorization_service=CrmAuthorizationService(unit_test_context.uow_factory),
         encryption_service=unit_test_context.encryption_service,
         hash_service=unit_test_context.hash_service,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.core.bus.contract import IAsyncEventBus
 from app.modules.crm.application.audited.utils import AuditConfig, AuditedUtils, AuditSnapshot
 from app.modules.crm.application.exception import AppNotFound, PlatformNotFound
 from app.modules.crm.application.sdk.apps.commands import (
@@ -31,7 +32,6 @@ from app.modules.crm.application.sdk.apps.responses import (
     UpdateAppResponse,
     UpdatePlatformResponse,
 )
-from app.core.bus.contract import IAsyncEventBus
 from app.modules.crm.domain.uow import UnitOfWorkFactoryProtocol
 
 

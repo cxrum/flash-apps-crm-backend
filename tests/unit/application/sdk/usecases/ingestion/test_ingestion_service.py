@@ -360,11 +360,10 @@ def test_async_update_param_handler_rejects_wrong_message_type_with_detailed_tex
     async def scenario() -> None:
         handler = AsyncUpdateParamHandler(StubUoWFactory(StubUnitOfWork()))
 
-        with pytest.raises(
-            GeneralException,
-            match="expected UpdateCurrentParamMessage, got DomainEventMessage",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(DomainEventMessage(name="crm.events.metric.saved"))
+
+        assert error.value.message_key == "analytics.handler.update_param.message.invalid"
 
     asyncio.run(scenario())
 
@@ -382,11 +381,10 @@ def test_async_update_param_handler_rejects_missing_click_with_detailed_text() -
             },
         )
 
-        with pytest.raises(
-            GeneralException,
-            match="could not find click with id='missing-click'",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(message)
+
+        assert error.value.message_key == "analytics.handler.update_param.click.not_found"
 
     asyncio.run(scenario())
 
@@ -407,10 +405,9 @@ def test_async_update_param_handler_rejects_missing_param_definitions_with_detai
             },
         )
 
-        with pytest.raises(
-            GeneralException,
-            match=f"could not find param definitions for app_id='{app.app_id}' and click_id='{click.click_id}'",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(message)
+
+        assert error.value.message_key == "analytics.handler.update_param.definitions.not_found"
 
     asyncio.run(scenario())

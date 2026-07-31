@@ -68,9 +68,10 @@ def _build_service(
 def test_process_s2s_click_raises_for_unknown_app_code() -> None:
     service, signature_service, ip2location_gateway = _build_service(StubUnitOfWork())
 
-    with pytest.raises(AnalyticsApplicationException, match="Unknown app code"):
+    with pytest.raises(AnalyticsApplicationException) as error:
         service.process_s2s_click(build_s2s_click_command(app_code="missing-app"))
 
+    assert error.value.message_key == "sdk.s2s.app_code.unknown"
     assert signature_service.calls == []
     assert ip2location_gateway.calls == []
 
@@ -80,8 +81,10 @@ def test_process_s2s_click_raises_for_unknown_platform() -> None:
     service, _, _ = _build_service(uow)
     _seed_platform(uow, platform="ios")
 
-    with pytest.raises(AnalyticsApplicationException, match="is not configured"):
+    with pytest.raises(AnalyticsApplicationException) as error:
         service.process_s2s_click(build_s2s_click_command(platform="android"))
+
+    assert error.value.message_key == "sdk.s2s.platform.not_configured"
 
 
 def test_process_s2s_click_rejects_invalid_signature() -> None:

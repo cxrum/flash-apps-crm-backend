@@ -1,8 +1,15 @@
 from __future__ import annotations
 
+import asyncio
+
+from app.core.bus.contract import IAsyncEventBus
+from app.core.bus.type import EventMessage
 from app.modules.crm.application.access_decorators import require_app_access, require_role
 from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.modules.crm.application.contracts.encryption import EncryptionServiceProtocol
+from app.modules.crm.application.events_bus.factories.app_configuration_projection import (
+    AppConfigurationProjectionMessageFactory,
+)
 from app.modules.crm.application.exception import RoleNotFound
 from app.modules.crm.application.mapper import PaginationMapper
 from app.modules.crm.application.sdk.apps.commands import (
@@ -58,14 +65,25 @@ class AppService(AppServiceProtocol):
     def __init__(
         self,
         uow_factory: UnitOfWorkFactoryProtocol,
+        event_bus: IAsyncEventBus,
         authorization_service: CrmAuthorizationServiceProtocol,
         encryption_service: EncryptionServiceProtocol,
         hash_service: HashProtocol,
     ) -> None:
         self._uow_factory = uow_factory
+        self._event_bus = event_bus
         self._authorization_service = authorization_service
         self._encryption_service = encryption_service
         self._hash_service = hash_service
+
+    def _publish_after_commit(self, message: EventMessage) -> None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            asyncio.run(self._event_bus.publish(message))
+            return
+
+        loop.create_task(self._event_bus.publish(message))
 
     def _get_app(self, uow: UnitOfWorkProtocol, *, app_id: int) -> CrmAppEntity:
         saved_app = uow.app_repo.get_by_id(app_id)
@@ -152,6 +170,8 @@ class AppService(AppServiceProtocol):
             if saved.sdk_secret_fallback_encrypted is None:
                 raise SdkAppPlatformRepositoryEmptyEntity()
 
+        self._publish_after_commit(AppConfigurationProjectionMessageFactory.from_app_platform(saved))
+
         return RotatePlatformSecretResponse(
             new_sdk_secret=self._encryption_service.decrypt(saved.sdk_secret_fallback_encrypted)
         )
@@ -186,6 +206,8 @@ class AppService(AppServiceProtocol):
                 )
             )
 
+        self._publish_after_commit(AppConfigurationProjectionMessageFactory.from_app(saved_app))
+
         return CreateAppResponse(app=SdkAppResponsesMapper.app_domain_to_value(saved_app))
 
     @require_role(Roles.MANAGER)
@@ -196,6 +218,8 @@ class AppService(AppServiceProtocol):
                 code_slug=command.code, name=command.name, description=command.description, status=command.status
             )
             saved_app = uow.app_repo.save(saved_app)
+
+        self._publish_after_commit(AppConfigurationProjectionMessageFactory.from_app(saved_app))
 
         return UpdateAppResponse(app=SdkAppResponsesMapper.app_domain_to_value(saved_app))
 
@@ -258,6 +282,8 @@ class AppService(AppServiceProtocol):
 
             app_platform_response, secret_view = self._platform_response_with_secret(saved_platform_app, role)
 
+        self._publish_after_commit(AppConfigurationProjectionMessageFactory.from_app_platform(saved_platform_app))
+
         return CreatePlatformResponse(
             app_platform=app_platform_response,
             sdk_secret=self._encryption_service.decrypt(secret_view),
@@ -294,6 +320,8 @@ class AppService(AppServiceProtocol):
                 status=command.status,
             )
             saved_platform = uow.app_platform_repo.save(saved_platform)
+
+        self._publish_after_commit(AppConfigurationProjectionMessageFactory.from_app_platform(saved_platform))
 
         return UpdatePlatformResponse(app_platform=SdkAppResponsesMapper.app_platform_domain_to_value(saved_platform))
 

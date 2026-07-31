@@ -9,6 +9,14 @@ from app.modules.crm.domain.event_bus.entity import DomainEventMessage
 from app.modules.analytics.handlers.event.conversion import AsyncConversionHandler
 from app.modules.analytics.handlers.event.event import ConversionEventMessage, MetricEventMessage
 from app.modules.analytics.handlers.event.metric import AsyncMetricHandler
+from app.core.bus.event.events.app_configuration import (
+    AppConfigurationProjectionMessage,
+    AppPlatformConfigurationProjectionMessage,
+)
+from app.modules.analytics.handlers.app.projection import (
+    AppConfigurationProjectionHandler,
+    AppPlatformConfigurationProjectionHandler,
+)
 from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
 from app.modules.analytics.handlers.update_param.update_param import AsyncUpdateParamHandler
 from app.modules.crm.application.events_bus.handlers.audit import AsyncAuditValueHandler
@@ -181,11 +189,10 @@ def test_async_metric_handler_rejects_wrong_message_type_with_detailed_text() ->
     async def scenario() -> None:
         handler = AsyncMetricHandler(StubUoWFactory(StubUnitOfWork()))
 
-        with pytest.raises(
-            GeneralException,
-            match="expected MetricEventMessage, got DomainEventMessage",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(DomainEventMessage(name=MetricEventMessage.EVENT_NAME))
+
+        assert error.value.message_key == "analytics.handler.metric.message.invalid"
 
     asyncio.run(scenario())
 
@@ -195,11 +202,10 @@ def test_async_metric_handler_rejects_missing_click_with_detailed_text() -> None
         uow = StubUnitOfWork()
         handler = AsyncMetricHandler(StubUoWFactory(uow))
 
-        with pytest.raises(
-            GeneralException,
-            match="could not find click with id='missing-click'",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(_build_metric_message(click_id="missing-click"))
+
+        assert error.value.message_key == "analytics.handler.metric.click.not_found"
 
     asyncio.run(scenario())
 
@@ -210,11 +216,10 @@ def test_async_metric_handler_rejects_missing_app_platform_with_detailed_text() 
         handler = AsyncMetricHandler(StubUoWFactory(uow))
         click = uow.click_repo.insert(build_click_entity(click_id="click-without-platform", app_platform_id=999))
 
-        with pytest.raises(
-            GeneralException,
-            match=f"could not find app platform with id='{click.app_platform_id}' for click_id='{click.click_id}'",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(_build_metric_message(click_id=click.click_id))
+
+        assert error.value.message_key == "analytics.handler.metric.platform.not_found"
 
     asyncio.run(scenario())
 
@@ -225,11 +230,10 @@ def test_async_metric_handler_rejects_missing_metric_definitions_with_detailed_t
         handler = AsyncMetricHandler(StubUoWFactory(uow))
         app, _, click = _seed_click_context(uow)
 
-        with pytest.raises(
-            GeneralException,
-            match=f"could not find metric definitions for app_id='{app.app_id}' and click_id='{click.click_id}'",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(_build_metric_message(click_id=click.click_id))
+
+        assert error.value.message_key == "analytics.handler.metric.definitions.not_found"
 
     asyncio.run(scenario())
 
@@ -246,11 +250,10 @@ def test_async_metric_handler_rejects_unknown_event_key_with_detailed_text() -> 
             )
         )
 
-        with pytest.raises(
-            GeneralException,
-            match=f"could not find metric definition for event_key='first_open' app_id='{app.app_id}' and click_id='{click.click_id}'",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(_build_metric_message(click_id=click.click_id))
+
+        assert error.value.message_key == "analytics.handler.metric.definition.not_found"
 
     asyncio.run(scenario())
 
@@ -268,11 +271,10 @@ def test_async_metric_handler_rejects_disabled_metric_definition() -> None:
             )
         )
 
-        with pytest.raises(
-            GeneralException,
-            match="metric definition .* is disabled",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(_build_metric_message(click_id=click.click_id))
+
+        assert error.value.message_key == "analytics.handler.metric.definition.disabled"
 
     asyncio.run(scenario())
 
@@ -289,10 +291,7 @@ def test_async_metric_handler_rejects_money_fields() -> None:
             )
         )
 
-        with pytest.raises(
-            GeneralException,
-            match="metric events do not support revenue fields",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(
                 _build_metric_message(
                     click_id=click.click_id,
@@ -301,6 +300,8 @@ def test_async_metric_handler_rejects_money_fields() -> None:
                     amount_usd=1.0,
                 )
             )
+
+        assert error.value.message_key == "analytics.handler.metric.revenue_fields.invalid"
 
     asyncio.run(scenario())
 
@@ -611,11 +612,10 @@ def test_async_conversion_handler_rejects_wrong_message_type_with_detailed_text(
     async def scenario() -> None:
         handler = AsyncConversionHandler(StubUoWFactory(StubUnitOfWork()))
 
-        with pytest.raises(
-            GeneralException,
-            match="expected ConversionEventMessage, got DomainEventMessage",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(DomainEventMessage(name=ConversionEventMessage.EVENT_NAME))
+
+        assert error.value.message_key == "analytics.handler.conversion.message.invalid"
 
     asyncio.run(scenario())
 
@@ -625,11 +625,10 @@ def test_async_conversion_handler_rejects_missing_click_with_detailed_text() -> 
         uow = StubUnitOfWork()
         handler = AsyncConversionHandler(StubUoWFactory(uow))
 
-        with pytest.raises(
-            GeneralException,
-            match="could not find click with id='missing-click'",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(_build_conversion_message(click_id="missing-click"))
+
+        assert error.value.message_key == "analytics.handler.conversion.click.not_found"
 
     asyncio.run(scenario())
 
@@ -640,11 +639,10 @@ def test_async_conversion_handler_rejects_missing_app_platform_with_detailed_tex
         handler = AsyncConversionHandler(StubUoWFactory(uow))
         click = uow.click_repo.insert(build_click_entity(click_id="click-without-platform", app_platform_id=999))
 
-        with pytest.raises(
-            GeneralException,
-            match=f"could not find app platform with id='{click.app_platform_id}' for click_id='{click.click_id}'",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(_build_conversion_message(click_id=click.click_id))
+
+        assert error.value.message_key == "analytics.handler.conversion.platform.not_found"
 
     asyncio.run(scenario())
 
@@ -655,11 +653,10 @@ def test_async_conversion_handler_rejects_missing_conversion_definitions_with_de
         handler = AsyncConversionHandler(StubUoWFactory(uow))
         app, _, click = _seed_click_context(uow)
 
-        with pytest.raises(
-            GeneralException,
-            match=f"could not find conversion definitions for app_id='{app.app_id}' and click_id='{click.click_id}'",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(_build_conversion_message(click_id=click.click_id))
+
+        assert error.value.message_key == "analytics.handler.conversion.definitions.not_found"
 
     asyncio.run(scenario())
 
@@ -676,11 +673,10 @@ def test_async_conversion_handler_rejects_unknown_event_key_with_detailed_text()
             )
         )
 
-        with pytest.raises(
-            GeneralException,
-            match=f"could not find conversion definition for event_key='purchase' app_id='{app.app_id}' and click_id='{click.click_id}'",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(_build_conversion_message(click_id=click.click_id))
+
+        assert error.value.message_key == "analytics.handler.conversion.definition.not_found"
 
     asyncio.run(scenario())
 
@@ -698,10 +694,7 @@ def test_async_conversion_handler_rejects_revenue_fields_when_definition_disallo
             )
         )
 
-        with pytest.raises(
-            GeneralException,
-            match="does not allow revenue fields",
-        ):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(
                 _build_conversion_message(
                     click_id=click.click_id,
@@ -709,28 +702,30 @@ def test_async_conversion_handler_rejects_revenue_fields_when_definition_disallo
                 )
             )
 
+        assert error.value.message_key == "analytics.handler.conversion.revenue_fields.forbidden"
+
     asyncio.run(scenario())
 
 
 @pytest.mark.parametrize(
-    ("definition_overrides", "message_overrides", "expected_match"),
+    ("definition_overrides", "message_overrides", "expected_key"),
     [
         (
             {"revenue_enabled": True, "expects_amount": True, "expects_currency": False},
             {"currency": None},
-            "requires amount",
+            "analytics.handler.conversion.amount.required",
         ),
         (
             {"revenue_enabled": True, "expects_amount": False, "expects_currency": True},
             {"amount": None},
-            "requires currency",
+            "analytics.handler.conversion.currency.required",
         ),
     ],
 )
 def test_async_conversion_handler_rejects_missing_required_fields(
     definition_overrides: dict[str, bool],
     message_overrides: dict[str, float | str | None],
-    expected_match: str,
+    expected_key: str,
 ) -> None:
     async def scenario() -> None:
         uow = StubUnitOfWork()
@@ -744,7 +739,7 @@ def test_async_conversion_handler_rejects_missing_required_fields(
             )
         )
 
-        with pytest.raises(GeneralException, match=expected_match):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(
                 _build_conversion_message(
                     click_id=click.click_id,
@@ -752,28 +747,30 @@ def test_async_conversion_handler_rejects_missing_required_fields(
                 )
             )
 
+        assert error.value.message_key == expected_key
+
     asyncio.run(scenario())
 
 
 @pytest.mark.parametrize(
-    ("definition_overrides", "message_overrides", "expected_match"),
+    ("definition_overrides", "message_overrides", "expected_key"),
     [
         (
             {"revenue_enabled": True, "expects_amount": False, "expects_currency": False},
             {"amount": 5.0},
-            "does not accept amount",
+            "analytics.handler.conversion.amount.unexpected",
         ),
         (
             {"revenue_enabled": True, "expects_amount": False, "expects_currency": False},
             {"currency": "USD"},
-            "does not accept currency",
+            "analytics.handler.conversion.currency.unexpected",
         ),
     ],
 )
 def test_async_conversion_handler_rejects_unexpected_revenue_fields(
     definition_overrides: dict[str, bool],
     message_overrides: dict[str, float | str | None],
-    expected_match: str,
+    expected_key: str,
 ) -> None:
     async def scenario() -> None:
         uow = StubUnitOfWork()
@@ -787,13 +784,15 @@ def test_async_conversion_handler_rejects_unexpected_revenue_fields(
             )
         )
 
-        with pytest.raises(GeneralException, match=expected_match):
+        with pytest.raises(GeneralException) as error:
             await handler.handle(
                 _build_conversion_message(
                     click_id=click.click_id,
                     **message_overrides,  # type: ignore
                 )
             )
+
+        assert error.value.message_key == expected_key
 
     asyncio.run(scenario())
 
@@ -808,6 +807,8 @@ def test_event_subscribers_are_split_between_crm_and_analytics_buses() -> None:
         UpdateCurrentParamMessage.EVENT_NAME: AsyncUpdateParamHandler,
         MetricEventMessage.EVENT_NAME: AsyncMetricHandler,
         ConversionEventMessage.EVENT_NAME: AsyncConversionHandler,
+        AppConfigurationProjectionMessage.EVENT_NAME: AppConfigurationProjectionHandler,
+        AppPlatformConfigurationProjectionMessage.EVENT_NAME: AppPlatformConfigurationProjectionHandler,
     }
     assert crm_subscriber_map == {
         ValueChangedEvent.EVENT_NAME: AsyncAuditValueHandler,

@@ -1,8 +1,8 @@
-from typing import Any, Dict
+from typing import Any
 
 
 class MessageResolver:
-    CATALOG: dict[str, str] = {
+    CATALOG: dict[str, str] = {  # noqa: RUF012
         "internal": "Internal server error",
         "authentication.credentials.invalid": "Invalid email or password",
         "authentication.email.exists": "User with this email already exists",
@@ -99,16 +99,43 @@ class MessageResolver:
         "domain.event_bus.exception_event.type.invalid": "ExceptionEvent.exception_type must be str",
         "domain.event_bus.exception_event.message.invalid": "ExceptionEvent.exception_message must be str",
         "domain.event_bus.exception_event.context.invalid": "ExceptionEvent.context must be dict",
+        "analytics.projection.app.message.invalid": "App configuration projection expected AppConfigurationProjectionMessage, got {message_type}",
+        "analytics.projection.app_platform.message.invalid": "App platform configuration projection expected AppPlatformConfigurationProjectionMessage, got {message_type}",
+        "analytics.statistics.platform.id.required": "Statistics aggregation requires an app platform id",
+        "analytics.statistics.conversion.aggregate.ambiguous": "Multiple conversion statistics aggregates match the same event",
+        "analytics.statistics.custom_params.aggregate.ambiguous": "Multiple custom parameter statistics aggregates match the same event",
+        "analytics.handler.update_param.message.invalid": "AsyncUpdateParamHandler expected UpdateCurrentParamMessage, got {message_type}",
+        "analytics.handler.update_param.params.empty": "AsyncUpdateParamHandler did not produce any params for click_id='{click_id}' from payload keys={param_keys}",
+        "analytics.handler.update_param.click.not_found": "AsyncUpdateParamHandler could not find click with id='{click_id}'",
+        "analytics.handler.update_param.platform.not_found": "AsyncUpdateParamHandler could not find app platform with id='{app_platform_id}' for click_id='{click_id}'",
+        "analytics.handler.update_param.definitions.not_found": "AsyncUpdateParamHandler could not find param definitions for app_id='{app_id}' and click_id='{click_id}'",
+        "analytics.handler.metric.message.invalid": "AsyncMetricHandler expected MetricEventMessage, got {message_type}",
+        "analytics.handler.metric.click.not_found": "AsyncMetricHandler could not find click with id='{click_id}'",
+        "analytics.handler.metric.platform.not_found": "AsyncMetricHandler could not find app platform with id='{app_platform_id}' for click_id='{click_id}'",
+        "analytics.handler.metric.definitions.not_found": "AsyncMetricHandler could not find metric definitions for app_id='{app_id}' and click_id='{click_id}'",
+        "analytics.handler.metric.definition.not_found": "AsyncMetricHandler could not find metric definition for event_key='{event_key}' app_id='{app_id}' and click_id='{click_id}'",
+        "analytics.handler.metric.definition.disabled": "AsyncMetricHandler metric definition for event_key='{event_key}' is disabled for app_id='{app_id}' and click_id='{click_id}'",
+        "analytics.handler.metric.revenue_fields.invalid": "AsyncMetricHandler metric events do not support revenue fields for event_id='{event_id}' and click_id='{click_id}'",
+        "analytics.handler.conversion.message.invalid": "AsyncConversionHandler expected ConversionEventMessage, got {message_type}",
+        "analytics.handler.conversion.click.not_found": "AsyncConversionHandler could not find click with id='{click_id}'",
+        "analytics.handler.conversion.platform.not_found": "AsyncConversionHandler could not find app platform with id='{app_platform_id}' for click_id='{click_id}'",
+        "analytics.handler.conversion.definitions.not_found": "AsyncConversionHandler could not find conversion definitions for app_id='{app_id}' and click_id='{click_id}'",
+        "analytics.handler.conversion.definition.not_found": "AsyncConversionHandler could not find conversion definition for event_key='{event_key}' app_id='{app_id}' and click_id='{click_id}'",
+        "analytics.handler.conversion.revenue_fields.forbidden": "AsyncConversionHandler conversion definition for event_key='{event_key}' does not allow revenue fields for app_id='{app_id}' and click_id='{click_id}'",
+        "analytics.handler.conversion.amount.required": "AsyncConversionHandler conversion definition for event_key='{event_key}' requires amount for click_id='{click_id}'",
+        "analytics.handler.conversion.currency.required": "AsyncConversionHandler conversion definition for event_key='{event_key}' requires currency for click_id='{click_id}'",
+        "analytics.handler.conversion.amount.unexpected": "AsyncConversionHandler conversion definition for event_key='{event_key}' does not accept amount for click_id='{click_id}'",
+        "analytics.handler.conversion.currency.unexpected": "AsyncConversionHandler conversion definition for event_key='{event_key}' does not accept currency for click_id='{click_id}'",
+        "analytics.handler.conversion.amount_usd.dependencies.invalid": "AsyncConversionHandler conversion message for event_key='{event_key}' requires amount and currency when amount_usd is present",
     }
 
-    def resolve(self, key: str, context: Dict[str, Any]) -> str:
-        
+    def resolve(self, key: str, context: dict[str, Any]) -> str:
+
         template = self.CATALOG.get(key, "Internal server error")
-        
+
         try:
             template = template.format(**context)
         finally:
             template = template
-             
+
         return template
-     

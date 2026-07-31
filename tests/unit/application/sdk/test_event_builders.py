@@ -40,8 +40,10 @@ def test_metrics_event_builder_rejects_money_values() -> None:
         event_key="session_start",
     )
 
-    with pytest.raises(AnalyticsApplicationException, match="cannot carry money values"):
+    with pytest.raises(AnalyticsApplicationException) as error:
         builder._set_amount(9.99)
+
+    assert error.value.message_key == "metric.money.value"
 
 
 def test_revenue_event_builder_requires_amount_and_currency() -> None:
@@ -51,8 +53,10 @@ def test_revenue_event_builder_requires_amount_and_currency() -> None:
         event_key="purchase",
     )
 
-    with pytest.raises(AnalyticsApplicationException, match="require amount"):
+    with pytest.raises(AnalyticsApplicationException) as error:
         builder.build()
+
+    assert error.value.message_key == "sdk.event.revenue.amount.required"
 
 
 def test_revenue_event_builder_builds_conversion_with_money_fields() -> None:
@@ -102,5 +106,7 @@ def test_conversion_event_builder_rejects_money_values() -> None:
         event_key="signup_complete",
     )
 
-    with pytest.raises(AnalyticsApplicationException, match="cannot carry money values"):
+    with pytest.raises(AnalyticsApplicationException) as error:
         builder._set_currency("USD")
+
+    assert error.value.message_key == "conversion.money.value"

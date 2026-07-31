@@ -1,6 +1,8 @@
 from functools import lru_cache
+from typing import Annotated
 
 from fastapi import Depends
+from redis.asyncio import Redis
 
 from app.core.config import Settings, settings
 from app.core.db.session import SessionFactory
@@ -25,6 +27,7 @@ def get_config() -> Settings:
 
 
 def get_idempotency_repository(
-    client=Depends(async_redis_client), config=Depends(get_config)
+    client: Annotated[Redis, Depends(async_redis_client)],
+    config: Annotated[Settings, Depends(get_config)],
 ) -> IdempotencyKeyRepositoryProtocol:
     return RedisIdempotencyKeyRepository(client, config)

@@ -10,6 +10,7 @@ from fastapi import FastAPI, Request
 from app.core.bus.exception_event import ExceptionEvent
 from app.core.config import settings
 from app.core.exception import BaseBoundaryException
+from app.modules.analytics.core.exception import AnalyticsApplicationException
 from app.modules.crm.di.exception_bus import (
     build_boundary_exception_handler,
     get_exception_event_subscribers,
@@ -128,6 +129,26 @@ def test_build_fastapi_exception_handler_publishes_exception_event_and_returns_5
                 "query_params": {"event_id": "evt-1"},
                 "client_host": "127.0.0.1",
             }
+        finally:
+            settings.debug_mode = original_debug_mode
+
+    asyncio.run(scenario())
+
+
+def test_build_fastapi_exception_handler_resolves_analytics_message_key() -> None:
+    async def scenario() -> None:
+        original_debug_mode = settings.debug_mode
+        settings.debug_mode = False
+        handler = build_boundary_exception_handler(RecordingExceptionBus())
+
+        try:
+            response = await handler(
+                build_request(),
+                AnalyticsApplicationException("sdk.event.id.required", {}, 400),
+            )
+
+            assert response.status_code == 400
+            assert json.loads(response.body) == {"detail": "Event id is required"}
         finally:
             settings.debug_mode = original_debug_mode
 

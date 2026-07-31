@@ -56,5 +56,7 @@ def test_raw_event_message_factory_builds_many_messages() -> None:
 def test_raw_event_message_factory_requires_event_id() -> None:
     event = build_event_entity(event_id="")
 
-    with pytest.raises(AnalyticsApplicationException, match="Event id is required"):
+    with pytest.raises(AnalyticsApplicationException) as error:
         RawEventMessageFactory.from_event(event)
+
+    assert error.value.message_key == "sdk.event.id.required"

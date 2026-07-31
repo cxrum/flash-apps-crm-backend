@@ -29,8 +29,8 @@ from app.modules.analytics.application.ingestion.exception import (
 )
 from app.modules.analytics.application.ingestion.protocol import IngestionServiceProtocol
 from app.modules.analytics.application.ingestion.responses import SdkInstallResponse
-from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
 from app.modules.analytics.domain.app_platform.AnalyticsAppPlatformEntity import AnalyticsAppPlatformEntity
+from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
 from app.modules.analytics.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
 from app.modules.analytics.domain.currency.entity import Money
 from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity

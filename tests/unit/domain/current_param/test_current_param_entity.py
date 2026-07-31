@@ -66,19 +66,25 @@ def test_update_param_stores_boolean_and_datetime_values_in_supported_slots() ->
 def test_update_param_rejects_unsupported_policy() -> None:
     entity = build_current_param_entity()
 
-    with pytest.raises(AnalyticsDomainException, match="Unsupported param update_policy"):
+    with pytest.raises(AnalyticsDomainException) as error:
         entity.update_param("prepend", "paid")
+
+    assert error.value.message_key == "domain.current_param.update_policy.unsupported"
 
 
 def test_update_param_rejects_append_for_non_string_or_list_values() -> None:
     entity = build_current_param_entity(value_string=None, value_json={"source": "organic"})
 
-    with pytest.raises(AnalyticsDomainException, match="Append policy supports only string and list values"):
+    with pytest.raises(AnalyticsDomainException) as error:
         entity.update_param("append", {"source": "paid"})
+
+    assert error.value.message_key == "domain.current_param.append.unsupported"
 
 
 def test_update_param_rejects_merge_for_scalar_values() -> None:
     entity = build_current_param_entity(value_string="organic")
 
-    with pytest.raises(AnalyticsDomainException, match="Merge policy supports only dict and list values"):
+    with pytest.raises(AnalyticsDomainException) as error:
         entity.update_param("merge", "paid")
+
+    assert error.value.message_key == "domain.current_param.merge.unsupported"

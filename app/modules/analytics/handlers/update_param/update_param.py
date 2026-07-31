@@ -2,10 +2,10 @@ from datetime import UTC, datetime
 
 from app.core.bus.contract import AsyncEventMessageHandler
 from app.core.bus.type import EventMessage
-from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
-from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
 from app.modules.analytics.core.exception import AnalyticsApplicationException as GeneralException
 from app.modules.analytics.domain.current_param.AnalyticsCurrentParamEntity import AnalyticsCurrentParamEntity
+from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
+from app.modules.analytics.handlers.update_param.event import UpdateCurrentParamMessage
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity
 
 
@@ -50,8 +50,8 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
 
         if new_params == []:
             raise GeneralException(
-                f"AsyncUpdateParamHandler did not produce any params for click_id='{click_id}' "
-                f"from payload keys={sorted(params.keys())}"
+                "analytics.handler.update_param.params.empty",
+                {"click_id": click_id, "param_keys": sorted(params)},
             )
 
         updated_params = uow.current_param_repo.create_or_update_many(new_params)
@@ -60,29 +60,30 @@ class AsyncUpdateParamHandler(AsyncEventMessageHandler):
     async def handle(self, message: EventMessage) -> None:
         if not isinstance(message, UpdateCurrentParamMessage):
             raise GeneralException(
-                f"AsyncUpdateParamHandler expected UpdateCurrentParamMessage, got {type(message).__name__}"
+                "analytics.handler.update_param.message.invalid",
+                {"message_type": type(message).__name__},
             )
 
         with self.__uow_factory.create() as uow:
             click = uow.click_repo.get_by_id(message.click_id)
 
             if click is None:
-                raise GeneralException(f"AsyncUpdateParamHandler could not find click with id='{message.click_id}'")
+                raise GeneralException("analytics.handler.update_param.click.not_found", {"click_id": message.click_id})
 
             app_platform = uow.app_platform_repo.get_by_id(click.app_platform_id)
 
             if app_platform is None:
                 raise GeneralException(
-                    "AsyncUpdateParamHandler could not find app platform "
-                    f"with id='{click.app_platform_id}' for click_id='{message.click_id}'"
+                    "analytics.handler.update_param.platform.not_found",
+                    {"app_platform_id": click.app_platform_id, "click_id": message.click_id},
                 )
 
             params_dictionary = uow.param_definition_repo.list_by_app_id(app_platform.app_id)
 
             if not params_dictionary:
                 raise GeneralException(
-                    "AsyncUpdateParamHandler could not find param definitions "
-                    f"for app_id='{app_platform.app_id}' and click_id='{message.click_id}'"
+                    "analytics.handler.update_param.definitions.not_found",
+                    {"app_id": app_platform.app_id, "click_id": message.click_id},
                 )
 
             self._update_params(

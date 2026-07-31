@@ -24,8 +24,8 @@ class AsyncConversionHandler(AsyncEventMessageHandler):
 
         if not definitions:
             raise GeneralException(
-                "AsyncConversionHandler could not find conversion definitions "
-                f"for app_id='{app_id}' and click_id='{click_id}'"
+                "analytics.handler.conversion.definitions.not_found",
+                {"app_id": app_id, "click_id": click_id},
             )
 
         return {definition.machine_key: definition for definition in definitions}
@@ -33,21 +33,22 @@ class AsyncConversionHandler(AsyncEventMessageHandler):
     async def handle(self, message: EventMessage) -> None:
         if not isinstance(message, ConversionEventMessage):
             raise GeneralException(
-                f"AsyncConversionHandler expected ConversionEventMessage, got {type(message).__name__}"
+                "analytics.handler.conversion.message.invalid",
+                {"message_type": type(message).__name__},
             )
 
         with self.__uow_factory.create() as uow:
             click = uow.click_repo.get_by_id(message.click_id)
 
             if click is None:
-                raise GeneralException(f"AsyncConversionHandler could not find click with id='{message.click_id}'")
+                raise GeneralException("analytics.handler.conversion.click.not_found", {"click_id": message.click_id})
 
             app_platform = uow.app_platform_repo.get_by_id(click.app_platform_id)
 
             if app_platform is None or app_platform.platform_id is None:
                 raise GeneralException(
-                    "AsyncConversionHandler could not find app platform "
-                    f"with id='{click.app_platform_id}' for click_id='{message.click_id}'"
+                    "analytics.handler.conversion.platform.not_found",
+                    {"app_platform_id": click.app_platform_id, "click_id": message.click_id},
                 )
 
             definition_lookup = self._get_definition_lookup(
@@ -59,9 +60,8 @@ class AsyncConversionHandler(AsyncEventMessageHandler):
 
             if definition is None:
                 raise GeneralException(
-                    "AsyncConversionHandler could not find conversion definition "
-                    f"for event_key='{message.event_key}' app_id='{app_platform.app_id}' "
-                    f"and click_id='{message.click_id}'"
+                    "analytics.handler.conversion.definition.not_found",
+                    {"event_key": message.event_key, "app_id": app_platform.app_id, "click_id": message.click_id},
                 )
 
             has_amount = message.amount is not None
@@ -71,44 +71,38 @@ class AsyncConversionHandler(AsyncEventMessageHandler):
 
             if has_revenue_payload and not definition.revenue_enabled:
                 raise GeneralException(
-                    "AsyncConversionHandler conversion definition "
-                    f"for event_key='{message.event_key}' does not allow revenue fields "
-                    f"for app_id='{app_platform.app_id}' and click_id='{message.click_id}'"
+                    "analytics.handler.conversion.revenue_fields.forbidden",
+                    {"event_key": message.event_key, "app_id": app_platform.app_id, "click_id": message.click_id},
                 )
 
             if definition.expects_amount and not has_amount:
                 raise GeneralException(
-                    "AsyncConversionHandler conversion definition "
-                    f"for event_key='{message.event_key}' requires amount "
-                    f"for click_id='{message.click_id}'"
+                    "analytics.handler.conversion.amount.required",
+                    {"event_key": message.event_key, "click_id": message.click_id},
                 )
 
             if definition.expects_currency and not has_currency:
                 raise GeneralException(
-                    "AsyncConversionHandler conversion definition "
-                    f"for event_key='{message.event_key}' requires currency "
-                    f"for click_id='{message.click_id}'"
+                    "analytics.handler.conversion.currency.required",
+                    {"event_key": message.event_key, "click_id": message.click_id},
                 )
 
             if has_amount and not definition.expects_amount:
                 raise GeneralException(
-                    "AsyncConversionHandler conversion definition "
-                    f"for event_key='{message.event_key}' does not accept amount "
-                    f"for click_id='{message.click_id}'"
+                    "analytics.handler.conversion.amount.unexpected",
+                    {"event_key": message.event_key, "click_id": message.click_id},
                 )
 
             if has_currency and not definition.expects_currency:
                 raise GeneralException(
-                    "AsyncConversionHandler conversion definition "
-                    f"for event_key='{message.event_key}' does not accept currency "
-                    f"for click_id='{message.click_id}'"
+                    "analytics.handler.conversion.currency.unexpected",
+                    {"event_key": message.event_key, "click_id": message.click_id},
                 )
 
             if has_amount_usd and not (has_amount and has_currency):
                 raise GeneralException(
-                    "AsyncConversionHandler conversion message "
-                    f"for event_key='{message.event_key}' requires amount and currency "
-                    "when amount_usd is present"
+                    "analytics.handler.conversion.amount_usd.dependencies.invalid",
+                    {"event_key": message.event_key},
                 )
 
             StatisticAggregates.update(

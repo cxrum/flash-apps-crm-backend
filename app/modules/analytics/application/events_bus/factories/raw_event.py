@@ -21,9 +21,9 @@ class RawEventMessageFactory:
         message_cls: type[TRawEventMessage] = RawEventMessage,
     ) -> TRawEventMessage:
         if not event.event_id:
-            raise AnalyticsApplicationException("Event id is required for RawEventMessage")
+            raise AnalyticsApplicationException("sdk.event.id.required")
         if not event.click_id:
-            raise AnalyticsApplicationException("Click id is required for RawEventMessage")
+            raise AnalyticsApplicationException("sdk.click.id.required")
 
         message_metadata = {
             "source": cls.DEFAULT_SOURCE,

@@ -79,5 +79,5 @@ def get_sdk_app_service(
     hash_service: Annotated[HashProtocol, Depends(get_hash_service)],
     event_bus: Annotated[IAsyncEventBus, Depends(get_in_memory_event_bus)],
 ) -> AppServiceProtocol:
-    app_service = AppService(uow_factory, authorization_service, encryption_service, hash_service)
+    app_service = AppService(uow_factory, event_bus, authorization_service, encryption_service, hash_service)
     return AuditedAppsService(uow_factory, app_service, event_bus)

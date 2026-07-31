@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import inspect
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable, Protocol
+from typing import Any, Protocol
 
 from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.modules.crm.application.exception import AppNotFound, UserNotFound

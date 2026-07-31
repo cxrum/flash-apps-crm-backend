@@ -4,8 +4,16 @@ from functools import lru_cache
 from app.core.bus.contract import AsyncEventMessageHandler, IAsyncEventBus
 from app.core.bus.di import AsyncHandlerSubscription
 from app.core.bus.event.bus import InMemoryAsyncEventBus
+from app.core.bus.event.events.app_configuration import (
+    AppConfigurationProjectionMessage,
+    AppPlatformConfigurationProjectionMessage,
+)
 from app.modules.analytics.di.infra import get_analytics_uow_factory
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol
+from app.modules.analytics.handlers.app.projection import (
+    AppConfigurationProjectionHandler,
+    AppPlatformConfigurationProjectionHandler,
+)
 from app.modules.analytics.handlers.event.conversion import AsyncConversionHandler
 from app.modules.analytics.handlers.event.event import ConversionEventMessage, MetricEventMessage
 from app.modules.analytics.handlers.event.metric import AsyncMetricHandler
@@ -37,6 +45,18 @@ def build_conversion_handler(
     return AsyncConversionHandler(uow_factory)
 
 
+def build_app_configuration_projection_handler(
+    uow_factory: AnalyticsUnitOfWorkFactoryProtocol,
+) -> AsyncEventMessageHandler:
+    return AppConfigurationProjectionHandler(uow_factory)
+
+
+def build_app_platform_configuration_projection_handler(
+    uow_factory: AnalyticsUnitOfWorkFactoryProtocol,
+) -> AsyncEventMessageHandler:
+    return AppPlatformConfigurationProjectionHandler(uow_factory)
+
+
 @lru_cache
 def get_event_subscribers() -> tuple[AsyncHandlerSubscription, ...]:
     uow_factory = get_analytics_uow_factory()
@@ -53,6 +73,14 @@ def get_event_subscribers() -> tuple[AsyncHandlerSubscription, ...]:
         (
             ConversionEventMessage.EVENT_NAME,
             build_conversion_handler(uow_factory),
+        ),
+        (
+            AppConfigurationProjectionMessage.EVENT_NAME,
+            build_app_configuration_projection_handler(uow_factory),
+        ),
+        (
+            AppPlatformConfigurationProjectionMessage.EVENT_NAME,
+            build_app_platform_configuration_projection_handler(uow_factory),
         ),
     )
 
