@@ -7,16 +7,24 @@ from typing import Any
 from sqlalchemy.orm import Session
 from typing_extensions import Self
 
+from app.modules.analytics.domain.app.app_repository_protocol import AnalyticsAppRepositoryProtocol
+from app.modules.analytics.domain.app_platform.app_platform_repository_protocol import (
+    AnalyticsAppPlatformRepositoryProtocol,
+)
 from app.modules.analytics.domain.click.click_repository_protocol import AnalyticsClickRepositoryProtocol
-from app.modules.analytics.domain.current_param.current_param_repository_protocol import AnalyticsCurrentParamRepositoryProtocol
-from app.modules.analytics.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import AnalyticsCustomParamsStatisticsRepositoryProtocol
+from app.modules.analytics.domain.current_param.current_param_repository_protocol import (
+    AnalyticsCurrentParamRepositoryProtocol,
+)
+from app.modules.analytics.domain.custom_params_statistics_aggregate.statistics_aggregate_repository_protocol import (
+    AnalyticsCustomParamsStatisticsRepositoryProtocol,
+)
 from app.modules.analytics.domain.events.event_repository_protocol import AnalyticsEventRepositoryProtocol
 from app.modules.analytics.domain.install.install_repository_protocol import AnalyticsInstallRepositoryProtocol
-from app.modules.analytics.domain.statistics_aggregate.statistics_aggregate_repository_protocol import AnalyticsStatisticsRepositoryProtocol
+from app.modules.analytics.domain.statistics_aggregate.statistics_aggregate_repository_protocol import (
+    AnalyticsStatisticsRepositoryProtocol,
+)
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.analytics.infra.db.factory import AnalyticsSqlAlchemyRepositoryFactory
-from app.modules.crm.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
-from app.modules.crm.domain.app_platform.app_platform_repository_protocol import CrmAppPlatformRepositoryProtocol
 from app.modules.crm.domain.conversion_definition.conversion_definition_repository_protocol import (
     CrmConversionDefinitionRepositoryProtocol,
 )
@@ -32,17 +40,18 @@ from app.modules.crm.infra.db.repositories.factory import CrmSqlAlchemyRepositor
 
 
 class SqlAlchemyUnitOfWork(AnalyticsUnitOfWorkProtocol):
-    app_repo: CrmAppRepositoryProtocol
-    app_platform_repo: CrmAppPlatformRepositoryProtocol
+    app_repo: AnalyticsAppRepositoryProtocol
+    app_platform_repo: AnalyticsAppPlatformRepositoryProtocol
+    metric_definition_repo: CrmMetricDefinitionRepositoryProtocol
+    conversion_definition_repo: CrmConversionDefinitionRepositoryProtocol
+    param_definition_repo: CrmParamDefinitionRepositoryProtocol
+
     click_repo: AnalyticsClickRepositoryProtocol
     install_repo: AnalyticsInstallRepositoryProtocol
     event_repo: AnalyticsEventRepositoryProtocol
     current_param_repo: AnalyticsCurrentParamRepositoryProtocol
     statistics_repo: AnalyticsStatisticsRepositoryProtocol
     custom_params_statistics_repo: AnalyticsCustomParamsStatisticsRepositoryProtocol
-    metric_definition_repo: CrmMetricDefinitionRepositoryProtocol
-    conversion_definition_repo: CrmConversionDefinitionRepositoryProtocol
-    param_definition_repo: CrmParamDefinitionRepositoryProtocol
 
     def __init__(
         self,
@@ -57,8 +66,8 @@ class SqlAlchemyUnitOfWork(AnalyticsUnitOfWorkProtocol):
 
     def __enter__(self) -> Self:
         self.session = self._session_factory()
-        self.app_repo = self._crm_reference_repository_factory.app_repo(self.session)
-        self.app_platform_repo = self._crm_reference_repository_factory.app_platform_repo(self.session)
+        self.app_repo = self._analytics_repository_factory.app_repo(self.session)
+        self.app_platform_repo = self._analytics_repository_factory.app_platform_repo(self.session)
         self.metric_definition_repo = self._crm_reference_repository_factory.metric_definition_repo(self.session)
         self.conversion_definition_repo = self._crm_reference_repository_factory.conversion_definition_repo(
             self.session

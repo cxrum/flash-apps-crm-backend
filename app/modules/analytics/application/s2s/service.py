@@ -10,10 +10,10 @@ from app.modules.analytics.application.s2s.responses import S2SClickResponse
 from app.modules.analytics.application.tracking.entities import TrackingRedirectCommand
 from app.modules.analytics.application.tracking.responses import TrackingRedirectResponse
 from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
+from app.modules.analytics.domain.app_platform.AnalyticsAppPlatformEntity import AnalyticsAppPlatformEntity
 from app.modules.analytics.domain.signature_protocol import AnalyticsSignatureProtocol
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
 from app.modules.crm.application.contracts.ip2location import IP2LocationGatewayProtocol, IpLocation
-from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
 from app.modules.crm.domain.hash_protocol import HashableValue, HashProtocol
 
 
@@ -38,7 +38,7 @@ class ClickService(ClickServiceProtocol):
         platform: str,
         app_code: str,
         uow: AnalyticsUnitOfWorkProtocol,
-    ) -> CrmAppPlatformEntity | None:
+    ) -> AnalyticsAppPlatformEntity | None:
         app = uow.app_repo.get_by_slug(app_code)
         if app is None:
             raise UnknownAppCode(app_code)
@@ -55,7 +55,7 @@ class ClickService(ClickServiceProtocol):
         uow: AnalyticsUnitOfWorkProtocol,
         *,
         click: AnalyticsClickEntity,
-        platform: CrmAppPlatformEntity,
+        platform: AnalyticsAppPlatformEntity,
         source_click_id: str | None = None,
     ) -> AnalyticsClickEntity:
 

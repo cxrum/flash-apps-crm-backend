@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.analytics.application.tracking.entities import TrackingRedirectCommand
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 
 
 class TrackingCommandMapper:

@@ -1,5 +1,6 @@
 from typing import Mapping
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.application.admin.secrets.commands import (
     CreateSecretTemplateCommand,
     DeleteAppSecretCommand,
@@ -13,7 +14,6 @@ from app.modules.crm.application.admin.secrets.commands import (
     UpsertAppSecretsCommand,
 )
 from app.modules.crm.application.admin.secrets.responses import AppSecretResponseEntry, SecretTemplateResponseEntry
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.domain.app_secret.CrmAppSecretEntity import CrmAppSecretEntity
 from app.modules.crm.domain.secret_template.CrmSecretTemplateEntity import CrmSecretTemplateEntity
 

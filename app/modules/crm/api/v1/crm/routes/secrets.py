@@ -2,6 +2,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends, Query, status
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.api.v1.crm.payloads import (
     AppScopeQueryPayload,
     CreateSecretTemplatePayload,
@@ -13,7 +14,6 @@ from app.modules.crm.application.admin.secrets.mappers import SecretsResponseMap
 from app.modules.crm.application.admin.secrets.protocol import SecretsServiceProtocol
 from app.modules.crm.application.base import JsonDict
 from app.modules.crm.application.crm_authentication.responses import ResolvedCrmUserResponse
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.di.dependencies import resolve_user
 from app.modules.crm.di.services import get_admin_secrets_service
 

@@ -8,6 +8,12 @@ from sqlalchemy import RowMapping, desc, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
+from app.modules.analytics.domain.app.AnalyticsAppEntity import AnalyticsAppEntity
+from app.modules.analytics.domain.app.app_repository_protocol import AnalyticsAppRepositoryProtocol
+from app.modules.analytics.domain.app_platform.AnalyticsAppPlatformEntity import AnalyticsAppPlatformEntity
+from app.modules.analytics.domain.app_platform.app_platform_repository_protocol import (
+    AnalyticsAppPlatformRepositoryProtocol,
+)
 from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
 from app.modules.analytics.domain.click.click_repository_protocol import AnalyticsClickRepositoryProtocol
 from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
@@ -16,6 +22,8 @@ from app.modules.analytics.domain.install.AnalyticsInstallEntity import Analytic
 from app.modules.analytics.domain.install.install_repository_protocol import AnalyticsInstallRepositoryProtocol
 from app.modules.analytics.infra.db.models import (
     AnalyticsClick,
+    AnalyticsApp,
+    AnalyticsAppPlatform,
     AnalyticsCurrentParam,
     AnalyticsCustomParamsStatisticsAggregate,
     AnalyticsEvent,
@@ -30,7 +38,6 @@ from app.modules.analytics.domain.custom_params_statistics_aggregate.statistics_
 from app.modules.crm.domain.pagination import Pagination
 from app.modules.analytics.domain.statistics_aggregate.AnalyticsStatisticsAggregateEntity import AnalyticsStatisticsAggregateEntity
 from app.modules.analytics.domain.statistics_aggregate.statistics_aggregate_repository_protocol import AnalyticsStatisticsRepositoryProtocol
-from app.modules.crm.infra.db.apps.models import AppPlatform
 
 
 def _apply_pagination(stmt, pagination: Pagination | None):
@@ -39,6 +46,147 @@ def _apply_pagination(stmt, pagination: Pagination | None):
     if pagination is not None and pagination.limit is not None:
         stmt = stmt.limit(pagination.limit)
     return stmt
+
+
+class SqlAlchemyAnalyticsAppRepository(AnalyticsAppRepositoryProtocol):
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    @staticmethod
+    def _to_domain(row: AnalyticsApp) -> AnalyticsAppEntity:
+        return AnalyticsAppEntity(app_id=row.app_id, code_slug=row.code_slug)
+
+    @staticmethod
+    def _to_row(entity: AnalyticsAppEntity) -> AnalyticsApp:
+        kwargs: dict[str, object] = {"code_slug": entity.code_slug}
+        if entity.app_id is not None:
+            kwargs["app_id"] = entity.app_id
+        return AnalyticsApp(**kwargs)
+
+    def save(self, entity: AnalyticsAppEntity) -> AnalyticsAppEntity:
+        row = self.session.merge(self._to_row(entity))
+        self.session.flush()
+        return self._to_domain(row)
+
+    def save_many(self, entities: list[AnalyticsAppEntity]) -> list[AnalyticsAppEntity]:
+        rows = [self.session.merge(self._to_row(entity)) for entity in entities]
+        self.session.flush()
+        return [self._to_domain(row) for row in rows]
+
+    def delete(self, app_id: int) -> AnalyticsAppEntity:
+        row = self.session.get(AnalyticsApp, app_id)
+        if row is None:
+            raise AnalyticsInfraException()
+
+        app = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return app
+
+    def get_by_id(self, app_id: int) -> AnalyticsAppEntity | None:
+        row = self.session.get(AnalyticsApp, app_id)
+        return self._to_domain(row) if row is not None else None
+
+    def get_by_slug(self, code_slug: str) -> AnalyticsAppEntity | None:
+        row = self.session.scalars(select(AnalyticsApp).where(AnalyticsApp.code_slug == code_slug)).first()
+        return self._to_domain(row) if row is not None else None
+
+    def list_all(self, *, pagination: Pagination | None = None) -> list[AnalyticsAppEntity]:
+        rows = self.session.scalars(
+            _apply_pagination(select(AnalyticsApp).order_by(AnalyticsApp.app_id.asc()), pagination)
+        ).all()
+        return [self._to_domain(row) for row in rows]
+
+
+class SqlAlchemyAnalyticsAppPlatformRepository(AnalyticsAppPlatformRepositoryProtocol):
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    @staticmethod
+    def _to_domain(row: AnalyticsAppPlatform) -> AnalyticsAppPlatformEntity:
+        return AnalyticsAppPlatformEntity(
+            platform_id=row.platform_id,
+            app_id=row.app_id,
+            platform=row.platform,
+            install_key=row.install_key,
+            sdk_secret_encrypted=row.sdk_secret_encrypted,
+        )
+
+    @staticmethod
+    def _to_row(entity: AnalyticsAppPlatformEntity) -> AnalyticsAppPlatform:
+        kwargs: dict[str, object] = {
+            "app_id": entity.app_id,
+            "platform": entity.platform,
+            "install_key": entity.install_key,
+            "sdk_secret_encrypted": entity.sdk_secret_encrypted,
+        }
+        if entity.platform_id is not None:
+            kwargs["platform_id"] = entity.platform_id
+        return AnalyticsAppPlatform(**kwargs)
+
+    def save(self, entity: AnalyticsAppPlatformEntity) -> AnalyticsAppPlatformEntity:
+        row = self.session.merge(self._to_row(entity))
+        self.session.flush()
+        return self._to_domain(row)
+
+    def save_many(self, entities: list[AnalyticsAppPlatformEntity]) -> list[AnalyticsAppPlatformEntity]:
+        rows = [self.session.merge(self._to_row(entity)) for entity in entities]
+        self.session.flush()
+        return [self._to_domain(row) for row in rows]
+
+    def delete(self, platform_id: int) -> AnalyticsAppPlatformEntity:
+        row = self.session.get(AnalyticsAppPlatform, platform_id)
+        if row is None:
+            raise AnalyticsInfraException()
+
+        platform = self._to_domain(row)
+        self.session.delete(row)
+        self.session.flush()
+        return platform
+
+    def get_by_id(self, platform_id: int) -> AnalyticsAppPlatformEntity | None:
+        row = self.session.get(AnalyticsAppPlatform, platform_id)
+        return self._to_domain(row) if row is not None else None
+
+    def get_by_install_key(self, install_key: str) -> AnalyticsAppPlatformEntity | None:
+        row = self.session.scalars(
+            select(AnalyticsAppPlatform)
+            .where(AnalyticsAppPlatform.install_key == install_key)
+            .order_by(AnalyticsAppPlatform.platform_id.asc())
+        ).first()
+        return self._to_domain(row) if row is not None else None
+
+    def list_by_app_id(
+        self,
+        app_id: int,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[AnalyticsAppPlatformEntity]:
+        rows = self.session.scalars(
+            _apply_pagination(
+                select(AnalyticsAppPlatform)
+                .where(AnalyticsAppPlatform.app_id == app_id)
+                .order_by(AnalyticsAppPlatform.platform_id.asc()),
+                pagination,
+            )
+        ).all()
+        return [self._to_domain(row) for row in rows]
+
+    def list_by_platform(
+        self,
+        platform: str,
+        *,
+        pagination: Pagination | None = None,
+    ) -> list[AnalyticsAppPlatformEntity]:
+        rows = self.session.scalars(
+            _apply_pagination(
+                select(AnalyticsAppPlatform)
+                .where(AnalyticsAppPlatform.platform == platform)
+                .order_by(AnalyticsAppPlatform.platform_id.asc()),
+                pagination,
+            )
+        ).all()
+        return [self._to_domain(row) for row in rows]
 
 
 class SqlAlchemyAnalyticsClickRepository(AnalyticsClickRepositoryProtocol):
@@ -145,8 +293,8 @@ class SqlAlchemyAnalyticsClickRepository(AnalyticsClickRepositoryProtocol):
     ) -> list[AnalyticsClickEntity]:
         stmt = (
             select(AnalyticsClick)
-            .join(AppPlatform, AnalyticsClick.app_platform_id == AppPlatform.platform_id)
-            .where(AppPlatform.app_id == app_id)
+            .join(AnalyticsAppPlatform, AnalyticsClick.app_platform_id == AnalyticsAppPlatform.platform_id)
+            .where(AnalyticsAppPlatform.app_id == app_id)
         )
         return self._list_clicks(stmt, click_id=click_id, pagination=pagination)
 
@@ -368,8 +516,8 @@ class SqlAlchemyAnalyticsEventRepository(AnalyticsEventRepositoryProtocol):
         stmt = (
             select(AnalyticsEvent)
             .join(AnalyticsClick, AnalyticsEvent.click_id == AnalyticsClick.click_id)
-            .join(AppPlatform, AnalyticsClick.app_platform_id == AppPlatform.platform_id)
-            .where(AppPlatform.app_id == app_id)
+            .join(AnalyticsAppPlatform, AnalyticsClick.app_platform_id == AnalyticsAppPlatform.platform_id)
+            .where(AnalyticsAppPlatform.app_id == app_id)
         )
         return self._list_events(stmt, click_id=click_id, event_key=event_key, pagination=pagination)
 
@@ -385,8 +533,8 @@ class SqlAlchemyAnalyticsEventRepository(AnalyticsEventRepositoryProtocol):
         if app_id is not None:
             stmt = (
                 stmt.join(AnalyticsClick, AnalyticsEvent.click_id == AnalyticsClick.click_id)
-                .join(AppPlatform, AnalyticsClick.app_platform_id == AppPlatform.platform_id)
-                .where(AppPlatform.app_id == app_id)
+                .join(AnalyticsAppPlatform, AnalyticsClick.app_platform_id == AnalyticsAppPlatform.platform_id)
+                .where(AnalyticsAppPlatform.app_id == app_id)
             )
         return self._list_events(stmt, click_id=click_id, event_key=event_key, pagination=pagination)
 

@@ -1,5 +1,6 @@
 from typing import Mapping
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.application.admin.push.commands import (
     CreatePushCampaignCommand,
     DeletePushCampaignCommand,
@@ -10,7 +11,6 @@ from app.modules.crm.application.admin.push.commands import (
     UpdatePushCampaignCommand,
 )
 from app.modules.crm.application.admin.push.responses import PushResponseEntry
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.domain.push_campaign import CrmPushCampaignEntity
 
 

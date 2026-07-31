@@ -1,12 +1,12 @@
 from collections.abc import Mapping
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.application.admin.audit.commands import (
     ListAuditLogCommand,
 )
 from app.modules.crm.application.admin.audit.responses import (
     AuditLogResponseEntry,
 )
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.domain.audit_log.CrmAuditLogEntity import CrmAuditLogEntity
 
 

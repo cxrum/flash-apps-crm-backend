@@ -7,7 +7,33 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db.base import Base
-from app.modules.crm.infra.db.apps.models import AppPlatform, AppUser  # noqa: F401
+from app.modules.crm.infra.db.apps.models import AppUser  # noqa: F401
+
+
+class AnalyticsApp(Base):
+    __tablename__ = "analytics_apps"
+
+    app_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    code_slug: Mapped[str] = mapped_column(String(120), nullable=False, unique=True, index=True)
+
+
+class AnalyticsAppPlatform(Base):
+    __tablename__ = "analytics_app_platforms"
+    __table_args__ = (
+        CheckConstraint("platform IN ('android', 'ios')", name="ck_analytics_app_platforms_platform"),
+        UniqueConstraint("app_id", "platform", name="uq_analytics_app_platforms_app_platform"),
+    )
+
+    platform_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    app_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("analytics_apps.app_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    platform: Mapped[str] = mapped_column(String(16), nullable=False, index=True)
+    install_key: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
+    sdk_secret_encrypted: Mapped[str] = mapped_column(String(255), nullable=False)
 
 
 class AnalyticsClick(Base):
@@ -23,7 +49,7 @@ class AnalyticsClick(Base):
     click_id: Mapped[str] = mapped_column(String(64), primary_key=True)
     app_platform_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("crm_app_platforms.platform_id", ondelete="RESTRICT"),
+        ForeignKey("analytics_app_platforms.platform_id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
@@ -69,7 +95,7 @@ class AnalyticsInstall(Base):
     )
     app_platform_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("crm_app_platforms.platform_id", ondelete="RESTRICT"),
+        ForeignKey("analytics_app_platforms.platform_id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
@@ -157,7 +183,7 @@ class AnalyticsStatisticsAggregate(Base):
     aggregate_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     app_platform_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("crm_app_platforms.platform_id", ondelete="RESTRICT"),
+        ForeignKey("analytics_app_platforms.platform_id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
@@ -188,7 +214,7 @@ class AnalyticsCustomParamsStatisticsAggregate(Base):
     aggregate_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     app_platform_id: Mapped[int] = mapped_column(
         BigInteger,
-        ForeignKey("crm_app_platforms.platform_id", ondelete="RESTRICT"),
+        ForeignKey("analytics_app_platforms.platform_id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )

@@ -4,14 +4,12 @@ from fastapi import Depends
 
 from app.core.bus.contract import IAsyncEventBus
 from app.core.bus.di import get_in_memory_event_bus
-from app.infra.analytics_logs_adapter import CrmIngestionAnalyticsLogsAdapter
 from app.infra.analytics_attribution_adapter import CrmAnalyticsAttributionAdapter
+from app.infra.analytics_logs_adapter import CrmIngestionAnalyticsLogsAdapter
 from app.modules.analytics.application.attribution.protocol import AnalyticsAttributionPort
-from app.modules.analytics.di.services import get_analytics_attribution_service
 from app.modules.analytics.application.logs.protocol import AnalyticsLogsPort
-from app.modules.analytics.di.services import get_analytics_logs_service
+from app.modules.analytics.di.services import get_analytics_attribution_service, get_analytics_logs_service
 from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
-from app.modules.crm.application.attribution.protocol import CrmAttributionGateway
 from app.modules.crm.application.admin.ingestion.analytics_logs_gateway import AnalyticsLogsGateway
 from app.modules.crm.application.admin.ingestion.protocol import IngestionDataServiceProtocol
 from app.modules.crm.application.admin.ingestion.service import IngestionDataService
@@ -19,6 +17,7 @@ from app.modules.crm.application.admin.postback.protocol import PostbackServiceP
 from app.modules.crm.application.admin.postback.service import PostbackService
 from app.modules.crm.application.admin.push.protocol import PushServiceProtocol
 from app.modules.crm.application.admin.push.service import PushService
+from app.modules.crm.application.attribution.protocol import CrmAttributionGateway
 from app.modules.crm.application.contracts.requester import S2SRequesterProtocol
 from app.modules.crm.di.infra import get_uow_factory
 from app.modules.crm.di.services import get_crm_authorization_service, get_s2s_requester

@@ -3,6 +3,8 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.modules.analytics.infra.db.repositories import (
+    SqlAlchemyAnalyticsAppPlatformRepository,
+    SqlAlchemyAnalyticsAppRepository,
     SqlAlchemyAnalyticsClickRepository,
     SqlAlchemyAnalyticsCurrentParamRepository,
     SqlAlchemyAnalyticsCustomParamsStatisticsRepository,
@@ -13,6 +15,12 @@ from app.modules.analytics.infra.db.repositories import (
 
 
 class AnalyticsSqlAlchemyRepositoryFactory:
+    def app_repo(self, session: Session) -> SqlAlchemyAnalyticsAppRepository:
+        return SqlAlchemyAnalyticsAppRepository(session)
+
+    def app_platform_repo(self, session: Session) -> SqlAlchemyAnalyticsAppPlatformRepository:
+        return SqlAlchemyAnalyticsAppPlatformRepository(session)
+
     def click_repo(self, session: Session) -> SqlAlchemyAnalyticsClickRepository:
         return SqlAlchemyAnalyticsClickRepository(session)
 

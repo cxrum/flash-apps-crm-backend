@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 from dataclasses import asdict
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.application.sdk.apps.commands import (
     CreateAppCommand,
     CreateAppPlatformCommand,
@@ -15,7 +16,6 @@ from app.modules.crm.application.sdk.apps.commands import (
     UpdateAppPlatformCommand,
 )
 from app.modules.crm.application.sdk.apps.responses import AppPlatformResponseValue, AppResponseValue
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.domain.app.CrmAppEntity import CrmAppEntity
 from app.modules.crm.domain.app_platform import CrmAppPlatformEntity
 

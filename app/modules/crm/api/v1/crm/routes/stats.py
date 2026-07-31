@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.infra.di import get_admin_ingestion_data_service
 from app.modules.crm.api.v1.crm.payloads import ClickLogsQueryPayload, EventLogsQueryPayload, StatsQueryPayload
 from app.modules.crm.api.v1.stubs import build_stub_response
@@ -11,7 +12,6 @@ from app.modules.crm.application.admin.ingestion.mappers import IngestionDataRes
 from app.modules.crm.application.admin.ingestion.protocol import IngestionDataServiceProtocol
 from app.modules.crm.application.base import JsonDict
 from app.modules.crm.application.crm_authentication.responses import ResolvedCrmUserResponse
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.di.dependencies import resolve_user
 
 router = APIRouter()

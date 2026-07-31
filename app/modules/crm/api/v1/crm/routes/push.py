@@ -2,6 +2,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends, Query, status
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.infra.di import get_crm_push_service
 from app.modules.crm.api.v1.crm.payloads import (
     AppFilterQueryPayload,
@@ -15,7 +16,6 @@ from app.modules.crm.application.admin.push.mappers import PushResponseMapper as
 from app.modules.crm.application.admin.push.protocol import PushServiceProtocol
 from app.modules.crm.application.base import JsonDict
 from app.modules.crm.application.crm_authentication.responses import ResolvedCrmUserResponse
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.di.dependencies import resolve_user
 
 router = APIRouter()

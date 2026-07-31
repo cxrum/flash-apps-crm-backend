@@ -3,8 +3,8 @@ from __future__ import annotations
 from types import TracebackType
 from typing import Any, Protocol
 
-from app.modules.crm.domain.app.app_repository_protocol import CrmAppRepositoryProtocol
-from app.modules.crm.domain.app_platform.app_platform_repository_protocol import CrmAppPlatformRepositoryProtocol
+from app.modules.analytics.domain.app.app_repository_protocol import AnalyticsAppRepositoryProtocol
+from app.modules.analytics.domain.app_platform.app_platform_repository_protocol import AnalyticsAppPlatformRepositoryProtocol
 from app.modules.analytics.domain.click.click_repository_protocol import AnalyticsClickRepositoryProtocol
 from app.modules.crm.domain.conversion_definition.conversion_definition_repository_protocol import (
     CrmConversionDefinitionRepositoryProtocol,
@@ -23,8 +23,8 @@ from app.modules.analytics.domain.statistics_aggregate.statistics_aggregate_repo
 
 
 class AnalyticsUnitOfWorkProtocol(Protocol):
-    app_repo: CrmAppRepositoryProtocol
-    app_platform_repo: CrmAppPlatformRepositoryProtocol
+    app_repo: AnalyticsAppRepositoryProtocol
+    app_platform_repo: AnalyticsAppPlatformRepositoryProtocol
     click_repo: AnalyticsClickRepositoryProtocol
     install_repo: AnalyticsInstallRepositoryProtocol
     event_repo: AnalyticsEventRepositoryProtocol

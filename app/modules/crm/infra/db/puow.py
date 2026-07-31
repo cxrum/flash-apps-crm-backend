@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable
 from types import TracebackType
 from typing import Any
 
@@ -38,7 +38,6 @@ from app.modules.crm.domain.user_permissions.user_permissions_repository_protoco
     CrmUserPermissionsRepositoryProtocol,
 )
 from app.modules.crm.infra.db.repositories.factory import CrmSqlAlchemyRepositoryFactory
-from app.core.db.session import SessionFactory
 
 # FIXME: Temporary decision. Divide this class to smaller ones for each application service.
 
@@ -72,7 +71,7 @@ class SqlAlchemyUnitOfWork(UnitOfWorkProtocol):
         self._repository_factory = repository_factory or CrmSqlAlchemyRepositoryFactory()
         self.session: Session | None = None
 
-    def __enter__(self) -> "SqlAlchemyUnitOfWork":
+    def __enter__(self) -> SqlAlchemyUnitOfWork:
         self.session = self._session_factory()
         self.app_repo = self._repository_factory.app_repo(self.session)
         self.app_platform_repo = self._repository_factory.app_platform_repo(self.session)

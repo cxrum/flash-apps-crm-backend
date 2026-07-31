@@ -1,5 +1,6 @@
 from typing import Mapping
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.application.admin.postback.commands import (
     CreatePostbackRuleCommand,
     DeletePostbackRuleCommand,
@@ -8,7 +9,6 @@ from app.modules.crm.application.admin.postback.commands import (
     UpdatePostbackRuleCommand,
 )
 from app.modules.crm.application.admin.postback.responses import PostbackResponseEntry
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.domain.postback_rule.CrmPostbackRuleEntity import CrmPostbackRuleEntity
 
 

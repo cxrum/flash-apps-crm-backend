@@ -1,5 +1,6 @@
 from collections.abc import Mapping
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.analytics.application.ingestion.commands import (
     SdkEventsCommand,
     SdkInstallCommand,
@@ -7,7 +8,6 @@ from app.modules.analytics.application.ingestion.commands import (
 )
 from app.modules.analytics.application.s2s.commands import S2SClickCommand
 from app.modules.crm.application.sdk.apps.commands import AppConfigurationCommand
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 
 
 class SdkIngestionCommandMapper:

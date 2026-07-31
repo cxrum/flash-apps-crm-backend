@@ -5,10 +5,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import RedirectResponse
 
-from app.modules.analytics.api.v1.tracking.payloads import TrackingRedirectQueries
+from app.core.utils.general_mapper import GeneralMapper as GeneralMapper
 from app.modules.analytics.application.s2s.protocol import ClickServiceProtocol
 from app.modules.analytics.application.tracking.mappers import TrackingCommandMapper
-from app.modules.crm.core.utils.general_mapper import GeneralMapper as GeneralMapper
 from app.modules.analytics.di.services import get_analytics_click_service
 
 router = APIRouter()
@@ -20,7 +19,7 @@ async def tracking_redirect(
     app_code: str,
     platform: str,
     redirect_url: Annotated[str, Query()],
-    s2s_service: Annotated[ClickServiceProtocol,  Depends(get_analytics_click_service)],
+    s2s_service: Annotated[ClickServiceProtocol, Depends(get_analytics_click_service)],
     idempotency_key: Annotated[str | None, Query()] = None,
 ) -> RedirectResponse:
 

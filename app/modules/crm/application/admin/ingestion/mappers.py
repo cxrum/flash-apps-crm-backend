@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.application.admin.ingestion.commands import ListClickLogsCommand, ListEventLogsCommand
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 
 
 class IngestionDataResponseMapper:

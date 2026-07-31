@@ -5,7 +5,7 @@ from typing import Any
 from app.core.bus.event.events.analytics import RawEventMessage
 from app.modules.analytics.core.exception import AnalyticsApplicationException
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkProtocol
-from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
+from app.modules.analytics.domain.app_platform.AnalyticsAppPlatformEntity import AnalyticsAppPlatformEntity
 from app.modules.analytics.domain.currency.entity import Money
 from app.modules.analytics.domain.custom_params_statistics_aggregate.AnalyticsCustomParamsStatisticsAggregateEntity import AnalyticsCustomParamsStatisticsAggregateEntity
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity, DefaultParamKeys
@@ -31,7 +31,7 @@ class StatisticAggregates:
         uow: AnalyticsUnitOfWorkProtocol,
         message: RawEventMessage,
         revenue_enabled: bool,
-        app_platform: CrmAppPlatformEntity,
+        app_platform: AnalyticsAppPlatformEntity,
     ) -> None:
         if app_platform.platform_id is None:
             raise AnalyticsApplicationException()

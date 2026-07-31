@@ -1,5 +1,6 @@
 from typing import Mapping
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.application.admin.definitions.commands import (
     CreateConversionDefinitionCommand,
     CreateMetricDefinitionCommand,
@@ -22,7 +23,6 @@ from app.modules.crm.application.admin.definitions.responses import (
     MetricDefinitionResponseEntry,
     ParamDefinitionResponseEntry,
 )
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.domain.conversion_definition.CrmConversionDefinitionEntity import CrmConversionDefinitionEntity
 from app.modules.crm.domain.metric_definition.CrmMetricDefinitionEntity import CrmMetricDefinitionEntity
 from app.modules.crm.domain.param_definition.CrmParamDefinitionEntity import CrmParamDefinitionEntity

@@ -1,7 +1,7 @@
 """Move raw ingestion storage from CRM to Analytics ownership.
 
 Revision ID: 202607301200
-Revises: befddfc0fff6
+Revises: 0d9359a914ee
 Create Date: 2026-07-30 12:00:00.000000
 """
 
@@ -13,7 +13,7 @@ from alembic import op
 
 
 revision = "202607301200"
-down_revision = "befddfc0fff6"
+down_revision = "0d9359a914ee"
 branch_labels = None
 depends_on = None
 

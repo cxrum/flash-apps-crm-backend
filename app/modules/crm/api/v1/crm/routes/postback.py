@@ -2,6 +2,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends, Query, status
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.infra.di import get_crm_postback_service
 from app.modules.crm.api.v1.crm.payloads import (
     AppFilterQueryPayload,
@@ -12,7 +13,6 @@ from app.modules.crm.api.v1.transport import PaginationQueryPayload
 from app.modules.crm.application.admin.postback.mappers import PostbackResponseMapper as AdminCommandMapper
 from app.modules.crm.application.admin.postback.protocol import PostbackServiceProtocol
 from app.modules.crm.application.crm_authentication.responses import ResolvedCrmUserResponse
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.di.dependencies import resolve_user
 
 router = APIRouter()

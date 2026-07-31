@@ -30,13 +30,13 @@ from app.modules.analytics.application.ingestion.exception import (
 from app.modules.analytics.application.ingestion.protocol import IngestionServiceProtocol
 from app.modules.analytics.application.ingestion.responses import SdkInstallResponse
 from app.modules.analytics.domain.click.AnalyticsClickEntity import AnalyticsClickEntity
+from app.modules.analytics.domain.app_platform.AnalyticsAppPlatformEntity import AnalyticsAppPlatformEntity
+from app.modules.analytics.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
+from app.modules.analytics.domain.currency.entity import Money
 from app.modules.analytics.domain.events.AnalyticsEventEntity import AnalyticsEventEntity
 from app.modules.analytics.domain.install.AnalyticsInstallEntity import AnalyticsInstallEntity
 from app.modules.analytics.domain.redis.repo import IdempotencyKeyRepositoryProtocol, IdempotencyKeyStatus
 from app.modules.analytics.domain.uow import AnalyticsUnitOfWorkFactoryProtocol, AnalyticsUnitOfWorkProtocol
-from app.modules.crm.domain.app_platform.CrmAppPlatformEntity import CrmAppPlatformEntity
-from app.modules.analytics.domain.currency.currency_convertor_protocol import CurrencyConvertorClientProtocol
-from app.modules.analytics.domain.currency.entity import Money
 
 
 class IngestionService(IngestionServiceProtocol):
@@ -56,7 +56,7 @@ class IngestionService(IngestionServiceProtocol):
         self,
         install_key: str,
         uow: AnalyticsUnitOfWorkProtocol,
-    ) -> CrmAppPlatformEntity:
+    ) -> AnalyticsAppPlatformEntity:
         platform = uow.app_platform_repo.get_by_install_key(install_key)
 
         if platform is None or platform.platform_id is None:

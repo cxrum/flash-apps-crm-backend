@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, Query
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.api.v1.crm.payloads import AppScopeQueryPayload, RolesQueryPayload, ShareAppPayload
 from app.modules.crm.api.v1.transport import PaginationQueryPayload
 from app.modules.crm.application.admin.crm_authorization.mappers import (
@@ -10,7 +11,6 @@ from app.modules.crm.application.admin.crm_authorization.mappers import (
 from app.modules.crm.application.admin.crm_authorization.protocol import CrmAuthorizationServiceProtocol
 from app.modules.crm.application.base import JsonDict
 from app.modules.crm.application.crm_authentication.responses import ResolvedCrmUserResponse
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.di.dependencies import resolve_user
 from app.modules.crm.di.services import get_crm_authorization_service
 

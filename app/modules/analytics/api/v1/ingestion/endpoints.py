@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, Query, Response, status
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.analytics.api.v1.ingestion.payloads import (
     SdkEventsPayload,
     SdkInstallPayload,
@@ -13,7 +14,6 @@ from app.modules.analytics.application.ingestion.mappers import SdkIngestionComm
 from app.modules.analytics.application.ingestion.protocol import IngestionServiceProtocol
 from app.modules.analytics.di.services import get_analytics_ingestion_service
 from app.modules.crm.application.sdk.apps.protocol import AppServiceProtocol
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.di.services import get_sdk_app_service
 
 router = APIRouter()
@@ -65,6 +65,6 @@ async def get_public_config(
     install_key: Annotated[str, Query()],
     app_service: Annotated[AppServiceProtocol, Depends(get_sdk_app_service)],
 ) -> str:
-    command = SdkIngestionCommandMapper.config_from_transport(GeneralMapper.to_dict(install_key=install_key))
+    command = SdkIngestionCommandMapper.config_from_transport(payload=GeneralMapper.to_dict(install_key=install_key))
     response = app_service.get_app_config_secrets(command)
     return response.model_dump_json()

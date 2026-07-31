@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, Query, status
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.api.v1.crm.payloads import (
     AppScopeQueryPayload,
     CreateConversionDefinitionPayload,
@@ -12,7 +13,6 @@ from app.modules.crm.application.admin.definitions.mappers import DefinitionsCom
 from app.modules.crm.application.admin.definitions.protocol import DefinitionsServiceProtocol
 from app.modules.crm.application.base import JsonDict
 from app.modules.crm.application.crm_authentication.responses import ResolvedCrmUserResponse
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.di.dependencies import resolve_user
 from app.modules.crm.di.services import get_admin_definitions_service
 

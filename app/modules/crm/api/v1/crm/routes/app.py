@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, Query, status
 
+from app.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.api.v1.crm.payloads import (
     CreateAppPayload,
     CreateAppPlatformPayload,
@@ -14,7 +15,6 @@ from app.modules.crm.application.base import JsonDict
 from app.modules.crm.application.crm_authentication.responses import ResolvedCrmUserResponse
 from app.modules.crm.application.sdk.apps.mappers import SdkAppCommandsMapper
 from app.modules.crm.application.sdk.apps.protocol import AppServiceProtocol
-from app.modules.crm.core.utils.general_mapper import GeneralMapper
 from app.modules.crm.di.dependencies import resolve_user
 from app.modules.crm.di.services import get_sdk_app_service
 
